@@ -193,6 +193,8 @@ namespace RhinoWood.Plugin.UI
             Muted("Fișa tehnică este în tabul „Fișă tehnică”. Restul planșelor (cote de îmbinare, plan de debitare, note de montaj) se exportă într-un singur PDF.");
             Row(Button("PDF Design", () => _msg.Text = WoodActions.ExportPdf(SheetMode.Design), BtnVariant.Primary),
                 Button("PDF Vânzare (ofertă)", () => _msg.Text = WoodActions.ExportPdf(SheetMode.Sale)));
+            Row(Button("Exportă piese de debitare (3D)", () => _msg.Text = WoodActions.ExportCutParts()));
+            Muted("Piesele se așază plat lângă model, în layerele Debitare: 01 piesă brută · 02 după rindeluire · 03 piesă cu găuri + deșeu roșu.");
             Row(Button("Exportă documentația (CSV/HTML)…", ExportReport));
             Add(_msg);
         }
@@ -224,6 +226,9 @@ namespace RhinoWood.Plugin.UI
                 var tag = i.Severity == Severity.Error ? "EROARE" : i.Severity == Severity.Warning ? "AVERTISMENT" : "INFO";
                 Add(new Label { Text = tag + " · " + Ro.Issue(i), Font = Tk.Label, TextColor = col, Wrap = WrapMode.Word });
             }
+            var holder = new StackLayout { Orientation = Orientation.Vertical, Spacing = 6, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+            Remedies.AddTo(new RemedyHost(holder), Prj, P.LastResult, null);
+            Add(holder);
             RuleTable();
         }
 

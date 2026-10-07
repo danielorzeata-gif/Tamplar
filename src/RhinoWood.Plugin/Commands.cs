@@ -76,6 +76,23 @@ namespace RhinoWood.Plugin
             return "Esența „" + name.Trim() + "” a fost adăugată cu profilele comerciale standard (editează user-library.json pentru dimensiuni și prețuri exacte).";
         }
 
+        /// <summary>Lays every part flat in the document as rough block, finished block and cut part + red waste (three layers).</summary>
+        public static string ExportCutParts()
+        {
+            if (P.Project == null) return "Nu există un proiect activ.";
+            var r = P.Recalculate();
+            return CutPartsExport.Run(RhinoDoc.ActiveDoc, P.Project, r);
+        }
+
+        /// <summary>Applies a suggested solution and refreshes the document / preview.</summary>
+        public static void ApplyRemedy(RhinoWood.Core.Projects.Remedy remedy)
+        {
+            if (P.Project == null) return;
+            RhinoWood.Core.Projects.RemedyEngine.Apply(P.Project, remedy);
+            var doc = RhinoDoc.ActiveDoc;
+            if (doc != null) Refresh(doc, false); else P.Recalculate();
+        }
+
         /// <summary>Selects the Rhino objects of a part so a click on a cutting-list row highlights it in the viewport.</summary>
         public static void SelectPart(RhinoDoc doc, string partId)
         {
@@ -335,6 +352,18 @@ namespace RhinoWood.Plugin
         {
             RhinoApp.WriteLine("Rhino Wood " + RhinoWood.Plugin.UI.BuildInfo.Text);
             RhinoApp.WriteLine("Fișier încărcat: " + RhinoWood.Plugin.UI.BuildInfo.Path);
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f11")]
+    public class WoodCutPartsCommand : Command
+    {
+        public override string EnglishName => "WoodCutParts";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            if (!WoodActions.RequireProject()) return Result.Failure;
+            RhinoApp.WriteLine("Rhino Wood: " + WoodActions.ExportCutParts());
             return Result.Success;
         }
     }

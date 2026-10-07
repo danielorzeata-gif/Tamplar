@@ -202,7 +202,8 @@ namespace RhinoWood.Plugin.UI
             var a = new AtButton("Fișă tehnică (previzualizare)", BtnVariant.Quiet); a.Click += (x, e) => Run("WoodSheet");
             var b = new AtButton(Sale ? "Exportă oferta PDF" : "Exportă planșe PDF", BtnVariant.Secondary); b.Click += (x, e) => Run("WoodPdf");
             var c = new AtButton("Exportă toate documentele…", BtnVariant.Quiet); c.Click += (x, e) => Run("WoodReport");
-            s.Add(a); s.Add(b); s.Add(c);
+            var d = new AtButton("Exportă piese de debitare (3D)", BtnVariant.Secondary); d.Click += (x, e) => Run("WoodCutParts");
+            s.Add(a); s.Add(b); s.Add(d); s.Add(c);
             return s;
         }
 
@@ -236,6 +237,7 @@ namespace RhinoWood.Plugin.UI
             foreach (var i in issues.Take(8))
                 _verif.Add(new Label { Text = (i.Severity == Severity.Error ? "○ " : "▲ ") + Ro.Issue(i), Font = Tk.Caption, TextColor = i.Severity == Severity.Error ? Tk.Danger : Tk.Warn, Wrap = WrapMode.Word });
             if (issues.Count > 8) _verif.Add(new Label { Text = "… încă " + (issues.Count - 8) + " (vezi planșele PDF).", Font = Tk.Caption, TextColor = Tk.InkMuted });
+            Remedies.AddTo(_verif, p, r, null);
 
             if (_debit != null)
             {

@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Avertismentul „mortaze care se intersectează” are acum **soluții aplicabile**: fiecare variantă e încercată pe proiect, ordonată după strategia de optimizare (cost / achiziție / deșeu / nr. bare) și apoi după rezistență; prima e marcată ★ Recomandat, cu buton „Aplică soluția”.
+- Piesele sunt **decupate boolean în 3D** (mortaze, găuri, obrajii și umerii cepurilor) în modurile Normal și peste.
+- `WoodCutParts` / buton „Exportă piese de debitare (3D)”: layere `Debitare::01 Piesă brută`, `02 După rindeluire`, `03 Debitare` (piesa cu găuri + deșeul în roșu), așezate plat lângă model.
 - `WoodStart`: fereastră cu taburi independente. Primul tab **Configurare** = interfața Atelier; celelalte (Proiect, Afișare, Optimizare, Suprascrieri, Fișă tehnică, Documente, Verificări, Setări, Materiale, Despre) înlocuiesc comenzile din linia de comandă (care rămân disponibile).
 
 ## 1.1.0 (unreleased)

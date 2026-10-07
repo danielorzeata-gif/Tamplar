@@ -195,6 +195,8 @@ namespace RhinoWood.Core.Joinery
             Compute(railThickness, railWidth, receivingSize).TenonLength;
 
         protected virtual bool Through => false;
+        /// <summary>True when the mortise goes through the receiving member (two crossing through mortises conflict).</summary>
+        public bool IsThroughJoint => Through;
         protected virtual bool OpenSlot => false;
 
         public override JointResult Generate(JointContext c)

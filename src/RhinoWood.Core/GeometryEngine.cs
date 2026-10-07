@@ -11,6 +11,17 @@ using RhinoWood.Core.Libraries;
 namespace RhinoWood.Core.Display
 {
     public enum PrimKind { Box, Cylinder, Line }
+
+    /// <summary>A volume removed from a part (mortise, hole, tenon cheek...), in WORLD coordinates. Boxes use Box, cylinders use P0/P1/Radius.</summary>
+    public sealed class CutVolume
+    {
+        public PrimKind Kind { get; set; }
+        public Box3 Box { get; set; }
+        public Vec3 P0 { get; set; }
+        public Vec3 P1 { get; set; }
+        public double Radius { get; set; }
+        public string Label { get; set; }
+    }
     public enum PrimCategory { Part, Feature, Hardware, Grain, Operation }
 
     /// <summary>Renderer-independent geometry description; the Rhino plugin converts these into Breps/curves.</summary>
@@ -26,6 +37,8 @@ namespace RhinoWood.Core.Display
         public double Radius { get; set; }
         public string Label { get; set; }
         public string Version { get; set; }
+        /// <summary>For Part primitives (Normal mode and above): volumes to subtract so the part is a real cut solid, not a bounding box.</summary>
+        public List<CutVolume> Cuts { get; set; }
     }
 
     public static class Hashing
@@ -97,7 +110,7 @@ namespace RhinoWood.Core.Display
         {
             var list = new List<GeometryPrimitive>
             {
-                new GeometryPrimitive { Key = part.Id, PartId = part.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = part.Bounds, Label = fam?.Name ?? part.Id, Version = version }
+                new GeometryPrimitive { Key = part.Id, PartId = part.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = part.Bounds, Label = fam?.Name ?? part.Id, Version = version, Cuts = mode >= DisplayMode.Normal ? PartSolids.CutsFor(part) : null }
             };
             if (mode >= DisplayMode.Engineering)
             {

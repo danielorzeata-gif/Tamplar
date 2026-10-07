@@ -52,6 +52,9 @@ namespace RhinoWood.Plugin
             if (Cache.TryGetValue(ck, out var g)) return g;
             switch (p.Kind)
             {
+                case PrimKind.Box when p.Category == PrimCategory.Part && p.Cuts != null && p.Cuts.Count > 0:
+                    g = CutSolids.CutPart(p, s);
+                    break;
                 case PrimKind.Box:
                     g = new Box(Plane.WorldXY, new Interval(p.Box.Min.X * s, p.Box.Max.X * s), new Interval(p.Box.Min.Y * s, p.Box.Max.Y * s), new Interval(p.Box.Min.Z * s, p.Box.Max.Z * s)).ToBrep();
                     break;
