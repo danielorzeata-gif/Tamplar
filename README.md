@@ -64,4 +64,11 @@ docs/                   ARCHITECTURE, USER_GUIDE, DEVELOPER_GUIDE, DATA_MODEL, K
 scripts/                build / install / sync / test
 ```
 
+## Knowledge base
+
+`knowledge/Wood/` holds the woodworking research the plugin is built on (joinery, species and wood movement, furniture,
+doors, windows, hardware, finishing, ~165 sourced rules with verification labels) plus the original Python engine. Start with
+`knowledge/Wood/00_INDEX/00_README_START_HERE.md`; the latest additions are in `00_INDEX/ITERATIA_9_USI_FERESTRE_MOBILIER.md`.
+Next steps: `docs/ROADMAP_V2.md`.
+
 See `docs/` for details and `CHANGELOG.md` for the release notes.

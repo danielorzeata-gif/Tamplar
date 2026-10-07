@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (unreleased)
+- Selectable joints per connection (mortise-tenon, loose tenon, dowel, bridle, Japanese kusabi, biscuit, pocket screw) and tabletop
+  fixing (Z-clip, figure-8, wooden button); rail lengths, tenons, holes and hardware follow the choice; choices persist.
+- `JointInfo` (strength, difficulty, pros/cons, source) for every joint; THROUGH_CONFLICT validation.
+- `PreviewEngine` (2D oblique preview from the Core model); 83 tests.
+- `knowledge/Wood`: imported knowledge base + iteration 9 research on doors, windows, furniture matrix, hardware; `docs/ROADMAP_V2.md`.
+
 ## 1.0.0
 First complete release (roadmap V1: core + parametric table + material optimization).
 
