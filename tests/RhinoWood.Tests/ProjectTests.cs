@@ -378,7 +378,10 @@ namespace RhinoWood.Tests
             var user = new WoodLibrary();
             user.Species["TEAK"] = new WoodSpecies { Id = "TEAK", Name = "Teak", PricePerM3 = 4200, SupplierId = "SUP-TIMBER", ReservePercent = 12 };
             user.Stock.Add(new StockItem { Id = "TEAK-90x90", SpeciesId = "TEAK", Width = 90, Thickness = 90, Lengths = { 3000, 4000 } });
+            user.Hardware["HNG-1"] = new HardwareItem { Id = "HNG-1", Category = "Hinges", Model = "Concealed hinge", Dimensions = new Vec3(45, 35, 12), UnitPrice = 2.5, Pattern = { new HolePatternEntry { Kind = FeatureKind.HingeCup, Diameter = 35, Depth = 12, Target = PatternTarget.Host } } };
             var back = LibrarySerializer.DeserializeUser(LibrarySerializer.SerializeUser(user));
+            Assert.Equal(new Vec3(45, 35, 12), back.Hardware["HNG-1"].Dimensions);
+            Assert.Equal(FeatureKind.HingeCup, back.Hardware["HNG-1"].Pattern[0].Kind);
             var lib = WoodLibrary.CreateDefault(); lib.Merge(back);
             Assert.Equal(12, lib.GetSpecies("TEAK").ReservePercent);
             Assert.Contains(lib.Stock, s => s.Id == "TEAK-90x90");

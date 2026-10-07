@@ -1,7 +1,7 @@
 {
   "SchemaVersion": 1,
   "PluginVersion": "1.0.0",
-  "ProjectId": "PRJ-6d930c5a",
+  "ProjectId": "PRJ-bb657d41",
   "Name": "Oak dining table",
   "FurnitureTypeId": "table.dining",
   "SpeciesId": "OAK",
@@ -65,5 +65,5 @@
       "1 x OAK 90x90 x 4000"
     ]
   },
-  "SavedUtc": "2026-10-07T15:54:39.5150523Z"
+  "SavedUtc": "2026-10-07T16:00:01.6562023Z"
 }

@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{22906ACC-4CA1-4A43-A6C4-A4F451A68336}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhinoWood.Core", "src\RhinoWood.Core\RhinoWood.Core.csproj", "{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhinoWood.Plugin", "src\RhinoWood.Plugin\RhinoWood.Plugin.csproj", "{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3E45C9F1-E6E0-478B-88AA-C6F509623F3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhinoWood.Tests", "tests\RhinoWood.Tests\RhinoWood.Tests.csproj", "{BE48B609-6833-4BF2-AD64-D4ACB0DABF43}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0F0F61A9-10AA-4143-B1B0-57C76B170BBE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoRunner", "samples\DemoRunner\DemoRunner.csproj", "{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE48B609-6833-4BF2-AD64-D4ACB0DABF43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE48B609-6833-4BF2-AD64-D4ACB0DABF43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE48B609-6833-4BF2-AD64-D4ACB0DABF43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE48B609-6833-4BF2-AD64-D4ACB0DABF43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{052E4EE7-9B2B-483B-BBF3-2DB38751F1B1} = {22906ACC-4CA1-4A43-A6C4-A4F451A68336}
+		{E4E665FD-4FF8-4097-B6C2-AF199E31F4B0} = {22906ACC-4CA1-4A43-A6C4-A4F451A68336}
+		{BE48B609-6833-4BF2-AD64-D4ACB0DABF43} = {3E45C9F1-E6E0-478B-88AA-C6F509623F3D}
+		{AFABF650-B1C6-4C90-861C-7E3F5DAE3FF6} = {0F0F61A9-10AA-4143-B1B0-57C76B170BBE}
+	EndGlobalSection
+EndGlobal

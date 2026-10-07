@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <LangVersion>11.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>false</UseWindowsForms>
+    <TargetExt>.rhp</TargetExt>
+    <NoWarn>NU1701;CS1591</NoWarn>
+    <AssemblyName>RhinoWood</AssemblyName>
+    <RootNamespace>RhinoWood.Plugin</RootNamespace>
+    <Version>1.0.0</Version>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Product>Rhino Wood - Woodworking CAD, Engineering and Manufacturing</Product>
+    <Company>Rhino Wood</Company>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="8.0.23304.9001" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\RhinoWood.Core\RhinoWood.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+name: RhinoWood
+version: 1.0.0
+authors:
+  - Rhino Wood
+description: Woodworking CAD, engineering, global material optimization, procurement and manufacturing system for solid-wood furniture in Rhino 8.
+url: https://github.com/danielorzeata-gif/tamplar
+keywords:
+  - woodworking
+  - furniture
+  - joinery
+  - cutting-list
+  - optimization

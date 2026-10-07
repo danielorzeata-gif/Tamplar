@@ -233,12 +233,26 @@ namespace RhinoWood.Core.Projects
 
     public static class PluginInfo { public const string Version = "1.0.0"; }
 
+    /// <summary>Vec3 is a readonly struct; serialize as [x,y,z] so library data (e.g. hardware dimensions) round-trips.</summary>
+    public sealed class Vec3JsonConverter : JsonConverter<RhinoWood.Core.Geometry.Vec3>
+    {
+        public override RhinoWood.Core.Geometry.Vec3 Read(ref Utf8JsonReader reader, Type t, JsonSerializerOptions o)
+        {
+            var a = JsonSerializer.Deserialize<double[]>(ref reader, o);
+            return new RhinoWood.Core.Geometry.Vec3(a[0], a[1], a[2]);
+        }
+        public override void Write(Utf8JsonWriter w, RhinoWood.Core.Geometry.Vec3 v, JsonSerializerOptions o)
+        {
+            w.WriteStartArray(); w.WriteNumberValue(v.X); w.WriteNumberValue(v.Y); w.WriteNumberValue(v.Z); w.WriteEndArray();
+        }
+    }
+
     public static class ProjectSerializer
     {
         public static readonly JsonSerializerOptions Options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            Converters = { new JsonStringEnumConverter() },
+            Converters = { new JsonStringEnumConverter(), new Vec3JsonConverter() },
             NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
         };
 
