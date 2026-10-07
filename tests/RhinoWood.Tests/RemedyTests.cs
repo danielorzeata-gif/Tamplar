@@ -231,3 +231,62 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class DresserTests
+    {
+        private static WoodProject D(string tier = "STANDARD") { var p = WoodProject.Create("casework.dresser", "Comodă"); p.ApplyTier(tier); return p; }
+
+        [Fact]
+        public void Dresser_MatchesTheBedroomSheet()
+        {
+            var r = D().Recalculate();
+            Assert.False(r.HasErrors, string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.Empty(r.Optimization.Unplaced);
+            Assert.Equal(6, r.Model.AllParts.Count(p => p.Id.StartsWith("LEG")));                 // 4 corners + 2 under the separator
+            Assert.Equal(8, r.Model.AllParts.Count(p => p.Id.StartsWith("FRONT")));                // 2 columns x 4 drawers
+            Assert.Equal(8, r.Model.HardwareInstalls.Count(h => h.HardwareId == "SLIDE-SC"));
+            Assert.Contains(r.Model.HardwareInstalls, h => h.HardwareId == "ANTITIP-KIT");       // ~87 kg, H 800 -> EN 14749
+            var heights = r.Model.AllParts.Where(p => p.Id.StartsWith("FRONT-R") && p.Id.EndsWith("C1")).OrderBy(p => p.Bounds.Min.Z).Select(p => p.Finished.Width).ToList();
+            Assert.Equal(new[] { 197.0, 174.0, 151.0, 128.0 }, heights.Select(h => System.Math.Round(h)).ToArray());   // graded fronts: 197 / 174 / 151 / 128
+            Assert.Equal(897, r.Model.FindPart("FRONT-R1C1").Finished.Length, 6);                    // 1800/2 - 3
+            Assert.Equal(661, r.Model.FindPart("SIDE-1").Finished.Length, 6);
+        }
+
+        [Fact]
+        public void Columns_And_Drawers_ChangeTheGrid()
+        {
+            var p = D(); p.SetParameter("columns", 3); p.SetParameter("drawers", 3); var r = p.Recalculate();
+            Assert.Equal(9, r.Model.AllParts.Count(x => x.Id.StartsWith("FRONT"))); Assert.Equal(8, r.Model.AllParts.Count(x => x.Id.StartsWith("LEG")));
+            Assert.Equal(2, r.Model.AllParts.Count(x => x.Id.StartsWith("SEP"))); Assert.False(r.HasErrors);
+        }
+
+        [Theory] [InlineData("scoop")] [InlineData("handle")] [InlineData("push")] [InlineData("jrabbet")]
+        public void FrontStyle_AddsTheMatchingFeaturesOrHardware(string style)
+        {
+            var p = D(); p.SetChoice("frontStyle", style); var r = p.Recalculate();
+            var fr = r.Model.AllParts.Where(x => x.Id.StartsWith("FRONT")).ToList();
+            if (style == "scoop") Assert.All(fr, f => Assert.Contains(f.Features, q => q.Kind == RhinoWood.Core.Domain.FeatureKind.RoutPocket));
+            if (style == "jrabbet") Assert.All(fr, f => Assert.Contains(f.Features, q => q.Kind == RhinoWood.Core.Domain.FeatureKind.Rabbet));
+            if (style == "handle") { Assert.Equal(8, r.Model.HardwareInstalls.Count(h => h.HardwareId == "HANDLE-128")); Assert.All(fr, f => Assert.Equal(2, f.Features.Count(q => q.Kind == RhinoWood.Core.Domain.FeatureKind.ThroughHole))); }
+            if (style == "push") Assert.Equal(8, r.Model.HardwareInstalls.Count(h => h.HardwareId == "PUSH-OPEN"));
+            Assert.False(r.HasErrors);
+        }
+
+        [Fact]
+        public void VariantsKeepClassA_AndSaveMaterial()
+        {
+            double cost(string t) => D(t).Recalculate().Cost.RawMaterial;
+            Assert.True(cost("PREMIUM") >= cost("STANDARD") - 1e-6 && cost("STANDARD") >= cost("ECONOMA") - 1e-6);
+            Assert.All(D("ECONOMA").Recalculate().Model.Families.Where(f => f.VisClass == 'A'), f => Assert.Equal("OAK", f.SpeciesId));
+        }
+
+        [Fact]
+        public void AllSheetsBuild()
+        {
+            var p = D(); var r = p.Recalculate();
+            Assert.All(RhinoWood.Core.Reports.SheetBuilder.Build(p, r, RhinoWood.Core.Reports.SheetMode.Design), s => Assert.False(string.IsNullOrWhiteSpace(s.Body)));
+        }
+    }
+}

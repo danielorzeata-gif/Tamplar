@@ -20,6 +20,7 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Families = new Dictionary<string, string>
         {
             ["F-TOP"] = "Blat (încleiat din lamele)", ["F-LEG"] = "Picior", ["F-APRON-L"] = "Zargă lungă", ["F-APRON-S"] = "Zargă scurtă",
+            ["F-DR-CAP"] = "Capac", ["F-DR-SIDE"] = "Lateral", ["F-DR-BOT"] = "Fund", ["F-DR-SEP"] = "Separator", ["F-DR-LEG"] = "Picior",
             ["F-NS-CAP"] = "Capac", ["F-NS-SIDE"] = "Lateral", ["F-NS-FRONT"] = "Față sertar", ["F-NS-LEG"] = "Picior", ["F-NS-BOT"] = "Fund", ["F-NS-SHELF"] = "Poliță nișă",
             ["F-NS-DSIDE"] = "Sertar · lateral", ["F-NS-DFRONT"] = "Sertar · față interioară", ["F-NS-DBACK"] = "Sertar · spate"
         };
@@ -33,7 +34,7 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Hardware = new Dictionary<string, string>
         {
             ["TOP-ZCLIP"] = "Clips Z 30×20", ["TOP-FIGURE8"] = "Fixare figure-8", ["TOP-BUTTON"] = "Buton de lemn", ["TOP-SLOTSCREW"] = "Șurub în gaură alungită 4×35 + șaibă", ["TOP-SLOTSCREW-L"] = "Șurub în gaură alungită lungă 4×35 + șaibă",
-            ["SLIDE-SC"] = "Glisieră ascunsă soft-close 350 (pereche)", ["FOOT-LEVEL"] = "Patină reglabilă picior", ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
+            ["HANDLE-128"] = "Mâner sertar 128 mm", ["PUSH-OPEN"] = "Mecanism push-to-open", ["ANTITIP-KIT"] = "Kit anti-basculare (fixare în perete)", ["SLIDE-SC"] = "Glisieră ascunsă soft-close 350 (pereche)", ["FOOT-LEVEL"] = "Patină reglabilă picior", ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
         };
         private static readonly Dictionary<FeatureKind, string> Features = new Dictionary<FeatureKind, string>
         {
@@ -44,18 +45,24 @@ namespace RhinoWood.Core.Reports
         };
 
         public static string SpeciesName(string id, string fallback = null) => Species.TryGetValue(id ?? "", out var v) ? v : fallback ?? id;
-        public static string Family(PartFamily f) => Families.TryGetValue(f.Id, out var v) ? v : f.Name;
+        public static string Family(PartFamily f)
+        {
+            if (Families.TryGetValue(f.Id, out var v)) return v;
+            var m = Regex.Match(f.Id, @"^F-DR-(FRONT|DSIDE|DFRONT|DBACK)-(\d+)$");
+            if (m.Success) { string row = " (rândul " + m.Groups[2].Value + ")"; switch (m.Groups[1].Value) { case "FRONT": return "Față sertar" + row; case "DSIDE": return "Sertar · lateral" + row; case "DFRONT": return "Sertar · față interioară" + row; default: return "Sertar · spate" + row; } }
+            return f.Name;
+        }
         public static string Joint(IJointDefinition d) => Joints.TryGetValue(d.Id, out var v) ? v : d.Name;
         public static string Joint(string id, string fallback) => Joints.TryGetValue(id, out var v) ? v : fallback;
         public static string HardwareName(string id, string fallback) => Hardware.TryGetValue(id, out var v) ? v : fallback ?? id;
         private static readonly Dictionary<string, string> Params = new Dictionary<string, string>
         {
             ["length"] = "Lungime", ["width"] = "Lățime", ["height"] = "Înălțime", ["topThickness"] = "Grosime blat", ["legSectionUser"] = "Secțiune picior (0 = regulă)",
-            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat", ["depth"] = "Adâncime", ["legHeight"] = "Înălțime picioare", ["panelThickness"] = "Grosime panouri", ["drawerHeight"] = "Înălțime față sertar"
+            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat", ["depth"] = "Adâncime", ["legHeight"] = "Înălțime picioare", ["panelThickness"] = "Grosime panouri", ["drawerHeight"] = "Înălțime față sertar", ["columns"] = "Coloane", ["drawers"] = "Sertare pe coloană", ["gradation"] = "Gradare fronturi (cele de jos mai înalte)"
         };
         private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
         {
-            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp"
+            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp", ["frontStyle"] = "Deschidere față sertar"
         };
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;
@@ -78,7 +85,7 @@ namespace RhinoWood.Core.Reports
             }
         }
         public static string OverrideNode(string node) => node == "leg.section" ? "Secțiune picior" : node == "apron.height" ? "Înălțime zargă" : node == "overhang" ? "Prelungire blat" : node == "leg.height" ? "Înălțime picior" : node;
-        public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : typeId == "casework.nightstand" ? "Noptieră din lemn masiv" : fallback;
+        public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : typeId == "casework.nightstand" ? "Noptieră din lemn masiv" : typeId == "casework.dresser" ? "Comodă din lemn masiv" : typeId == "casework.bed" ? "Pat din lemn masiv" : fallback;
         public static string Feature(FeatureKind k) => Features.TryGetValue(k, out var v) ? v : k.ToString();
 
         private static string Num(Match m, int g) => m.Groups[g].Value;

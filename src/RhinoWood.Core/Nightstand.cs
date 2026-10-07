@@ -42,10 +42,12 @@ namespace RhinoWood.Core.Furniture
 
         public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
         {
-            new ChoiceDef { Key = "materialB", Label = "Interior (class B) species", Group = "Materials", Kind = "species", Default = "ASH", Options = { "OAK", "ASH", "SPRUCE", "PINE" },
+            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "material.interior", Key = "materialB", Label = "Interior (class B) species", Group = "Materials", Kind = "species", Default = "ASH", Options = { "OAK", "ASH", "SPRUCE", "PINE" },
                 Description = "Species of the parts seen only when the drawer is open (drawer box, bottom, shelf). Class A (fronts, sides, cap, legs) uses the project species." },
-            new ChoiceDef { Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit" },
+            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit" },
                 Description = "Joint between the body panels (no visible screws)." },
+            new ChoiceDef { StyleKind = StyleKind.Aspect, StyleKey = "front.style", Key = "frontStyle", Label = "Front opening", Group = "Drawer", Kind = "frontstyle", Default = "scoop", Options = { "scoop", "handle", "push", "jrabbet" },
+                Description = "How the drawer opens: finger scoop, handle (128 mm), push-to-open, or J finger rabbet. The same in the whole room." },
         };
 
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
@@ -65,48 +67,20 @@ namespace RhinoWood.Core.Furniture
             double Val(string k) => v.TryGetValue(k, out var d) ? d : Parameters.First(p => p.Key == k).Default;
             string Ch(string k) => ch != null && ch.TryGetValue(k, out var s) ? s : Choices.First(c => c.Key == k).Default;
             g.AddInput("species", speciesId);
-            g.AddInput("materialB", Ch("materialB")); g.AddInput("jointBody", Ch("jointBody"));
+            g.AddInput("materialB", Ch("materialB")); g.AddInput("jointBody", Ch("jointBody")); g.AddInput("frontStyle", Ch("frontStyle"));
             foreach (var p in Parameters) g.AddInput(NodeFor(p.Key), Val(p.Key));
-            var deps = new[] { "species", "materialB", "jointBody", "width", "depth", "height", "legHeight", "panelThickness", "drawerHeight", "biscuit.pitch" };
+            var deps = new[] { "species", "materialB", "jointBody", "frontStyle", "width", "depth", "height", "legHeight", "panelThickness", "drawerHeight", "biscuit.pitch" };
             g.AddComputed("layout", deps, r => Build(ctx, r));
             return g;
         }
 
-        private static PartFamily Family(ProjectContext ctx, string id, string name, PartType type, string species, Dims fin, Axis grain, char cls, bool glued)
-        {
-            var rules = ctx.Rules;
-            var roughFull = rules.Rough(fin);
-            var fam = new PartFamily
-            {
-                Id = id, Name = name, Type = type, Assembly = "Body", SpeciesId = species, Finished = fin, GrainAxis = grain, VisClass = cls,
-                RequiresGrainContinuity = !glued, VisualGrainRequired = cls == 'A', GrainGroup = cls == 'A' ? "NS-A" : null,
-                RoughPieces = { new RoughPieceSpec { CountPerPart = 1, Rough = roughFull, Role = name + " blank" } }
-            };
-            if (glued && fin.Width > 100)
-            {
-                var stock = ctx.Library.PanelStripStock(species, rules.Rough(new Dims(1, 1, fin.Thickness)).Thickness);
-                double stockW = stock == null ? 140 : Math.Max(stock.Width, stock.Thickness);
-                double maxStrip = stockW - rules.PanelStripWidthAllowance;
-                int n = Math.Max(1, (int)Math.Ceiling((fin.Width + rules.GluedPanelTrim) / maxStrip));
-                if (n > 1)
-                {
-                    double stripFinished = (fin.Width + rules.GluedPanelTrim) / n;
-                    fam.EdgeGlued = true; fam.RequiresGrainContinuity = false;
-                    fam.Notes = "Edge-glued from " + n + " strips with biscuits; alternate growth-ring orientation.";
-                    fam.RoughPieces[0] = new RoughPieceSpec { CountPerPart = n, Rough = new Dims(roughFull.Length, stripFinished + rules.PanelStripWidthAllowance, roughFull.Thickness), Role = name + " strip" };
-                }
-            }
-            return fam;
-        }
-
-        private static void Add(PartFamily fam, string id, Box3 b, Axis len, Axis wid, Axis thk) =>
-            fam.Instances.Add(new PartInstance { Id = id, FamilyId = fam.Id, Index = fam.Instances.Count, Bounds = b, LengthAxis = len, WidthAxis = wid, ThicknessAxis = thk });
-
-        private static Box3 B(double x0, double y0, double z0, double x1, double y1, double z1) => new Box3(new Vec3(x0, y0, z0), new Vec3(x1, y1, z1));
+        private static PartFamily Family(ProjectContext ctx, string id, string name, PartType type, string species, Dims fin, Axis grain, char cls, bool glued) => CaseKit.Family(ctx, id, name, type, species, fin, grain, cls, glued);
+        private static void Add(PartFamily fam, string id, Box3 b, Axis len, Axis wid, Axis thk) => CaseKit.Add(fam, id, b, len, wid, thk);
+        private static Box3 B(double x0, double y0, double z0, double x1, double y1, double z1) => CaseKit.B(x0, y0, z0, x1, y1, z1);
 
         private static object Build(ProjectContext ctx, IGraphReader r)
         {
-            string spA = r.Get<string>("species"), spB = r.Get<string>("materialB"), joint = r.Get<string>("jointBody");
+            string spA = r.Get<string>("species"), spB = r.Get<string>("materialB"), joint = r.Get<string>("jointBody"), fstyle = r.Get<string>("frontStyle");
             double W = r.Get<double>("width"), D = r.Get<double>("depth"), H = r.Get<double>("height"), legH = r.Get<double>("legHeight");
             double t = r.Get<double>("panelThickness"), dH = r.Get<double>("drawerHeight");
             var L = new Layout();
@@ -135,11 +109,11 @@ namespace RhinoWood.Core.Furniture
             // drawer box
             double bw = iw - 2 * slide, sl = Math.Max(150, Math.Floor((latD - t - 15) / 50) * 50), bh = dH - 46.5, zb = zShelf1 + 15;
             double xs0 = x0 + t + slide, xs1 = xe - t - slide;
-            var dside = Family(ctx, "F-NS-DSIDE", "Drawer side", PartType.Drawer, spB, new Dims(sl, bh, t), Axis.Y, 'B', false);
+            var dside = Family(ctx, "F-NS-DSIDE", "Drawer side", PartType.Drawer, spB, new Dims(sl, bh, t), Axis.Y, 'B', true);
             Add(dside, "DSIDE-1", B(xs0, yb0, zb, xs0 + t, yb0 + sl, zb + bh), Axis.Y, Axis.Z, Axis.X); Add(dside, "DSIDE-2", B(xs1 - t, yb0, zb, xs1, yb0 + sl, zb + bh), Axis.Y, Axis.Z, Axis.X);
             double fbw = bw - 2 * t;
-            var dfront = Family(ctx, "F-NS-DFRONT", "Drawer inner front", PartType.Drawer, spB, new Dims(fbw, bh, t), Axis.X, 'B', false); Add(dfront, "DFRONT-1", B(xs0 + t, yb0, zb, xs1 - t, yb0 + t, zb + bh), Axis.X, Axis.Z, Axis.Y);
-            var dback = Family(ctx, "F-NS-DBACK", "Drawer back", PartType.Drawer, spB, new Dims(fbw, bh - 12, t), Axis.X, 'B', false); Add(dback, "DBACK-1", B(xs0 + t, yb0 + sl - t, zb, xs1 - t, yb0 + sl, zb + bh - 12), Axis.X, Axis.Z, Axis.Y);
+            var dfront = Family(ctx, "F-NS-DFRONT", "Drawer inner front", PartType.Drawer, spB, new Dims(fbw, bh, t), Axis.X, 'B', true); Add(dfront, "DFRONT-1", B(xs0 + t, yb0, zb, xs1 - t, yb0 + t, zb + bh), Axis.X, Axis.Z, Axis.Y);
+            var dback = Family(ctx, "F-NS-DBACK", "Drawer back", PartType.Drawer, spB, new Dims(fbw, bh - 12, t), Axis.X, 'B', true); Add(dback, "DBACK-1", B(xs0 + t, yb0 + sl - t, zb, xs1 - t, yb0 + sl, zb + bh - 12), Axis.X, Axis.Z, Axis.Y);
 
             L.Families.AddRange(new[] { cap, side, front, leg, bot, shelf, dside, dfront, dback });
 
@@ -152,6 +126,7 @@ namespace RhinoWood.Core.Furniture
             J("dowel", "DFRONT-1", true, "DSIDE-1"); J("dowel", "DFRONT-1", false, "DSIDE-2");
             J("dowel", "DBACK-1", true, "DSIDE-1"); J("dowel", "DBACK-1", false, "DSIDE-2");
 
+            CaseKit.FrontHardware(L.Installs, fstyle, "FRONT-1", B(x0 + 1.5, 0, zShelf1 + 1.5, xe - 1.5, t, zShelf1 + 1.5 + frontH));
             // ---- hardware: one soft-close slide pair, levelling feet
             L.Installs.Add(new HardwareInstall { HardwareId = "SLIDE-SC", HostPartId = "DSIDE-1", MatePartId = "", Point = new Vec3(xs0, yb0 + sl / 2, zb + 20), Normal = new Vec3(-1, 0, 0), AxisU = new Vec3(0, 1, 0), AxisV = new Vec3(0, 0, 1), MatePoint = new Vec3(x0 + t, yb0 + sl / 2, zb + 20), MateNormal = new Vec3(1, 0, 0), MateAxisV = new Vec3(0, 0, 1) });
             for (int i = 1; i <= 4; i++)
@@ -161,9 +136,7 @@ namespace RhinoWood.Core.Furniture
             L.Sheets.Add(new SheetPart { Id = "BACK-1", Name = "Back", Material = "HDF 3", Thickness = 3, Bounds = B(x0 + t - 7.5, yb1 - 3, legH + t - 7.5, xe - t + 7.5, yb1, zTop + 7.5), AreaM2 = (iw + 15) * (zTop - legH - t + 15) / 1e6 });
             L.Sheets.Add(new SheetPart { Id = "DBOT-1", Name = "Drawer bottom", Material = "HDF 3", Thickness = 3, Bounds = B(xs0 + t - 6, yb0 + 5, zb + 8, xs1 - t + 6, yb0 + 5 + sl - 15, zb + 11), AreaM2 = (fbw + 12) * (sl - 15) / 1e6 });
 
-            string fp = string.Join("|", L.Families.Select(f => f.Id + ":" + f.SpeciesId + ":" + f.Finished + ":" + string.Join(";", f.RoughPieces.Select(x => x.CountPerPart + "x" + x.Rough)) + ":" + string.Join(";", f.Instances.Select(i => i.Id + "@" + i.Bounds))))
-                + "|" + string.Join(";", L.Requests.Select(q => q.JointTypeId + q.PartAId + q.PartBId + q.AAtStart)) + "|" + string.Join(";", L.Sheets.Select(s => s.Id + s.Bounds));
-            return new Boxed<Layout>(L, fp);
+            return new Boxed<Layout>(L, CaseKit.Fingerprint(L.Families, L.Requests, L.Sheets) + "|" + fstyle + string.Join(";", L.Installs.Select(h => h.HardwareId)));
         }
 
         public FurnitureModel Assemble(DependencyGraph g, ProjectContext ctx)
@@ -179,6 +152,7 @@ namespace RhinoWood.Core.Furniture
             }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
             BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            CaseKit.AddFrontFeatures(model, g.Get<string>("frontStyle"));
             model.SheetParts.AddRange(L.Sheets.Select(s => new SheetPart { Id = s.Id, Name = s.Name, Material = s.Material, Bounds = s.Bounds, Thickness = s.Thickness, AreaM2 = s.AreaM2 }));
             return model;
         }

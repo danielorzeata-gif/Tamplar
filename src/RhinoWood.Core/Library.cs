@@ -219,6 +219,18 @@ namespace RhinoWood.Core.Libraries
             lib.Hardware["SCR-4x16"] = new HardwareItem { Id = "SCR-4x16", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x16", Dimensions = new Vec3(16, 4, 4), UnitPrice = 0.03 };
             lib.Hardware["SCR-4x35"] = new HardwareItem { Id = "SCR-4x35", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x35", Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.05 };
             lib.Hardware["WSH-4"] = new HardwareItem { Id = "WSH-4", Category = "Washers", Manufacturer = "Generic", Model = "Washer 4", Dimensions = new Vec3(1, 12, 12), UnitPrice = 0.02 };
+            lib.Hardware["HANDLE-128"] = new HardwareItem
+            {
+                Id = "HANDLE-128", Category = "Handle", Manufacturer = "Generic", Model = "Drawer handle 128 mm", Dimensions = new Vec3(128, 12, 30), UnitPrice = 22,
+                InstallationNotesRo = "Două găuri Ø5 la 128 mm între axe, centrate pe față.", InstallationNotes = "Two Ø5 holes at 128 mm centres, centred on the front.",
+                Pattern =
+                {
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.ThroughHole, U = -64, V = 0, Diameter = 5, Depth = 19, Purpose = "Handle screw hole" },
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.ThroughHole, U = 64, V = 0, Diameter = 5, Depth = 19, Purpose = "Handle screw hole" },
+                }
+            };
+            lib.Hardware["PUSH-OPEN"] = new HardwareItem { Id = "PUSH-OPEN", Category = "Push latch", Manufacturer = "Generic", Model = "Push-to-open latch", Dimensions = new Vec3(40, 20, 15), UnitPrice = 35 };
+            lib.Hardware["ANTITIP-KIT"] = new HardwareItem { Id = "ANTITIP-KIT", Category = "Safety", Manufacturer = "Generic", Model = "Anti-tip wall anchor kit (EN 14749 / EN 15939)", Dimensions = new Vec3(60, 20, 20), UnitPrice = 18 };
             lib.Hardware["SLIDE-SC"] = new HardwareItem { Id = "SLIDE-SC", Category = "Drawer slide", Manufacturer = "Generic", Model = "Hidden soft-close drawer slide 350 (pair)", Dimensions = new Vec3(350, 13, 45), UnitPrice = 95 };
             lib.Hardware["FOOT-LEVEL"] = new HardwareItem { Id = "FOOT-LEVEL", Category = "Feet", Manufacturer = "Generic", Model = "Adjustable levelling foot", Dimensions = new Vec3(30, 30, 20), UnitPrice = 6 };
             lib.Hardware["TOP-SLOTSCREW"] = new HardwareItem

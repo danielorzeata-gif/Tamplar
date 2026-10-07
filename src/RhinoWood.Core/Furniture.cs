@@ -102,6 +102,7 @@ namespace RhinoWood.Core.Furniture
             var r = new FurnitureRegistry();
             r.Register(new TableDefinition());
             r.Register(new NightstandDefinition());
+            r.Register(new DresserDefinition());
             return r;
         }
     }
