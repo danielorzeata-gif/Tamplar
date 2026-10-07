@@ -190,6 +190,10 @@ namespace RhinoWood.Core.Domain
         public bool GrainAlongLength { get; set; } = true;
         public bool RequiresGrainContinuity { get; set; }
         public bool VisualGrainRequired { get; set; }
+        /// <summary>True for panels made of edge-glued strips (RoughPieces count = strips per part); strips are drawn separately and joined with biscuits.</summary>
+        public bool EdgeGlued { get; set; }
+        /// <summary>Visibility class (A = visible closed, B = visible when open, C = hidden); drives the species per variant.</summary>
+        public char VisClass { get; set; } = 'A';
         public string GrainGroup { get; set; }
         public List<PartInstance> Instances { get; set; } = new List<PartInstance>();
         public string Notes { get; set; }
@@ -207,6 +211,8 @@ namespace RhinoWood.Core.Domain
         public List<HardwareInstall> HardwareInstalls { get; set; } = new List<HardwareInstall>();
         /// <summary>Biscuits (lamelle) that join the edge-glued strips of panels; count and position follow the panel size and the biscuit pitch.</summary>
         public List<BiscuitInstance> Biscuits { get; set; } = new List<BiscuitInstance>();
+        /// <summary>Non-wood sheet parts (HDF back, drawer bottoms): shown and priced by area, not cut from boards.</summary>
+        public List<SheetPart> SheetParts { get; set; } = new List<SheetPart>();
         public List<Issue> Issues { get; set; } = new List<Issue>();
         public IEnumerable<PartInstance> AllParts => Families.SelectMany(f => f.Instances);
         public PartInstance FindPart(string id) => AllParts.FirstOrDefault(p => p.Id == id);
@@ -215,6 +221,16 @@ namespace RhinoWood.Core.Domain
     }
 
     /// <summary>A flat biscuit (#10/#20) in an edge joint between two strips of a glued panel. Box = the biscuit body in world coordinates.</summary>
+    public sealed class SheetPart
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Material { get; set; }
+        public Box3 Bounds { get; set; }
+        public double Thickness { get; set; }
+        public double AreaM2 { get; set; }
+    }
+
     public sealed class BiscuitInstance
     {
         public string Id { get; set; }

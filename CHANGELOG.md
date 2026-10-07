@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- **Piesă nouă: Noptieră** (`casework.nightstand`, din fișa dormitor): 4 picioare, 2 laterale, fund, poliță de nișă, capac, sertar cu față suprapusă și cutie, spate și fund de sertar din HDF (preț pe m²). Panourile late se încleiază din scânduri cu lamele; îmbinările de corp sunt dibluri (sau lamele), picioarele pe dibluri Ø10; glisieră soft-close și patine reglabile în BOM.
+- **Clase de vizibilitate A/B/C**: piesele vizibile închis (față, laterale, capac, picioare) rămân din esența proiectului; interiorul (fund, poliță, cutia sertarului) urmează varianta: PREMIUM stejar, STANDARD frasin, ECONOMA molid (alegere „Esență interior”, modificabilă).
+- `WoodNew` / tab Proiect → „Piesă nouă”: alegi tipul (masă / noptieră).
+- Verificările de fibră: avertismentul „fibre încrucișate” apare doar când o piesă se mișcă pe linia de lipire iar cealaltă nu; „panou fără fixări” nu mai apare la panourile prinse prin îmbinări.
 - **Fixări blat pe zargile scurte**: numărul crește cu dimensiunea mesei (aceeași regulă de pas ca la zargile lungi), mereu impar, cu un șurub pe axa centrală, distribuite simetric; șuruburile îndepărtate de centru primesc gaură alungită mai lungă (`TOP-SLOTSCREW-L`, cursă 26 mm).
 - Soluții aplicabile și pentru avertismentul „cursa fixării” (schimbă fixarea blatului cu una care permite mișcarea), nu doar pentru mortaze.
 - Baza de cunoștințe: `03_FURNITURE/bedroom/FISA_DORMITOR.md` (clase de vizibilitate A/B/C, reguli MIX, niveluri PREMIUM/STANDARD/ESENȚIAL) și secțiunile de fronturi de comodă.

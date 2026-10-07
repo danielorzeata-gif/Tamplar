@@ -107,7 +107,7 @@ namespace RhinoWood.Core.Display
         }
     
         /// <summary>Number of edge-glued strips of a part (1 for ordinary parts).</summary>
-        public static int StripCount(PartFamily fam) => fam != null && fam.Type == PartType.Top ? Math.Max(1, fam.RoughPieces.Sum(r => r.CountPerPart)) : 1;
+        public static int StripCount(PartFamily fam) => fam != null && fam.EdgeGlued ? Math.Max(1, fam.RoughPieces.Sum(r => r.CountPerPart)) : 1;
 
         /// <summary>World boxes of the strips of a glued panel (equal widths along the part's width axis); a single box for ordinary parts.</summary>
         public static List<Box3> StripBoxes(PartInstance part, PartFamily fam)

@@ -50,6 +50,19 @@ namespace RhinoWood.Plugin
             RhinoApp.RunScript("-_Zoom _Extents", false);
         }
 
+        /// <summary>Creates a draft of any furniture type (preview in the viewport until Generează).</summary>
+        public static void NewProject(string typeId)
+        {
+            var types = RhinoWood.Core.Furniture.FurnitureRegistry.CreateDefault();
+            var def = types.Get(typeId);
+            var name = RhinoWood.Core.Reports.Ro.FurnitureName(typeId, def.Name);
+            P.PreviewOn = true;
+            P.SetProject(RhinoWood.Core.Projects.WoodProject.Create(typeId, name, "OAK", P.Library), generated: false);
+        }
+
+        public static System.Collections.Generic.IEnumerable<(string id, string name)> FurnitureTypes() =>
+            RhinoWood.Core.Furniture.FurnitureRegistry.CreateDefault().All.Select(d => (d.TypeId, RhinoWood.Core.Reports.Ro.FurnitureName(d.TypeId, d.Name)));
+
         /// <summary>Exports the PDF sheets (DESIGN or SALE); asks where to save. Returns a short message for the UI.</summary>
         public static string ExportPdf(RhinoWood.Core.Reports.SheetMode sm)
         {
@@ -364,6 +377,22 @@ namespace RhinoWood.Plugin
         {
             if (!WoodActions.RequireProject()) return Result.Failure;
             RhinoApp.WriteLine("Rhino Wood: " + WoodActions.ExportCutParts());
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f12")]
+    public class WoodNewCommand : Command
+    {
+        public override string EnglishName => "WoodNew";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            var types = WoodActions.FurnitureTypes().ToList();
+            var go = new GetOption(); go.SetCommandPrompt("Piesă nouă");
+            var idx = types.Select(t => go.AddOption(t.id.Replace(".", "_").Replace("casework_", ""))).ToList();
+            if (go.Get() != GetResult.Option) return Result.Cancel;
+            WoodActions.NewProject(types[idx.IndexOf(go.Option().Index)].id);
+            RhinoApp.WriteLine("Rhino Wood: ciornă creată; ajustează în fereastra WoodStart, apoi Generează.");
             return Result.Success;
         }
     }

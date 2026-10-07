@@ -219,6 +219,8 @@ namespace RhinoWood.Core.Libraries
             lib.Hardware["SCR-4x16"] = new HardwareItem { Id = "SCR-4x16", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x16", Dimensions = new Vec3(16, 4, 4), UnitPrice = 0.03 };
             lib.Hardware["SCR-4x35"] = new HardwareItem { Id = "SCR-4x35", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x35", Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.05 };
             lib.Hardware["WSH-4"] = new HardwareItem { Id = "WSH-4", Category = "Washers", Manufacturer = "Generic", Model = "Washer 4", Dimensions = new Vec3(1, 12, 12), UnitPrice = 0.02 };
+            lib.Hardware["SLIDE-SC"] = new HardwareItem { Id = "SLIDE-SC", Category = "Drawer slide", Manufacturer = "Generic", Model = "Hidden soft-close drawer slide 350 (pair)", Dimensions = new Vec3(350, 13, 45), UnitPrice = 95 };
+            lib.Hardware["FOOT-LEVEL"] = new HardwareItem { Id = "FOOT-LEVEL", Category = "Feet", Manufacturer = "Generic", Model = "Adjustable levelling foot", Dimensions = new Vec3(30, 30, 20), UnitPrice = 6 };
             lib.Hardware["TOP-SLOTSCREW"] = new HardwareItem
             {
                 Id = "TOP-SLOTSCREW", Category = "Tabletop fastener", Manufacturer = "Generic", Model = "Slotted-hole screw 4x35 + washer",

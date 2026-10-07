@@ -151,3 +151,83 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class NightstandTests
+    {
+        private static WoodProject N(string tier = "STANDARD") { var p = WoodProject.Create("casework.nightstand", "Noptieră"); p.ApplyTier(tier); return p; }
+
+        [Fact]
+        public void Nightstand_HasAllParts_NoErrors_AndAPurchasePlan()
+        {
+            var r = N().Recalculate();
+            Assert.Equal(new[] { "CAP-1", "DBACK-1", "DFRONT-1", "DSIDE-1", "DSIDE-2", "FRONT-1", "LEG-1", "LEG-2", "LEG-3", "LEG-4", "SHELF-1", "SIDE-1", "SIDE-2", "BOT-1" }.OrderBy(x => x), r.Model.AllParts.Select(p => p.Id).OrderBy(x => x));
+            Assert.Equal(2, r.Model.SheetParts.Count);
+            Assert.False(r.HasErrors, string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.Empty(r.Optimization.Unplaced); Assert.True(r.Cost.Total > 0);
+            Assert.Contains(r.Bom.Lines, l => l.Id.StartsWith("SHEET-HDF"));
+            Assert.Equal(4, r.Model.HardwareInstalls.Count(h => h.HardwareId == "FOOT-LEVEL"));
+        }
+
+        [Theory]
+        [InlineData("PREMIUM", "OAK")] [InlineData("STANDARD", "ASH")] [InlineData("ECONOMA", "SPRUCE")]
+        public void SpeciesFollowsVisibilityClass_AndTheVariant(string tier, string classB)
+        {
+            var r = N(tier).Recalculate();
+            Assert.All(r.Model.Families.Where(f => f.VisClass == 'A'), f => Assert.Equal("OAK", f.SpeciesId));
+            Assert.All(r.Model.Families.Where(f => f.VisClass == 'B'), f => Assert.Equal(classB, f.SpeciesId));
+            Assert.Contains(r.Model.Families, f => f.VisClass == 'B');
+        }
+
+        [Fact]
+        public void Variants_ChangeMaterialCost_Monotonically()
+        {
+            double c(string t) => N(t).Recalculate().Cost.RawMaterial;
+            Assert.True(c("PREMIUM") >= c("STANDARD") - 1e-6); Assert.True(c("STANDARD") >= c("ECONOMA") - 1e-6);
+        }
+
+        [Fact]
+        public void WiderNightstand_ChangesStripsAndBiscuits_AndLegsAreDowelled()
+        {
+            var p = N(); var a = p.Recalculate(); int b0 = a.Model.Biscuits.Count;
+            p.SetParameter("depth", 550); p.SetParameter("width", 800); var b = p.Recalculate();
+            Assert.True(b.Model.Biscuits.Count >= b0); Assert.False(b.HasErrors);
+            Assert.Equal(4, b.Model.Joints.Count(j => j.JointTypeId == "dowel" && j.PartAId.StartsWith("LEG")));
+            Assert.True(b.Model.AllParts.All(x => x.Bounds.Size.X > 0 && x.Bounds.Size.Y > 0 && x.Bounds.Size.Z > 0));
+        }
+
+        [Fact]
+        public void Geometry_IncludesSheetParts_AndCutPanels()
+        {
+            var p = N(); p.Recalculate();
+            var prims = p.GenerateGeometry(RhinoWood.Core.Domain.DisplayMode.Normal);
+            Assert.Contains(prims, x => x.Key == "BACK-1"); Assert.Contains(prims, x => x.Key == "DBOT-1");
+            Assert.True(prims.Any(x => x.PartId == "SIDE-1" && x.Cuts != null && x.Cuts.Count > 0));
+        }
+
+        [Fact]
+        public void PersistsAndReopens()
+        {
+            var p = N("PREMIUM"); var r = p.Recalculate();
+            var (q, ok) = ProjectSerializer.Open(ProjectSerializer.Serialize(p, r), p.Library);
+            Assert.Equal("casework.nightstand", q.Furniture.TypeId); Assert.Equal("OAK", q.Choices["materialB"]); Assert.True(ok);
+        }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    public class NightstandSheetTests
+    {
+        [Theory] [InlineData(RhinoWood.Core.Reports.SheetMode.Design)] [InlineData(RhinoWood.Core.Reports.SheetMode.Sale)]
+        public void AllSheets_BuildForTheNightstand(RhinoWood.Core.Reports.SheetMode mode)
+        {
+            var p = WoodProject.Create("casework.nightstand", "n"); var r = p.Recalculate();
+            var sheets = RhinoWood.Core.Reports.SheetBuilder.Build(p, r, mode, "STANDARD");
+            Assert.NotEmpty(sheets); Assert.All(sheets, s => Assert.False(string.IsNullOrWhiteSpace(s.Body)));
+            var html = RhinoWood.Core.Reports.SheetDocument.Html(sheets, "n");
+            System.IO.File.WriteAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ns_" + mode + ".html"), html);
+        }
+    }
+}

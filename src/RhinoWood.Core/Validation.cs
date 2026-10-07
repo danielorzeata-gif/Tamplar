@@ -76,6 +76,8 @@ namespace RhinoWood.Core.Validation
                 var fa = c.Model.FamilyOf(j.PartAId); var fb = c.Model.FamilyOf(j.PartBId);
                 if (fa == null || fb == null || fa.GrainAxis == fb.GrainAxis) continue;
                 var pa = c.Model.FindPart(j.PartAId);
+                // the glue line runs along A's width axis; a crack risk exists only when one part moves along it (grain across it) and the other does not
+                if ((fa.GrainAxis != pa.WidthAxis) == (fb.GrainAxis != pa.WidthAxis)) continue;
                 if (pa.Finished.Width > 60)
                     yield return new Issue { Severity = Severity.Warning, Code = "CROSS_GRAIN", SubjectId = j.Id, Message = "Cross-grain glued connection detected between " + j.PartAId + " and " + j.PartBId + " (" + j.JointTypeId + ", width " + pa.Finished.Width.ToString("0.#", CultureInfo.InvariantCulture) + " mm): seasonal movement may crack the joint." };
             }
@@ -107,7 +109,7 @@ namespace RhinoWood.Core.Validation
                         if (disp > hw.TravelAllowance + 1e-9)
                             yield return new Issue { Severity = Severity.Warning, Code = "MOVEMENT_FASTENER", SubjectId = grp.First().Id, Message = string.Format(CultureInfo.InvariantCulture, "{0} on {1}: expected movement {2:0.0} mm exceeds fastener travel {3:0.0} mm; use slotted holes or more flexible fasteners.", hw.Model, grp.First().HostPartId, disp, hw.TravelAllowance) };
                     }
-                    if (!c.Model.HardwareInstalls.Any(x => x.MatePartId == part.Id) && part.Finished.Width > 150)
+                    if (!c.Model.HardwareInstalls.Any(x => x.MatePartId == part.Id) && !c.Model.Joints.Any(x => x.PartAId == part.Id || x.PartBId == part.Id) && part.Finished.Width > 150)
                         yield return new Issue { Severity = Severity.Warning, Code = "MOVEMENT_UNFASTENED", SubjectId = part.Id, Message = part.Id + ": wide solid-wood panel has no movement-compatible fasteners defined." };
                 }
             }

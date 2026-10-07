@@ -94,6 +94,8 @@ namespace RhinoWood.Core.Display
                 var key = part.Id + "|" + fp + "|" + mode + "|" + (grain ? "g" : "-") + "|s" + (mode >= DisplayMode.Normal ? PartSolids.StripCount(fam) : 1);
                 all.AddRange(_cache.GetOrAdd(key, () => Build(part, fam, mode, grain, fp)));
             }
+            foreach (var sp in model.SheetParts)
+                all.Add(new GeometryPrimitive { Key = sp.Id, PartId = sp.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = sp.Bounds, Label = sp.Name + " (" + sp.Material + ")", Version = Hashing.Short(sp.Bounds.ToString()) });
             if (mode >= DisplayMode.Engineering)
                 foreach (var b in model.Biscuits)
                 {

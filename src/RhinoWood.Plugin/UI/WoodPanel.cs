@@ -165,7 +165,7 @@ namespace RhinoWood.Plugin.UI
 
         private Control JointsSection(WoodProject p)
         {
-            var s = new AtSection("Îmbinări", p.Furniture.Choices.Count + " alegeri", true);
+            var s = new AtSection("Îmbinări și materiale", p.Furniture.Choices.Count + " alegeri", true);
             foreach (var ch in p.Furniture.Choices)
             {
                 var choice = ch;
@@ -186,10 +186,11 @@ namespace RhinoWood.Plugin.UI
         }
 
         private static string OptionLabel(WoodProject p, ChoiceDef c, string id) =>
-            c.Kind == "joint" ? Ro.Joint(p.Joints.Get(id)) : Ro.HardwareName(id, p.Library.Hardware.TryGetValue(id, out var h) ? h.Model : id);
+            c.Kind == "joint" ? Ro.Joint(p.Joints.Get(id)) : c.Kind == "species" ? Ro.SpeciesName(id, p.Library.Species.TryGetValue(id, out var sp0) ? sp0.Name : id) : Ro.HardwareName(id, p.Library.Hardware.TryGetValue(id, out var h) ? h.Model : id);
 
         private static string OptionNote(WoodProject p, ChoiceDef c, string id)
         {
+            if (c.Kind == "species") return p.Library.Species.TryGetValue(id, out var sp1) ? "contragere tangențială " + (sp1.DiffShrinkTangentialPct).ToString("0.00", CultureInfo.InvariantCulture) + " %/% · " + sp1.DataLabel : "";
             if (c.Kind != "joint") return p.Library.Hardware.TryGetValue(id, out var h) ? "cursă " + h.TravelAllowance.ToString("0.#", CultureInfo.InvariantCulture) + " mm" : "";
             var i = p.Joints.Get(id).Info;
             return "rezistență " + Dots(i.Strength) + " · dificultate " + Dots(i.Difficulty) + " · " + (i.VisibleFromOutside ? "aparentă" : "ascunsă");

@@ -82,8 +82,12 @@ namespace RhinoWood.Plugin.UI
                 Text(Prj.Name + " · " + Ro.FurnitureName(Prj.Furniture.TypeId, Prj.Furniture.Name));
                 Muted((P.Generated ? "Geometria este generată în document." : "Ciornă: doar previzualizare în viewport (apasă Generează în Configurare)."));
             }
-            Row(Button("Masă nouă", () => { P.PreviewOn = true; P.SetProject(WoodProject.CreateTable("Masă sufragerie", "OAK", P.Library), false); }),
-                Button("Deschide…", Open), Button("Salvează…", Save));
+            var types = WoodActions.FurnitureTypes().ToList();
+            var dd = new DropDown { Font = Tk.Label };
+            foreach (var ty in types) dd.Items.Add(new ListItem { Text = ty.name, Key = ty.id });
+            dd.SelectedIndex = 0;
+            Add(Labeled("Piesă nouă", dd));
+            Row(Button("Creează ciornă", () => WoodActions.NewProject(dd.SelectedKey), BtnVariant.Primary), Button("Deschide…", Open), Button("Salvează…", Save));
         }
 
         private void Open()

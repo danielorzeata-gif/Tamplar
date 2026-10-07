@@ -19,7 +19,9 @@ namespace RhinoWood.Core.Reports
         };
         private static readonly Dictionary<string, string> Families = new Dictionary<string, string>
         {
-            ["F-TOP"] = "Blat (încleiat din lamele)", ["F-LEG"] = "Picior", ["F-APRON-L"] = "Zargă lungă", ["F-APRON-S"] = "Zargă scurtă"
+            ["F-TOP"] = "Blat (încleiat din lamele)", ["F-LEG"] = "Picior", ["F-APRON-L"] = "Zargă lungă", ["F-APRON-S"] = "Zargă scurtă",
+            ["F-NS-CAP"] = "Capac", ["F-NS-SIDE"] = "Lateral", ["F-NS-FRONT"] = "Față sertar", ["F-NS-LEG"] = "Picior", ["F-NS-BOT"] = "Fund", ["F-NS-SHELF"] = "Poliță nișă",
+            ["F-NS-DSIDE"] = "Sertar · lateral", ["F-NS-DFRONT"] = "Sertar · față interioară", ["F-NS-DBACK"] = "Sertar · spate"
         };
         private static readonly Dictionary<string, string> Joints = new Dictionary<string, string>
         {
@@ -31,7 +33,7 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Hardware = new Dictionary<string, string>
         {
             ["TOP-ZCLIP"] = "Clips Z 30×20", ["TOP-FIGURE8"] = "Fixare figure-8", ["TOP-BUTTON"] = "Buton de lemn", ["TOP-SLOTSCREW"] = "Șurub în gaură alungită 4×35 + șaibă", ["TOP-SLOTSCREW-L"] = "Șurub în gaură alungită lungă 4×35 + șaibă",
-            ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
+            ["SLIDE-SC"] = "Glisieră ascunsă soft-close 350 (pereche)", ["FOOT-LEVEL"] = "Patină reglabilă picior", ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
         };
         private static readonly Dictionary<FeatureKind, string> Features = new Dictionary<FeatureKind, string>
         {
@@ -49,15 +51,15 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Params = new Dictionary<string, string>
         {
             ["length"] = "Lungime", ["width"] = "Lățime", ["height"] = "Înălțime", ["topThickness"] = "Grosime blat", ["legSectionUser"] = "Secțiune picior (0 = regulă)",
-            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat"
+            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat", ["depth"] = "Adâncime", ["legHeight"] = "Înălțime picioare", ["panelThickness"] = "Grosime panouri", ["drawerHeight"] = "Înălțime față sertar"
         };
         private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
         {
-            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat"
+            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp"
         };
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;
-        public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g == "Top" ? "Blat" : g == "Legs" ? "Picioare" : g == "Aprons" ? "Zargi" : g;
+        public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g == "Top" ? "Blat" : g == "Body" ? "Corp" : g == "Drawer" ? "Sertar" : g == "Materials" ? "Materiale" : g == "Legs" ? "Picioare" : g == "Aprons" ? "Zargi" : g;
         public static string DisplayMode(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Performanță" : m == Domain.DisplayMode.Normal ? "Normal" : m == Domain.DisplayMode.Engineering ? "Inginerie" : "Fabricație";
         public static string DisplayModeInfo(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Piese simple; fără îmbinări, feronerie, fibră sau detalii de prelucrare. Pentru proiecte mari."
             : m == Domain.DisplayMode.Normal ? "Geometria normală a mobilierului."
@@ -76,7 +78,7 @@ namespace RhinoWood.Core.Reports
             }
         }
         public static string OverrideNode(string node) => node == "leg.section" ? "Secțiune picior" : node == "apron.height" ? "Înălțime zargă" : node == "overhang" ? "Prelungire blat" : node == "leg.height" ? "Înălțime picior" : node;
-        public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : fallback;
+        public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : typeId == "casework.nightstand" ? "Noptieră din lemn masiv" : fallback;
         public static string Feature(FeatureKind k) => Features.TryGetValue(k, out var v) ? v : k.ToString();
 
         private static string Num(Match m, int g) => m.Groups[g].Value;

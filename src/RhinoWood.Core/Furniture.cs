@@ -101,6 +101,7 @@ namespace RhinoWood.Core.Furniture
         {
             var r = new FurnitureRegistry();
             r.Register(new TableDefinition());
+            r.Register(new NightstandDefinition());
             return r;
         }
     }
@@ -252,43 +253,12 @@ namespace RhinoWood.Core.Furniture
                 var fam = new PartFamily
                 {
                     Id = "F-TOP", Name = "Table top (edge-glued)", Type = PartType.Top, Assembly = "Top", SpeciesId = r.Get<string>("species"),
-                    Finished = fin, GrainAxis = Axis.X, RequiresGrainContinuity = false, VisualGrainRequired = true, GrainGroup = "TOP",
+                    Finished = fin, GrainAxis = Axis.X, RequiresGrainContinuity = false, VisualGrainRequired = true, GrainGroup = "TOP", EdgeGlued = true,
                     Notes = "Edge-glued from " + n + " strips; alternate growth-ring orientation to limit cupping.",
                     RoughPieces = { new RoughPieceSpec { CountPerPart = n, Rough = strip, Role = "Top strip" } }
                 };
                 fam.Instances.Add(new PartInstance { Id = "TOP-1", FamilyId = fam.Id, Index = 0, Bounds = new Box3(new Vec3(0, 0, H - T), new Vec3(L, W, H)), LengthAxis = Axis.X, WidthAxis = Axis.Y, ThicknessAxis = Axis.Z });
                 return new Boxed<List<PartFamily>>(new List<PartFamily> { fam }, Sig.Of(new[] { fam }));
-            });
-
-            // Biscuits between the strips of the top (physical rules): #20 (56x23x4) from 20 mm thickness, #10 (53x19x4) below; centred in the thickness
-            // (two rows from 45 mm); first/last biscuit centre 60 mm from the ends; evenly spread at no more than the pitch -> count follows the length.
-            g.AddComputed("top.biscuits", new[] { "comp.top", "biscuit.pitch" }, r =>
-            {
-                var fam = r.Get<Boxed<List<PartFamily>>>("comp.top").Value[0];
-                var top = fam.Instances[0]; int strips = PartSolids.StripCount(fam);
-                var list = new List<BiscuitInstance>();
-                double pitch = r.Get<double>("biscuit.pitch");
-                double T = top.Bounds.Size.Z, L = top.Bounds.Size.X;
-                bool big = T >= 20; double bl = big ? 56 : 53, bw = big ? 23 : 19; string size = big ? "#20" : "#10";
-                double m = 60, span = Math.Max(0, L - 2 * m);
-                int nb = Math.Max(2, (int)Math.Floor(span / pitch + 1e-9) + 1);
-                int rows = T >= 45 ? 2 : 1;
-                double sw = top.Bounds.Size.Y / strips; int k = 0;
-                for (int e = 1; e < strips; e++)
-                {
-                    double y = top.Bounds.Min.Y + e * sw;
-                    for (int i = 0; i < nb; i++)
-                    {
-                        double x = top.Bounds.Min.X + m + span * i / (nb - 1);
-                        for (int rw = 0; rw < rows; rw++)
-                        {
-                            double z = top.Bounds.Min.Z + (rows == 1 ? T / 2 : T * (rw + 1) / 3.0);
-                            list.Add(new BiscuitInstance { Id = "BSC-" + (++k).ToString("000", CultureInfo.InvariantCulture), PartId = top.Id, Edge = e, Size = size,
-                                Box = new Box3(new Vec3(x - bl / 2, y - bw / 2, z - 2), new Vec3(x + bl / 2, y + bw / 2, z + 2)) });
-                        }
-                    }
-                }
-                return new Boxed<List<BiscuitInstance>>(list, size + "|" + string.Join("|", list.Select(b => b.Box.ToString())));
             });
 
             g.AddComputed("joints.requests", new[] { "comp.legs", "comp.aprons", "joint.long", "joint.short" }, r =>
@@ -380,30 +350,18 @@ namespace RhinoWood.Core.Furniture
                 }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
 
-            // biscuit slots: cut in both neighbouring strips (the slot box straddles the glue line); the biscuit solid is kept for display and the BOM
-            var top = model.FindPart("TOP-1");
-            if (top != null)
-            {
-                int fn = 0;
-                foreach (var b in g.Get<Boxed<List<BiscuitInstance>>>("top.biscuits").Value)
-                {
-                    var slot = new Box3(b.Box.Min - new Vec3(1, 0.5, 0), b.Box.Max + new Vec3(1, 0.5, 0)).Inflate(0);
-                    slot = new Box3(slot.Min.With(Axis.Z, b.Box.Min.Z - 0.05), slot.Max.With(Axis.Z, b.Box.Max.Z + 0.05));
-                    top.Features.Add(JointGeometry.Rect(top, top.WorldBoxToLocal(slot), FeatureKind.BiscuitSlot, slot.Size.Y / 2, "Biscuit slot " + b.Size + " (strip edge " + b.Edge + ")", "ROUT-SLOT-3", b.Id, "BSL" + (++fn).ToString("000", CultureInfo.InvariantCulture)));
-                    model.Biscuits.Add(new BiscuitInstance { Id = b.Id, PartId = b.PartId, Edge = b.Edge, Size = b.Size, Box = b.Box });
-                }
-            }
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
             return model;
         }
 
-        internal static PartFamily CloneFamily(PartFamily f)
+        public static PartFamily CloneFamily(PartFamily f)
         {
             var c = new PartFamily
             {
                 Id = f.Id, Name = f.Name, Type = f.Type, Assembly = f.Assembly, SpeciesId = f.SpeciesId, Finished = f.Finished,
                 RoughPieces = f.RoughPieces.Select(r => new RoughPieceSpec { CountPerPart = r.CountPerPart, Rough = r.Rough, Role = r.Role }).ToList(),
                 GrainAxis = f.GrainAxis, GrainAlongLength = f.GrainAlongLength, RequiresGrainContinuity = f.RequiresGrainContinuity,
-                VisualGrainRequired = f.VisualGrainRequired, GrainGroup = f.GrainGroup, Notes = f.Notes
+                VisualGrainRequired = f.VisualGrainRequired, EdgeGlued = f.EdgeGlued, VisClass = f.VisClass, GrainGroup = f.GrainGroup, Notes = f.Notes
             };
             foreach (var i in f.Instances)
                 c.Instances.Add(new PartInstance { Id = i.Id, FamilyId = i.FamilyId, Index = i.Index, Bounds = i.Bounds, LengthAxis = i.LengthAxis, WidthAxis = i.WidthAxis, ThicknessAxis = i.ThicknessAxis });

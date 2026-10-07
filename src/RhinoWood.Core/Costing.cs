@@ -60,6 +60,12 @@ namespace RhinoWood.Core.Costing
             foreach (var p in opt.Purchase)
                 bom.Lines.Add(new BomLine { Category = "Material", Id = p.Id, Description = p.Item.Label + " x " + p.Length.ToString("0", ci) + " mm" + (p.ReserveQuantity > 0 ? " (incl. " + p.ReserveQuantity + " reserve)" : ""), Quantity = p.Quantity, Unit = "pcs", UnitCost = p.UnitPrice });
             cost.RawMaterial = opt.Purchase.Sum(p => p.Total);
+            foreach (var g in model.SheetParts.GroupBy(s => s.Material))
+            {
+                double area = g.Sum(s => s.AreaM2), price = _settings.Rules.HdfPricePerM2;
+                bom.Lines.Add(new BomLine { Category = "Material", Id = "SHEET-" + g.Key.Replace(' ', '-'), Description = g.Key + " (" + string.Join(", ", g.Select(s => s.Name)) + ")", Quantity = Math.Round(area, 3), Unit = "m2", UnitCost = price });
+                cost.RawMaterial += Math.Round(area * price, 2);
+            }
 
             // hardware and fasteners
             foreach (var g in model.HardwareInstalls.GroupBy(h => h.HardwareId))

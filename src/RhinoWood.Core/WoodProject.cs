@@ -81,6 +81,14 @@ namespace RhinoWood.Core.Projects
             return new WoodProject(name, types.Get("table.dining"), speciesId, lib, JointRegistry.CreateDefault(), types);
         }
 
+        /// <summary>Creates a project of any registered furniture type (e.g. "table.dining", "casework.nightstand").</summary>
+        public static WoodProject Create(string typeId, string name, string speciesId = "OAK", WoodLibrary lib = null)
+        {
+            lib = lib ?? WoodLibrary.CreateDefault();
+            var types = FurnitureRegistry.CreateDefault();
+            return new WoodProject(name, types.Get(typeId), speciesId, lib, JointRegistry.CreateDefault(), types);
+        }
+
         internal void ForceId(string id) { Id = id; }
         internal void RestoreTier(string tier) { Tier = tier; }
         /// <summary>Records the variant name without touching choices (used when a room drives the choices).</summary>
