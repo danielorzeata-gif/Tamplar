@@ -123,21 +123,27 @@ namespace RhinoWood.Core.Libraries
                     DataLabel = label, DataSource = src, RecommendedJoinery = joinery.ToList(),
                     MachiningNotes = "Sharp tooling; climb-cut end grain carefully.", FinishingNotes = "Sand to P180 before oil/lacquer."
                 };
-            // European species - [V-DATA] (prices are placeholders: edit in the user library)
-            Sp("OAK", "Oak", 710, 13000, 95, 52, 23, 42, 0.16, 0.36, null, "Good", 1400, null, "[V-DATA]", LWF, "mortise-tenon", "dowel", "dovetail");
-            Sp("BEECH", "Beech", 715, 14000, 120, 60, 28, 40, 0.20, 0.41, 10.3, "Fair", 900, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
-            Sp("ASH", "Ash", 700, 13000, 105, 50, 28, 40, 0.21, 0.38, null, "Fair", 1100, null, "[V-DATA]", LWF, "mortise-tenon", "bridle");
-            Sp("MAPLE", "Maple (sycamore)", 630, 10500, 95, 50, 26, 34, 0.15, 0.26, null, "Fair", 1300, null, "[V-DATA]", LWF + "; R/T = midpoints of ranges", "dowel", "mortise-tenon");
+            // European species - [V-DATA]. Prices: the user's list, lei/m3, dried 8-10 %, planed, class A/B (12 species); the others are placeholders (edit in the user library)
+            Sp("OAK", "Oak", 710, 13000, 95, 52, 23, 42, 0.16, 0.36, null, "Good", 2800, null, "[V-DATA]", LWF, "mortise-tenon", "dowel", "dovetail");
+            Sp("BEECH", "Beech", 715, 14000, 120, 60, 28, 40, 0.20, 0.41, 10.3, "Fair", 1300, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
+            Sp("ASH", "Ash", 700, 13000, 105, 50, 28, 40, 0.21, 0.38, null, "Fair", 1950, null, "[V-DATA]", LWF, "mortise-tenon", "bridle");
+            Sp("MAPLE", "Maple (sycamore)", 630, 10500, 95, 50, 26, 34, 0.15, 0.26, null, "Fair", 1450, null, "[V-DATA]", LWF + "; R/T = midpoints of ranges", "dowel", "mortise-tenon");
             Sp("PINE", "Scots pine", 520, 11000, 85, 47, 19, 19, 0.19, 0.36, 6.2, "Fair", 450, null, "[V-DATA]", LWF, "dowel", "half-lap");
             Sp("SPRUCE", "Spruce", 460, 11000, 80, 45, 12, 12, 0.19, 0.39, null, "Fair", 380, null, "[V-DATA]", LWF, "half-lap", "dowel");
-            Sp("WALNUT", "Walnut (European)", 680, 12500, 0, 0, 0, 0, 0.18, 0.29, null, "Very good", 2600, 15, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded", "mortise-tenon", "dovetail");
-            Sp("CHERRY", "Cherry", 615, 10000, 0, 0, 0, 0, 0.17, 0.28, null, "Good", 2200, null, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded; R/T midpoints", "mortise-tenon", "dovetail");
-            Sp("ROBINIA", "Black locust (robinia)", 740, 13600, 150, 73, 40, 57, 0.23, 0.35, null, "Good", 1000, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
+            Sp("WALNUT", "Walnut (European)", 680, 12500, 0, 0, 0, 0, 0.18, 0.29, null, "Very good", 3200, 15, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded", "mortise-tenon", "dovetail");
+            Sp("CHERRY", "Cherry", 615, 10000, 0, 0, 0, 0, 0.17, 0.28, null, "Good", 1700, null, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded; R/T midpoints", "mortise-tenon", "dovetail");
+            Sp("ROBINIA", "Black locust (robinia)", 740, 13600, 150, 73, 40, 57, 0.23, 0.35, null, "Good", 1600, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
             Sp("BIRCH", "Birch", 650, 14000, 120, 50, 23, 23, 0.29, 0.41, null, "Fair", 650, null, "[V-DATA]", LWF + "; ranges: mid values", "dowel", "mortise-tenon");
-            Sp("LINDEN", "Linden", 530, 7400, 90, 44, 13, 20, 0.0, 0.0, null, "Good", 600, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
-            Sp("ELM", "Elm", 650, 11000, 81, 51, 27, 37, 0.0, 0.0, null, "Fair", 1200, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "mortise-tenon");
-            Sp("ALDER", "Black alder", 550, 7700, 85, 47, 16, 17, 0.0, 0.0, null, "Good", 600, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
-            Sp("POPLAR", "Black poplar", 450, 8800, 55, 30, 10, 10, 0.13, 0.31, null, "Fair", 450, null, "[V-DATA]", LWF, "dowel");
+            Sp("LINDEN", "Linden", 530, 7400, 90, 44, 13, 20, 0.0, 0.0, null, "Good", 1400, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
+            Sp("ELM", "Elm", 650, 11000, 81, 51, 27, 37, 0.0, 0.0, null, "Fair", 1750, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "mortise-tenon");
+            Sp("ALDER", "Black alder", 550, 7700, 85, 47, 16, 17, 0.0, 0.0, null, "Good", 1100, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
+            Sp("POPLAR", "Black poplar", 450, 8800, 55, 30, 10, 10, 0.13, 0.31, null, "Fair", 900, null, "[V-DATA]", LWF, "dowel");
+            Sp("HORNBEAM", "Hornbeam", 750, 0, 0, 0, 0, 0, 0.20, 0.41, null, "Fair", 800, null, "[PROXY]", "density from memory, shrinkage proxy = beech (DIN 68100 value not in the knowledge base) - verify", "dowel", "mortise-tenon");
+            const string PriceEst = "estimare: lista de prețuri din Germania feb. 2026 × ~0,26 (raportul RO/DE la stejar și fag); verifică înainte de ofertă (Nordik Express 0745 525 203: frasin, paltin, tei, cireș, lemn uscat)";
+            foreach (var kv in new[] { "WALNUT", "ASH", "ELM", "CHERRY", "ROBINIA", "MAPLE", "LINDEN", "ALDER", "POPLAR", "HORNBEAM" })
+            { lib.Species[kv].PriceLabel = "[ESTIMARE]"; lib.Species[kv].PriceNote = PriceEst; }
+            lib.Species["OAK"].PriceLabel = "[REF]"; lib.Species["OAK"].PriceNote = "media anunțurilor românești 2.225 lei/m³; valoare de calcul puțin peste medie (anunțurile includ clasa C și lemn doar zvântat): 2.800";
+            lib.Species["BEECH"].PriceLabel = "[REF]"; lib.Species["BEECH"].PriceNote = "media anunțurilor românești 1.065 lei/m³; valoare de calcul: 1.300";
             // not covered by the verified report: kept as placeholders
             Sp("DOUGLAS", "Douglas fir", 530, 0, 0, 0, 0, 0, 0.18, 0.34, null, "Good", 520, null, "[UNVERIFIED]", "from memory - verify (Wood Handbook has US data)", "mortise-tenon", "bridle");
             Sp("MAHOGANY", "Mahogany", 550, 0, 0, 0, 0, 0, 0.20, 0.30, null, "Very good", 3000, 15, "[UNVERIFIED]", "from memory - verify", "mortise-tenon", "dovetail");

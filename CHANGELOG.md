@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.2.0
+- **Prețuri pe specie** (lei/m³, lemn uscat 8–10 %, tivit, clasa A/B): stejar 2.800, nuc 3.200, frasin 1.950, ulm 1.750, cireș 1.700, salcâm 1.600, paltin 1.450, tei 1.400, fag 1.300, arin 1.100, plop 900, carpen 800. Proveniența fiecărui preț e marcată: stejar și fag `[REF]` (medii din anunțuri RO: 2.225 / 1.065), restul `[ESTIMARE]` (lista DE feb. 2026 × ~0,26) — de verificat la Nordik Express 0745 525 203 înainte de ofertă; proiectul avertizează când folosește prețuri estimate. Preț placă încleiată lei/m² la 29 și 55 mm (stejar 29 mm ≈ 81).
+- **Preț de vânzare** (cercetat: cost direct + regie, apoi marjă PE PREȚ; mobilă la comandă 25–35 %): regie 10 %, marjă de bază 25 % + până la 10 puncte după minutele de îmbinări/găuri pe piesă (complexitate), rotunjire în sus la 10 lei, TVA 21 % (de la 1 aug. 2025); manoperă 90 lei/oră (uzual 75–100). Oferta arată preț fără TVA, TVA și total; fără costuri interne.
+- **Estimare rapidă de comandă**: volum finit × factor (tivit clasa B ×1,7; netivit ×1,8–2,2; semifabricate ×1,2), alături de planul optimizat.
+- Timpi de operații mai realiști (găuri cu șablon 0,5 min, lamelă 0,6 min, mortază 5 min).
 - **Layere pe piesă**: fiecare piesă are layerul ei (ex. `Pat`), cu sub-layer pentru fiecare familie de piese identice (Picior, Lonjeron, Șipcă somieră…) și sub-layerele `Joinery and holes`, `Operations`, `Grain`, `Hardware`. Layerele generale vechi se șterg când rămân goale.
 - **Desfășurat** (`WoodUnfold`, buton): toate piesele așezate plat și aliniate (brut → după rindeluire → piesă cu găuri + deșeu roșu + lamele), cu operațiile fiecărei piese, în layerul `{piesă}::Desfășurat`; pentru cameră, un bloc pe piesă. Înlocuiește `WoodCutParts`.
 - **Paletat** (`WoodPallet`, buton): piesele finite în cutii standard (FEFCO 0201/0203 și cutii lungi la comandă), cutiile pe paleți EPAL 1 / EPAL 3 / paleți lungi; fără amestec de piese în aceeași cutie, limite de greutate/înălțime, verificare curier DPD/GLS; desen 3D în `{piesă}::Paletat::Palet n::Cutia m` și raport. Cercetare în `knowledge/Wood/09_LOGISTICS/PACKING_PALLETS.md`.

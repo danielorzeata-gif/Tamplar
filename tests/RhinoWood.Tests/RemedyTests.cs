@@ -562,3 +562,68 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class PricingTests
+    {
+        [Fact]
+        public void Prices_FollowTheUsersList_ForTheTwelveSpecies()
+        {
+            var lib = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault();
+            var expected = new System.Collections.Generic.Dictionary<string, double> { ["OAK"] = 2800, ["WALNUT"] = 3200, ["ASH"] = 1950, ["ELM"] = 1750, ["CHERRY"] = 1700, ["ROBINIA"] = 1600, ["MAPLE"] = 1450, ["LINDEN"] = 1400, ["BEECH"] = 1300, ["ALDER"] = 1100, ["POPLAR"] = 900, ["HORNBEAM"] = 800 };
+            foreach (var kv in expected) Assert.Equal(kv.Value, lib.Species[kv.Key].PricePerM3);
+        }
+
+        [Fact]
+        public void SalePrice_IsMarginOnPrice_WithOverheadAndVat()
+        {
+            var p = WoodProject.Create("casework.dresser", "x"); var r = p.Recalculate(); var b = Pricing.Compute(p, r);
+            Assert.Equal(b.DirectCost * 1.10, b.ProductionCost, 1);                           // 10 % overhead
+            Assert.InRange(b.MarginPercent, 25, 35);                                          // 25 % + up to 10 for complexity
+            Assert.True(b.PriceExVat >= b.ProductionCost / (1 - b.MarginPercent / 100) - 1e-6 && b.PriceExVat < b.ProductionCost / (1 - b.MarginPercent / 100) + 10 + 1e-6);
+            Assert.Equal(b.PriceExVat * 1.21, b.PriceIncVat, 6);
+            Assert.True(b.Margin / b.PriceExVat >= (b.MarginPercent - 0.5) / 100);          // margin is a share of the price
+        }
+
+        [Fact]
+        public void MoreOperationsPerPart_MeansAHigherMargin()
+        {
+            var simple = WoodProject.Create("casework.bed", "s"); var rich = WoodProject.Create("table.dining", "d");
+            var a = Pricing.Compute(simple, simple.Recalculate()); var c = Pricing.Compute(rich, rich.Recalculate());
+            Assert.True(c.MinutesPerPart > a.MinutesPerPart); Assert.True(c.MarginPercent > a.MarginPercent);
+        }
+
+        [Fact]
+        public void PriceProvenance_And_PanelPricePerM2()
+        {
+            var lib = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault();
+            Assert.Equal("[REF]", lib.Species["OAK"].PriceLabel); Assert.Equal("[REF]", lib.Species["BEECH"].PriceLabel);
+            Assert.All(new[] { "ASH", "MAPLE", "LINDEN", "CHERRY" }, id => { Assert.Equal("[ESTIMARE]", lib.Species[id].PriceLabel); Assert.Contains("0745 525 203", lib.Species[id].PriceNote); });
+            Assert.Equal(81, PanelPrice.PerM2(lib.Species["OAK"].PricePerM3, 29), 0);          // the user's example: oak 29 mm = 81 lei/m2
+            Assert.Equal(154, PanelPrice.PerM2(lib.Species["OAK"].PricePerM3, 55), 0);
+            var p = WoodProject.Create("casework.nightstand", "n"); var b = Pricing.Compute(p, p.Recalculate());
+            Assert.Contains(b.UnverifiedPrices, x => x.Contains("[ESTIMARE]"));                // ash interior is an estimated price
+            var oak = WoodProject.Create("table.dining", "t"); Assert.Empty(Pricing.Compute(oak, oak.Recalculate()).UnverifiedPrices);
+        }
+
+        [Fact]
+        public void QuickOrderEstimate_IsFinishedVolumeTimesTheYieldFactor()
+        {
+            var p = WoodProject.Create("table.dining", "t"); var r = p.Recalculate();
+            var e = OrderEstimate.Compute(p, r);
+            Assert.Equal(1.7, e.Factor); Assert.Equal(r.Model.Families.Sum(f => f.Quantity * f.Finished.VolumeM3) * 1.7, e.OrderM3, 9);
+            p.Settings.LumberForm = "Blanks"; Assert.Equal(1.2, OrderEstimate.Compute(p, r).Factor);
+            p.Settings.LumberForm = "Unedged"; Assert.InRange(OrderEstimate.Compute(p, r).Factor, 1.8, 2.2);
+            Assert.True(e.Cost > 0);
+        }
+
+        [Fact]
+        public void SettingsChangeThePrice()
+        {
+            var p = WoodProject.Create("table.dining", "t"); var r = p.Recalculate(); double a = Pricing.Compute(p, r).PriceExVat;
+            p.Settings.SalesMarginPercent = 40; p.Settings.ComplexityMarginPercent = 0; Assert.True(Pricing.Compute(p, r).PriceExVat > a);
+            p.Settings.Rules.LaborRatePerHour = 150; p.Rebuild(); Assert.True(Pricing.Compute(p, p.Recalculate()).Labor > Pricing.Compute(WoodProject.Create("table.dining", "t"), WoodProject.Create("table.dining", "t").Recalculate()).Labor);
+        }
+    }
+}

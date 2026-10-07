@@ -59,6 +59,9 @@ namespace RhinoWood.Core.Domain
         public string MachiningNotes { get; set; }
         public string FinishingNotes { get; set; }
         public double PricePerM3 { get; set; }
+        /// <summary>Provenance of the price: [REF] real listings, [ESTIMARE] derived estimate (to be confirmed with a supplier), [UNVERIFIED] placeholder.</summary>
+        public string PriceLabel { get; set; } = "[UNVERIFIED]";
+        public string PriceNote { get; set; }
         public string SupplierId { get; set; }
         /// <summary>Material specific reserve (null = use global).</summary>
         public double? ReservePercent { get; set; }

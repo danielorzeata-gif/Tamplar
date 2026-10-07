@@ -337,13 +337,25 @@ namespace RhinoWood.Plugin.UI
             var s = Prj.Settings;
             var reserve = Field(Num(s.GlobalReservePercent)); var kerf = Field(Num(s.Rules.SawKerf)); var allow = Field(Num(s.Rules.LengthAllowance));
             var minRem = Field(Num(s.Rules.MinReusableRemnant)); var labor = Field(Num(s.Rules.LaborRatePerHour)); var margin = Field(Num(s.SalesMarginPercent));
+            var cmargin = Field(Num(s.ComplexityMarginPercent)); var overhead = Field(Num(s.OverheadPercent)); var vat = Field(Num(s.VatPercent)); var round = Field(Num(s.PriceRounding));
             var cur = Field(s.Currency, 60);
+            var yE = Field(Num(s.YieldEdged)); var yU = Field(Num(s.YieldUnedged)); var yB = Field(Num(s.YieldBlanks));
+            var form = new DropDown { Font = Tk.Label }; form.Items.Add(new ListItem { Text = "Tivit (lemn fasonat pe laturi)", Key = "Edged" }); form.Items.Add(new ListItem { Text = "Netivit", Key = "Unedged" }); form.Items.Add(new ListItem { Text = "Semifabricate", Key = "Blanks" }); form.SelectedKey = s.LumberForm;
+            Heading("Material și debitare");
             Add(Labeled("Rezervă globală (aplicată o dată)", reserve, "%"));
             Add(Labeled("Grosime tăietură (kerf)", kerf, "mm"));
             Add(Labeled("Adaos lungime", allow, "mm"));
             Add(Labeled("Rest minim reutilizabil", minRem, "mm"));
-            Add(Labeled("Tarif manoperă", labor, "/oră"));
-            Add(Labeled("Marjă vânzare", margin, "%"));
+            Heading("Estimare rapidă de comandă (volum finit × factor)");
+            Add(Labeled("Formă de aprovizionare", form));
+            Add(Labeled("Factor tivit (clasa B)", yE, "×")); Add(Labeled("Factor netivit (1,8–2,2)", yU, "×")); Add(Labeled("Factor semifabricate", yB, "×"));
+            Heading("Preț de vânzare");
+            Add(Labeled("Tarif manoperă", labor, "lei/oră (75–100 uzual)"));
+            Add(Labeled("Regie atelier", overhead, "% din costul direct"));
+            Add(Labeled("Marjă de bază (pe preț)", margin, "%"));
+            Add(Labeled("Adaos de complexitate (max)", cmargin, "puncte, după minutele de îmbinări pe piesă"));
+            Add(Labeled("TVA", vat, "%"));
+            Add(Labeled("Rotunjire preț (în sus)", round, "lei"));
             Add(Labeled("Monedă", cur));
             Add(Button("Aplică", () =>
             {
@@ -353,6 +365,14 @@ namespace RhinoWood.Plugin.UI
                 if (TryNum(minRem.Text, out var d)) s.Rules.MinReusableRemnant = d;
                 if (TryNum(labor.Text, out var e)) s.Rules.LaborRatePerHour = e;
                 if (TryNum(margin.Text, out var f)) s.SalesMarginPercent = f;
+                if (TryNum(cmargin.Text, out var f2)) s.ComplexityMarginPercent = f2;
+                if (TryNum(overhead.Text, out var f3)) s.OverheadPercent = f3;
+                if (TryNum(vat.Text, out var f4)) s.VatPercent = f4;
+                if (TryNum(round.Text, out var f5)) s.PriceRounding = f5;
+                if (TryNum(yE.Text, out var y1)) s.YieldEdged = y1;
+                if (TryNum(yU.Text, out var y2)) s.YieldUnedged = y2;
+                if (TryNum(yB.Text, out var y3)) s.YieldBlanks = y3;
+                if (form.SelectedKey != null) s.LumberForm = form.SelectedKey;
                 if (!string.IsNullOrWhiteSpace(cur.Text)) s.Currency = cur.Text.Trim();
                 Prj.Rebuild(); Refresh();
             }, BtnVariant.Primary));
@@ -368,8 +388,9 @@ namespace RhinoWood.Plugin.UI
         {
             Title("Materiale");
             Heading("Esențe în bibliotecă");
-            foreach (var sp in P.Library.Species.Values.OrderBy(x => x.Name))
-                Mono(string.Format(CultureInfo.InvariantCulture, "{0,-16} {1,5:0} kg/m³  {2,8:0.00}/m³  {3}", sp.Name, sp.DensityKgM3, sp.PricePerM3, sp.IsUserDefined ? "(utilizator)" : sp.DataLabel));
+            Muted("Preț lei/m³ (lemn uscat 8–10 %, tivit, clasa A/B) · preț plăcă încleiată lei/m² la 29 și 55 mm · proveniența prețului: [REF] anunțuri reale, [ESTIMARE] de verificat la furnizor.");
+            foreach (var sp in P.Library.Species.Values.OrderByDescending(x => x.PricePerM3))
+                Mono(string.Format(CultureInfo.InvariantCulture, "{0,-18} {1,7:0}/m³  {2,5:0}/m² 29mm  {3,5:0}/m² 55mm  {4}", Ro.SpeciesName(sp.Id, sp.Name), sp.PricePerM3, PanelPrice.PerM2(sp.PricePerM3, 29), PanelPrice.PerM2(sp.PricePerM3, 55), sp.IsUserDefined ? "(utilizator)" : sp.PriceLabel));
             Heading("Adaugă esență");
             var name = Field("", 160); var price = Field("1500"); var dens = Field("650"); var tang = Field("0.0040");
             Add(Labeled("Nume", name)); Add(Labeled("Preț", price, "/m³")); Add(Labeled("Densitate", dens, "kg/m³"));

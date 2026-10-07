@@ -36,7 +36,8 @@ namespace RhinoWood.Core.Rules
             finished.Thickness + SectionAllowance(finished.Thickness));
 
         // shop economics
-        public double LaborRatePerHour { get; set; } = 25;
+        /// <summary>Workshop labour, lei/hour. Romanian joiners ask ~75-100 lei/h (100-120 in big cities, 150+ for complex work) [REF brig.ro]; default 90.</summary>
+        public double LaborRatePerHour { get; set; } = 90;
         public double GluePricePerM2 { get; set; } = 1.2;
         public double BiscuitPrice { get; set; } = 0.25;
         public double HdfPricePerM2 { get; set; } = 12;
@@ -53,7 +54,21 @@ namespace RhinoWood.Core.Rules
         public Dictionary<string, double> ReserveOverrides { get; set; } = new Dictionary<string, double>();
         public string Currency { get; set; } = "lei";
         /// <summary>Sale price = production cost x (1 + margin). Only used in SALE (VANZARE) documents, never shown with internal costs.</summary>
-        public double SalesMarginPercent { get; set; } = 35;
+        /// <summary>BASE margin ON THE PRICE (not a markup on cost) for the simplest work; custom high-end woodwork is 25-35 %, production 15-20 % [REF].</summary>
+        public double SalesMarginPercent { get; set; } = 25;
+        /// <summary>Extra margin points reached at full complexity (many joinery operations per part): 25 % + 10 = 35 %.</summary>
+        public double ComplexityMarginPercent { get; set; } = 10;
+        /// <summary>Workshop overhead (rent, power, tools, consumables) as a percentage of the direct cost; the bedroom sheet uses 10 %.</summary>
+        public double OverheadPercent { get; set; } = 10;
+        /// <summary>VAT (Romania: standard rate 21 % from 1 Aug 2025).</summary>
+        public double VatPercent { get; set; } = 21;
+        /// <summary>The price without VAT is rounded UP to this step (0 = no rounding).</summary>
+        public double PriceRounding { get; set; } = 10;
+        /// <summary>Quick order estimate = finished volume x yield factor. Edged (tivit) class B 1.7; unedged (netivit) 1.8-2.2 (2.0); blanks (semifabricate) 1.2.</summary>
+        public string LumberForm { get; set; } = "Edged";
+        public double YieldEdged { get; set; } = 1.7;
+        public double YieldUnedged { get; set; } = 2.0;
+        public double YieldBlanks { get; set; } = 1.2;
         public DisplayMode Display { get; set; } = DisplayMode.Normal;
         public bool ShowGrain { get; set; }
 

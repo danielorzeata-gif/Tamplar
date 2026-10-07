@@ -65,7 +65,7 @@ namespace RhinoWood.Core.Reports
         }
 
         /// <summary>Customer price: production cost x (1 + margin), rounded up to 10.</summary>
-        public static double SalePrice(WoodProject p, ProjectResult r) => Math.Ceiling(r.Cost.Total * (1 + p.Settings.SalesMarginPercent / 100.0) / 10.0) * 10.0;
+        public static double SalePrice(WoodProject p, ProjectResult r) => RhinoWood.Core.Projects.Pricing.Compute(p, r).PriceExVat;
 
         public static string TierName(WoodProject p) => p.Tier == null ? null : p.Tier + (p.TierMatches ? "" : " (modificat)");
 
@@ -450,7 +450,9 @@ namespace RhinoWood.Core.Reports
             var sb = new StringBuilder();
             sb.Append($"<div class='offer'><div class='display'>{E(p.Name)}</div><div class='muted'>{E(SpeciesName(p, p.SpeciesId))}{(string.IsNullOrEmpty(variant) ? "" : " · variantă " + E(variant))}</div>");
             sb.Append($"<table class='narrow'><tr><td>Lungime</td><td class='num'>{N(bb.X)} mm</td></tr><tr><td>Lățime</td><td class='num'>{N(bb.Y)} mm</td></tr><tr><td>Înălțime</td><td class='num'>{N(bb.Z)} mm</td></tr>");
-            sb.Append($"<tr class='tot'><td>Preț</td><td class='num big'>{E(Money.Format(price, r.Cost.Currency))}</td></tr></table>");
+            var pb = RhinoWood.Core.Projects.Pricing.Compute(p, r);
+            sb.Append($"<tr><td>Preț fără TVA</td><td class='num'>{E(Money.Format(pb.PriceExVat, r.Cost.Currency))}</td></tr><tr><td>TVA {N(pb.VatPercent)} %</td><td class='num'>{E(Money.Format(pb.Vat, r.Cost.Currency))}</td></tr>");
+            sb.Append($"<tr class='tot'><td>Total cu TVA</td><td class='num big'>{E(Money.Format(pb.PriceIncVat, r.Cost.Currency))}</td></tr></table>");
             sb.Append("<p class='muted'>Prețul include materialul, execuția și montajul. Lemn masiv: mici variații de culoare și desen sunt naturale.</p>");
             sb.Append($"<p class='muted'><b>Materiale.</b> {E(RhinoWood.Core.Projects.SpeciesDeclaration.Text(new[] { r }, p.Tier))}</p></div>");
             return new Sheet { Id = "offer", Title = p.Name + " · ofertă", Body = sb.ToString() };

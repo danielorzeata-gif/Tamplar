@@ -133,10 +133,13 @@ namespace RhinoWood.Core.Manufacturing
             {
                 case FeatureKind.Mortise: return (OperationType.Mortise, "Hollow-chisel mortiser", 5);
                 case FeatureKind.Tenon: return (OperationType.Tenon, "Table saw / tenoning jig", 6);
-                case FeatureKind.Slot: case FeatureKind.BiscuitSlot: case FeatureKind.WedgeSlot: return (OperationType.Slot, "Router / slot cutter", 3);
+                case FeatureKind.BiscuitSlot: return (OperationType.Slot, "Biscuit joiner", 0.6);
+                case FeatureKind.Slot: case FeatureKind.WedgeSlot: return (OperationType.Slot, "Router / slot cutter", f.HasBox && f.Box.Size.X > 300 ? 4 : 3);
+                case FeatureKind.DowelHole: case FeatureKind.ScrewHole: case FeatureKind.ShelfPin: case FeatureKind.ConnectorHole: return (OperationType.Drill, "Doweling jig / drill press", 0.5);
+                case FeatureKind.HingeCup: case FeatureKind.Counterbore: case FeatureKind.Countersink: return (OperationType.Drill, "Drill press (Forstner)", 1.5);
                 case FeatureKind.ElongatedHole: return (OperationType.Rout, "Router", 3);
                 case FeatureKind.Dado: case FeatureKind.Rabbet: case FeatureKind.Lap: case FeatureKind.Pocket: case FeatureKind.RoutPocket: case FeatureKind.Finger: case FeatureKind.Dovetail: case FeatureKind.Scarf: return (OperationType.Rout, "Router table", 5);
-                default: return (OperationType.Drill, "Drill press", 1.5);
+                default: return (OperationType.Drill, "Drill press", 0.8);
             }
         }
     }

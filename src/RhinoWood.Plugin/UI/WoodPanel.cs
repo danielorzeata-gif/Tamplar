@@ -255,16 +255,28 @@ namespace RhinoWood.Plugin.UI
 
             _cost.Clear();
             var cur = r.Cost.Currency;
-            if (Sale) { _cost.Meta = "preț client"; _cost.Add(AtPrice.Build(new List<(string, string)>(), "Preț", Money.Format(SheetBuilder.SalePrice(p, r), cur))); }
+            var pb = Pricing.Compute(p, r);
+            if (Sale)
+            {
+                _cost.Meta = "preț client";
+                _cost.Add(AtPrice.Build(new List<(string, string)> { ("Preț fără TVA", Money.Format(pb.PriceExVat, cur)), ("TVA " + pb.VatPercent.ToString("0.#", CultureInfo.InvariantCulture) + " %", Money.Format(pb.Vat, cur)) }, "Total cu TVA", Money.Format(pb.PriceIncVat, cur)));
+            }
             else
             {
                 _cost.Meta = "producție";
                 _cost.Add(AtPrice.Build(new List<(string, string)>
                 {
-                    ("Material", Money.Format(r.Cost.RawMaterial, cur)),
-                    ("Feronerie și mărunțișuri", Money.Format(r.Cost.Hardware + r.Cost.Consumables, cur)),
-                    ("Manoperă", Money.Format(r.Cost.Labor, cur))
-                }, "Cost producție", Money.Format(r.Cost.Total, cur)));
+                    ("Material", Money.Format(pb.Material, cur)),
+                    ("Feronerie și mărunțișuri", Money.Format(pb.Hardware + pb.Consumables, cur)),
+                    ("Manoperă · " + pb.LaborHours.ToString("0.#", CultureInfo.InvariantCulture) + " h", Money.Format(pb.Labor, cur)),
+                    ("Regie", Money.Format(pb.Overhead, cur))
+                }, "Cost producție", Money.Format(pb.ProductionCost, cur)));
+                _cost.Add(new Label { Text = "Marjă " + pb.MarginPercent.ToString("0.#", CultureInfo.InvariantCulture) + " % pe preț (" + pb.BaseMarginPercent.ToString("0.#", CultureInfo.InvariantCulture) + " bază + " + pb.ComplexityMarginPercent.ToString("0.#", CultureInfo.InvariantCulture) + " complexitate: " + pb.MinutesPerPart.ToString("0", CultureInfo.InvariantCulture) + " min de îmbinări/găuri pe piesă)", Font = Tk.Caption, TextColor = Tk.InkMuted, Wrap = WrapMode.Word });
+                _cost.Add(AtPrice.Build(new List<(string, string)> { ("Preț fără TVA", Money.Format(pb.PriceExVat, cur)), ("TVA " + pb.VatPercent.ToString("0.#", CultureInfo.InvariantCulture) + " %", Money.Format(pb.Vat, cur)) }, "Preț de vânzare cu TVA", Money.Format(pb.PriceIncVat, cur)));
+                var qe = OrderEstimate.Compute(p, r);
+                _cost.Add(new Label { Text = "Estimare rapidă de comandă: volum finit × " + qe.Factor.ToString("0.0#", CultureInfo.InvariantCulture) + " = " + qe.OrderM3.ToString("0.000", CultureInfo.InvariantCulture) + " m³ ≈ " + Money.Format(qe.Cost, cur) + " (planul optimizat: " + r.Optimization.PurchasedM3.ToString("0.000", CultureInfo.InvariantCulture) + " m³ / " + Money.Format(r.Cost.RawMaterial, cur) + ")", Font = Tk.Caption, TextColor = Tk.InkMuted, Wrap = WrapMode.Word });
+                if (pb.UnverifiedPrices.Count > 0)
+                    _cost.Add(new Label { Text = "▲ Prețuri estimate la: " + string.Join(", ", pb.UnverifiedPrices) + ". Verifică la furnizor înainte de ofertă (Nordik Express 0745 525 203).", Font = Tk.Caption, TextColor = Tk.Warn, Wrap = WrapMode.Word });
             }
         }
 

@@ -49,9 +49,11 @@ namespace RhinoWood.Tests
             foreach (var forbidden in new[] { "deșeu", "Deșeu", "Cost producție", "Manoperă", "OAK-40x140", "debitare", "B001", "Necesar lucrare" })
                 Assert.DoesNotContain(forbidden, all);
             Assert.Contains("Preț", all);
-            // price = production cost + margin, rounded up to 10
-            double price = Math.Ceiling(r.Cost.Total * 1.35 / 10) * 10;
-            Assert.Contains(Money.Format(price, r.Cost.Currency), all);
+            // sale price = (direct cost + overhead) / (1 - margin on price), rounded up to 10, then VAT
+            var pb = RhinoWood.Core.Projects.Pricing.Compute(p, r);
+            Assert.Contains(Money.Format(pb.PriceExVat, r.Cost.Currency), all);
+            Assert.Contains(Money.Format(pb.PriceIncVat, r.Cost.Currency), all);
+            Assert.Contains("TVA", all);
         }
 
         [Fact]
