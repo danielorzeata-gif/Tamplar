@@ -356,3 +356,48 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    using RhinoWood.Core.Workspaces;
+    public class BedroomSetTests
+    {
+        [Theory] [InlineData("PREMIUM", "OAK", "OAK")] [InlineData("STANDARD", "ASH", "PINE")] [InlineData("ECONOMA", "SPRUCE", "PINE")]
+        public void OneChoicePropagatesToAllFourPieces(string tier, string classB, string classC)
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, tier);
+            Assert.Equal(4, room.Pieces.Count);
+            var res = ws.Recalculate(room);
+            Assert.All(room.Pieces.Where(p => p.Project.Furniture.TypeId != "casework.bed"), p => Assert.Equal(classB, p.Project.Choices["materialB"]));
+            Assert.Equal(classC, room.Pieces.First(p => p.Project.Furniture.TypeId == "casework.bed").Project.Choices["materialC"]);
+            Assert.Equal(0, res.Pieces.Sum(p => p.Errors));
+            Assert.Empty(res.Combined.Unplaced);
+            Assert.True(res.CombinedCost <= res.SeparateCostTotal + 1e-6);
+            Assert.Contains(tier == "PREMIUM" ? "Stejar masiv în toate componentele" : "Exterior din stejar masiv", res.Declaration);
+        }
+
+        [Fact]
+        public void FrontStyle_IsOneAspectSetForTheWholeRoom()
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, "STANDARD");
+            var imp = room.SetStyle(RhinoWood.Core.Furniture.StyleKind.Aspect, "front.style", "handle");
+            Assert.All(room.Pieces.Where(p => p.Project.Choices.ContainsKey("frontStyle")), p => Assert.Equal("handle", p.Project.Choices["frontStyle"]));
+            Assert.Equal(3, room.Pieces.Count(p => p.Project.Choices.ContainsKey("frontStyle")));
+        }
+
+        [Fact]
+        public void Layout_PlacesPiecesWithoutOverlapAndSurvivesPersistence()
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, "STANDARD");
+            var boxes = room.Pieces.Select(p => { var prims = p.Project.GenerateGeometry(RhinoWood.Core.Domain.DisplayMode.Normal); var min = new RhinoWood.Core.Geometry.Vec3(prims.Min(x => x.Box.Min.X), prims.Min(x => x.Box.Min.Y), 0); var max = new RhinoWood.Core.Geometry.Vec3(prims.Max(x => x.Box.Max.X), prims.Max(x => x.Box.Max.Y), 1); return (p.Name, box: new RhinoWood.Core.Geometry.Box3(min, max)); }).ToList();
+            for (int i = 0; i < boxes.Count; i++) for (int j = i + 1; j < boxes.Count; j++)
+                Assert.False(boxes[i].box.Intersects(boxes[j].box, -1), boxes[i].Name + " overlaps " + boxes[j].Name);
+            // nightstands face the foot of the bed (+Y): their front panel (min Y of the rotated model) is at the larger Y
+            var ns = room.Pieces.First(p => p.Project.Furniture.TypeId == "casework.nightstand");
+            var front = ns.Project.GenerateGeometry(RhinoWood.Core.Domain.DisplayMode.Normal).First(x => x.PartId == "FRONT-1");
+            Assert.True(front.Box.Center.Y > ns.Project.GenerateGeometry(RhinoWood.Core.Domain.DisplayMode.Normal).First(x => x.PartId == "BOT-1").Box.Center.Y);
+            var back = WorkspaceSerializer.Deserialize(WorkspaceSerializer.Serialize(ws));
+            Assert.Equal(180, back.Rooms[0].Pieces[1].Project.Placement.RotZ);
+        }
+    }
+}

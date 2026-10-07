@@ -451,7 +451,8 @@ namespace RhinoWood.Core.Reports
             sb.Append($"<div class='offer'><div class='display'>{E(p.Name)}</div><div class='muted'>{E(SpeciesName(p, p.SpeciesId))}{(string.IsNullOrEmpty(variant) ? "" : " · variantă " + E(variant))}</div>");
             sb.Append($"<table class='narrow'><tr><td>Lungime</td><td class='num'>{N(bb.X)} mm</td></tr><tr><td>Lățime</td><td class='num'>{N(bb.Y)} mm</td></tr><tr><td>Înălțime</td><td class='num'>{N(bb.Z)} mm</td></tr>");
             sb.Append($"<tr class='tot'><td>Preț</td><td class='num big'>{E(Money.Format(price, r.Cost.Currency))}</td></tr></table>");
-            sb.Append("<p class='muted'>Prețul include materialul, execuția și montajul. Lemn masiv: mici variații de culoare și desen sunt naturale.</p></div>");
+            sb.Append("<p class='muted'>Prețul include materialul, execuția și montajul. Lemn masiv: mici variații de culoare și desen sunt naturale.</p>");
+            sb.Append($"<p class='muted'><b>Materiale.</b> {E(RhinoWood.Core.Projects.SpeciesDeclaration.Text(new[] { r }, p.Tier))}</p></div>");
             return new Sheet { Id = "offer", Title = p.Name + " · ofertă", Body = sb.ToString() };
         }
     }

@@ -60,6 +60,8 @@ namespace RhinoWood.Core.Projects
         public DependencyGraph Graph { get; private set; }
         /// <summary>Components the user converted to custom (frozen) components: node id list.</summary>
         public List<string> CustomComponents { get; } = new List<string>();
+        /// <summary>Position of the piece in a room (rotation + world position of its min corner). Identity for a single piece.</summary>
+        public Placement Placement { get; set; } = new Placement();
 
         private FurnitureModel _model; private string _graphKey;
         private string _optKey; private ProjectResult _last;
@@ -238,7 +240,7 @@ namespace RhinoWood.Core.Projects
         public List<GeometryPrimitive> GenerateGeometry(DisplayMode? mode = null)
         {
             var model = BuildModel();
-            return new GeometryEngine(GeometryCache).Generate(model, mode ?? Settings.Display, Settings.ShowGrain);
+            return new GeometryEngine(GeometryCache).Generate(model, mode ?? Settings.Display, Settings.ShowGrain, Placement);
         }
     }
 
@@ -267,6 +269,7 @@ namespace RhinoWood.Core.Projects
         public string Tier { get; set; }
         public List<OverrideDto> Overrides { get; set; } = new List<OverrideDto>();
         public List<string> CustomComponents { get; set; } = new List<string>();
+        public Placement Placement { get; set; }
         public ProjectSettings Settings { get; set; }
         public PlanSnapshot Snapshot { get; set; }
         public DateTime SavedUtc { get; set; }
@@ -303,7 +306,7 @@ namespace RhinoWood.Core.Projects
             {
                 ProjectId = p.Id, Name = p.Name, FurnitureTypeId = p.Furniture.TypeId, SpeciesId = p.SpeciesId,
                 Parameters = new Dictionary<string, double>(p.Parameters), Choices = new Dictionary<string, string>(p.Choices), Tier = p.Tier, Settings = p.Settings, SavedUtc = DateTime.UtcNow,
-                CustomComponents = p.CustomComponents.ToList(),
+                CustomComponents = p.CustomComponents.ToList(), Placement = p.Placement.IsIdentity ? null : p.Placement,
                 Overrides = p.Overrides.Select(kv => new OverrideDto { NodeId = kv.Key, Mode = kv.Value.Mode, Value = kv.Value.Value }).ToList()
             };
             result = result ?? p.Recalculate();
@@ -331,6 +334,7 @@ namespace RhinoWood.Core.Projects
             p.RestoreTier(f.Tier);
             foreach (var o in f.Overrides) p.Graph.SetOverride(o.NodeId, new NumericOverride { Mode = o.Mode, Value = o.Value });
             p.CustomComponents.AddRange(f.CustomComponents);
+            if (f.Placement != null) p.Placement = f.Placement;
             return p;
         }
 

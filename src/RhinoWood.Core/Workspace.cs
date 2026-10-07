@@ -218,6 +218,9 @@ namespace RhinoWood.Core.Workspaces
         public List<PieceResultSummary> Pieces { get; set; } = new List<PieceResultSummary>();
         /// <summary>ONE optimization for every piece of the room (all pieces compete for the same boards).</summary>
         public OptimizationResult Combined { get; set; }
+        public List<ProjectResult> Results { get; set; } = new List<ProjectResult>();
+        /// <summary>Species declaration by visibility class, ready for the offer (MIX-011).</summary>
+        public string Declaration { get; set; }
         public double SeparateCostTotal => Pieces.Sum(p => p.SeparateCost);
         public double CombinedCost => Combined?.TotalCost ?? 0;
         public double Saving => Math.Max(0, SeparateCostTotal - CombinedCost);
@@ -245,6 +248,7 @@ namespace RhinoWood.Core.Workspaces
             foreach (var piece in room.Pieces)
             {
                 var own = piece.Project.Recalculate();          // separate plan (for comparison + per-piece validation)
+                res.Results.Add(own);
                 res.Pieces.Add(new PieceResultSummary
                 {
                     PieceId = piece.Id, Name = piece.Name, SeparateCost = own.Optimization.TotalCost, SeparateBoards = own.Optimization.BoardCount,
@@ -262,6 +266,7 @@ namespace RhinoWood.Core.Workspaces
                 perPiece.Add(mine);
             }
             res.Combined = new StockOptimizer(Library, Settings).Optimize(demands, perPiece);
+            res.Declaration = SpeciesDeclaration.Text(res.Results, room.Tier);
             return res;
         }
     }

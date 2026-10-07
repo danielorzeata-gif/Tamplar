@@ -25,6 +25,35 @@ namespace RhinoWood.Core.Display
     public enum PrimCategory { Part, Feature, Hardware, Grain, Operation }
 
     /// <summary>Renderer-independent geometry description; the Rhino plugin converts these into Breps/curves.</summary>
+    /// <summary>Where a piece stands in a room: rotation about Z (multiples of 90°) and the world position of the rotated model's min corner.</summary>
+    public sealed class Placement
+    {
+        public int RotZ { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public bool IsIdentity => RotZ % 360 == 0 && X == 0 && Y == 0;
+
+        public Vec3 Rotate(Vec3 p)
+        {
+            switch (((RotZ % 360) + 360) % 360)
+            {
+                case 90: return new Vec3(-p.Y, p.X, p.Z);
+                case 180: return new Vec3(-p.X, -p.Y, p.Z);
+                case 270: return new Vec3(p.Y, -p.X, p.Z);
+                default: return p;
+            }
+        }
+
+        /// <summary>Returns a mapping from model coordinates to room coordinates for a model with the given bounds.</summary>
+        public Func<Vec3, Vec3> For(Box3 modelBounds)
+        {
+            var a = Rotate(modelBounds.Min); var b = Rotate(modelBounds.Max);
+            double mx = Math.Min(a.X, b.X), my = Math.Min(a.Y, b.Y);
+            double dx = X - mx, dy = Y - my;
+            return p => { var q = Rotate(p); return new Vec3(q.X + dx, q.Y + dy, q.Z); };
+        }
+    }
+
     public sealed class GeometryPrimitive
     {
         public string Key { get; set; }          // stable object id within the project
@@ -81,6 +110,21 @@ namespace RhinoWood.Core.Display
             sb.Append(p.Id).Append(p.Bounds.ToString());
             foreach (var f in p.Features) sb.Append(f.Kind).Append(f.HasBox ? f.Box.ToString() : f.Position + "/" + f.Direction + "/" + f.Diameter + "/" + f.Depth).Append(f.Angle);
             return Hashing.Short(sb.ToString());
+        }
+
+        public List<GeometryPrimitive> Generate(FurnitureModel model, DisplayMode mode, bool showGrain, Placement placement)
+        {
+            var all = Generate(model, mode, showGrain);
+            if (placement == null || placement.IsIdentity) return all;
+            var map = placement.For(model.Bounds);
+            Box3 Bx(Box3 b) => new Box3(map(b.Min), map(b.Max));
+            string tag = "|r" + placement.RotZ + "," + placement.X + "," + placement.Y;
+            return all.Select(p => new GeometryPrimitive
+            {
+                Key = p.Key, PartId = p.PartId, Kind = p.Kind, Category = p.Category, Box = Bx(p.Box), P0 = map(p.P0), P1 = map(p.P1), Radius = p.Radius, Label = p.Label,
+                Version = p.Version + tag,
+                Cuts = p.Cuts?.Select(c => new CutVolume { Kind = c.Kind, Box = c.Kind == PrimKind.Box ? Bx(c.Box) : c.Box, P0 = map(c.P0), P1 = map(c.P1), Radius = c.Radius, Label = c.Label }).ToList()
+            }).ToList();
         }
 
         public List<GeometryPrimitive> Generate(FurnitureModel model, DisplayMode mode, bool showGrain = false)
