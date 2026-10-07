@@ -234,6 +234,16 @@ namespace RhinoWood.Core.Libraries
             };
             lib.Hardware["BARREL-NUT-M8"] = new HardwareItem { Id = "BARREL-NUT-M8", Category = "Fasteners", Manufacturer = "Generic", Model = "Barrel nut M8 (12x20)", Dimensions = new Vec3(20, 12, 12), UnitPrice = 2 };
             lib.Hardware["PLUG-20"] = new HardwareItem { Id = "PLUG-20", Category = "Fasteners", Manufacturer = "Generic", Model = "Wood plug 20 mm", Dimensions = new Vec3(10, 20, 20), UnitPrice = 0.5 };
+            lib.Hardware["HINGE-CUP35"] = new HardwareItem
+            {
+                Id = "HINGE-CUP35", Category = "Hinge", Manufacturer = "Generic", Model = "Soft-close cup hinge 35 mm (overlay)", Dimensions = new Vec3(48, 40, 12), UnitPrice = 12,
+                InstallationNotesRo = "Cupă Ø35 adâncime 12 mm, la 22,5 mm de muchia de balamă și 100 mm de capete; placă de montaj pe lateral.",
+                InstallationNotes = "Ø35 cup 12 mm deep, 22.5 mm from the hinge edge and 100 mm from the ends; mounting plate on the side panel.",
+                FastenersPerUnit = { { "HINGE-PLATE", 1 } },
+                Pattern = { new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.HingeCup, U = 0, V = 0, Diameter = 35, Depth = 12, Purpose = "Hinge cup" } }
+            };
+            lib.Hardware["HINGE-PLATE"] = new HardwareItem { Id = "HINGE-PLATE", Category = "Fasteners", Manufacturer = "Generic", Model = "Hinge mounting plate", Dimensions = new Vec3(45, 40, 5), UnitPrice = 3 };
+            lib.Hardware["ROD-25"] = new HardwareItem { Id = "ROD-25", Category = "Clothes rail", Manufacturer = "Generic", Model = "Clothes rail 25 mm with flanges", Dimensions = new Vec3(1000, 25, 25), UnitPrice = 28 };
             lib.Hardware["HANDLE-128"] = new HardwareItem
             {
                 Id = "HANDLE-128", Category = "Handle", Manufacturer = "Generic", Model = "Drawer handle 128 mm", Dimensions = new Vec3(128, 12, 30), UnitPrice = 22,

@@ -148,7 +148,8 @@ namespace RhinoWood.Tests
         [Fact]
         public void Catalog_HasAll19Rules_WithForbiddenAndTypologyLevels()
         {
-            Assert.Equal(19, RuleCatalog.All.Count);
+            Assert.Equal(19, RuleCatalog.All.Count(r => System.Text.RegularExpressions.Regex.IsMatch(r.Id, @"^R\d+$")));
+            Assert.Contains(RuleCatalog.All, r => r.Id == "MIX-003");
             Assert.Equal(RuleConfidence.Forbidden, RuleCatalog.Get("R18").Confidence);
             Assert.Equal(RuleConfidence.TypologyOnly, RuleCatalog.Get("R19").Confidence);
             Assert.Contains("Janka", RuleCatalog.Get("R17").Note);

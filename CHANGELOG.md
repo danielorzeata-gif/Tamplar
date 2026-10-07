@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Dulap** (`casework.wardrobe`): uși suprapuse cu balamale cu cupă 35 (2/3/4 după înălțimea ușii), bară de haine la 1520–1770 mm, polițe fixe deasupra barei, spate HDF, picioare reglabile, kit anti-basculare; mâner vertical, push-to-open sau canal pe muchia liberă.
+- **Etajeră** (`casework.shelving`): montanți + polițe în canale (adâncime 1/3, max 12 mm), spate HDF; verificare de săgeată a rafturilor (L/300 sub 0,65 kg/dm³).
+- **Băncuță** (`casework.bench`): construcția mesei cu proporții de bancă (înălțime 400–500, implicit 450).
+- Reguli noi: `SHELF_DEFLECTION` (FUR-SHF), `SPECIES_MIX` (MIX-003) și MIX-001/005/011 în catalog; avertismentul de stabilitate devine informare când kitul anti-basculare e inclus; ușile pe balamale nu mai primesc „panou fără fixări”.
+- Camera de dormitor poate include și un dulap (cu rotație 270°, fața spre pat).
 - **Comodă** (`casework.dresser`): coloane × sertare parametrice (implicit 2×4), fronturi gradate (197/174/151/128), separatoare, 6 picioare (colțuri + sub separator), glisiere soft-close, spate și funduri HDF, kit anti-basculare adăugat automat când se depășesc pragurile EN 14749 (R10).
 - **Pat** (`casework.bed`): picioare tăblie/capăt, traverse, lonjeroane demontabile cu bulon M8 ascuns (piuliță cilindrică + dop Ø20, găuri generate), tăblie cu panou plutitor în canale, rigle, șipci pe cant (număr după lungimea saltelei), grindă și picior central; structura ascunsă (clasa C) din pin la STANDARD/ECONOMA, stejar la PREMIUM.
 - **Deschiderea sertarelor** (set Aspect al camerei): scobitură, mâner 128, push-to-open, falț J; aceeași în toată camera.

@@ -56,6 +56,11 @@ namespace RhinoWood.Core.Rules
             R("R16", "Assembly sequence", "directional blocking graph, one key part, 1DOF", "IBOIS; Song et al. 2017", "[V-TEXT]/[REF]", RuleConfidence.Safe),
             R("R17", "Hardness", "Brinell perpendicular (DIN 68364) ONLY", "DIN 68364 via LWF", "[V-DATA]", RuleConfidence.Safe, "Janka from the Wood Handbook extraction is FORBIDDEN (column misaligned)."),
             R("R18", "Bending equation Fb (Hu & Chen)", "-", "does not reproduce the reported optimum (+17 %)", "[V-TEXT]", RuleConfidence.Forbidden, "Not coded until checked in the PDF."),
+            R("MIX-001", "Visibility classes", "A (visible closed) keeps the base species in every variant; B/C may use a cheaper species", "Fișa dormitor §2-3", "[PRACTICA]", RuleConfidence.Safe),
+            R("MIX-003", "Species glued together move alike", "|diff_T(a) - diff_T(b)| <= 0.05 %/%", "DIN 68100 + propunere", "[V-DATA]+[ESTIMARE]", RuleConfidence.Conditional, "Threshold is our proposal; no official compatibility source found."),
+            R("MIX-005", "A joint takes the strength of the weaker species", "M ~ S^0.42 (Kasal 2015)", "Kasal 2015", "[V-TEXT]", RuleConfidence.Conditional),
+            R("MIX-011", "Species declaration on the offer", "A/B/C species stated; never a bare 'solid oak' on a mixed product", "Directiva 2005/29/CE", "[REF]", RuleConfidence.Safe),
+            R("FUR-SHF", "Shelf deflection", "delta = 5 w L^4 / (384 E I) <= L/300 under 0.65 kg/dm3", "EN 14749 load + Wood Handbook", "[V-STD]+[ESTIMARE]", RuleConfidence.SafeProvisional),
             R("R19", "Glue-free joints (wedge, tusk, sliding dovetail with key)", "-", "no peer-reviewed data 2015-2026", "-", RuleConfidence.TypologyOnly, "No numeric capacity: mark 'test per EN 1728/1730'."),
         };
 

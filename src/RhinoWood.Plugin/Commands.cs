@@ -52,10 +52,10 @@ namespace RhinoWood.Plugin
         }
 
         /// <summary>New bedroom set (bed + 2 nightstands + dresser) with one set of choices; draft preview until Generează.</summary>
-        public static void NewBedroom(string tier)
+        public static void NewBedroom(string tier, bool wardrobe = false)
         {
             var ws = new RhinoWood.Core.Workspaces.Workspace("Dormitor", P.Library);
-            var room = RhinoWood.Core.Projects.BedroomSet.Create(ws, tier);
+            var room = RhinoWood.Core.Projects.BedroomSet.Create(ws, tier, "OAK", "Dormitor", wardrobe);
             P.PreviewOn = true;
             P.SetRoom(ws, room, generated: false);
         }

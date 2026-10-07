@@ -401,3 +401,72 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class MoreFurnitureTests
+    {
+        [Theory] [InlineData("casework.bench")] [InlineData("casework.wardrobe")] [InlineData("casework.shelving")]
+        public void BuildsWithoutErrors_AndAllSheetsRender(string type)
+        {
+            var p = WoodProject.Create(type, "x"); var r = p.Recalculate();
+            Assert.False(r.HasErrors, type + ": " + string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.Empty(r.Optimization.Unplaced); Assert.True(r.Cost.Total > 0);
+            Assert.All(RhinoWood.Core.Reports.SheetBuilder.Build(p, r, RhinoWood.Core.Reports.SheetMode.Design), s => Assert.False(string.IsNullOrWhiteSpace(s.Body)));
+            var (q, ok) = ProjectSerializer.Open(ProjectSerializer.Serialize(p, r), p.Library); Assert.Equal(type, q.Furniture.TypeId); Assert.True(ok);
+        }
+
+        [Fact]
+        public void Bench_HasSeatHeightInTheErgonomicRange_AndTableLogic()
+        {
+            var r = WoodProject.Create("casework.bench", "b").Recalculate();
+            Assert.InRange(r.Model.Bounds.Size.Z, 440, 480); Assert.Contains(r.Model.AllParts, p => p.Id == "TOP-1"); Assert.Equal(8, r.Model.Joints.Count);
+        }
+
+        [Fact]
+        public void Wardrobe_HingesFollowDoorHeight_AndAntiTipAndRail()
+        {
+            Assert.Equal(2, RhinoWood.Core.Furniture.WardrobeDefinition.HingesFor(800)); Assert.Equal(3, RhinoWood.Core.Furniture.WardrobeDefinition.HingesFor(1500)); Assert.Equal(4, RhinoWood.Core.Furniture.WardrobeDefinition.HingesFor(2000));
+            var p = WoodProject.Create("casework.wardrobe", "w"); var r = p.Recalculate();
+            Assert.Equal(2 * 4, r.Model.HardwareInstalls.Count(h => h.HardwareId == "HINGE-CUP35"));
+            Assert.Contains(r.Model.HardwareInstalls, h => h.HardwareId == "ANTITIP-KIT"); Assert.Contains(r.Model.HardwareInstalls, h => h.HardwareId == "ROD-25");
+            Assert.All(r.Model.AllParts.Where(x => x.Id.StartsWith("DOOR")), d => Assert.Equal(4, d.Features.Count(f => f.Kind == RhinoWood.Core.Domain.FeatureKind.HingeCup)));
+            var rail = r.Model.HardwareInstalls.First(h => h.HardwareId == "ROD-25").Point.Z; Assert.InRange(rail, 1520, 1770);
+            p.SetParameter("doors", 3); Assert.Equal(3 * 4, p.Recalculate().Model.HardwareInstalls.Count(h => h.HardwareId == "HINGE-CUP35"));
+        }
+
+        [Fact]
+        public void Shelving_FlagsASaggingShelf_AndThickeningFixesIt()
+        {
+            var p = WoodProject.Create("casework.shelving", "s"); p.SetParameter("width", 1400); p.SetParameter("shelfThickness", 16);
+            Assert.Contains(p.Recalculate().Issues, i => i.Code == "SHELF_DEFLECTION");
+            p.SetParameter("shelfThickness", 40); Assert.DoesNotContain(p.Recalculate().Issues, i => i.Code == "SHELF_DEFLECTION");
+            Assert.DoesNotContain(WoodProject.Create("casework.shelving", "s").Recalculate().Issues, i => i.Code == "SHELF_DEFLECTION");   // 800 x 22 passes
+        }
+
+        [Fact]
+        public void SpeciesMix_WarnsOnlyForDissimilarShrinkage()
+        {
+            var p = WoodProject.Create("casework.nightstand", "n"); p.SetChoice("materialB", "ASH");
+            Assert.DoesNotContain(p.Recalculate().Issues, i => i.Code == "SPECIES_MIX");        // oak 0.36 vs ash 0.38: fine
+            p.SetChoice("materialB", "PINE"); Assert.DoesNotContain(p.Recalculate().Issues, i => i.Code == "SPECIES_MIX");
+        }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    using RhinoWood.Core.Workspaces;
+    public class BedroomWithWardrobeTests
+    {
+        [Fact]
+        public void Wardrobe_CanBeAddedAndStaysClearOfTheOtherPieces()
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, "STANDARD", "OAK", "Dormitor", wardrobe: true);
+            Assert.Equal(5, room.Pieces.Count);
+            var boxes = room.Pieces.Select(p => { var pr = p.Project.GenerateGeometry(RhinoWood.Core.Domain.DisplayMode.Normal); return (p.Name, new RhinoWood.Core.Geometry.Box3(new RhinoWood.Core.Geometry.Vec3(pr.Min(x => x.Box.Min.X), pr.Min(x => x.Box.Min.Y), 0), new RhinoWood.Core.Geometry.Vec3(pr.Max(x => x.Box.Max.X), pr.Max(x => x.Box.Max.Y), 1))); }).ToList();
+            for (int i = 0; i < boxes.Count; i++) for (int j = i + 1; j < boxes.Count; j++) Assert.False(boxes[i].Item2.Intersects(boxes[j].Item2, -1), boxes[i].Name + " overlaps " + boxes[j].Name);
+            var res = ws.Recalculate(room); Assert.Equal(0, res.Pieces.Sum(p => p.Errors)); Assert.Empty(res.Combined.Unplaced);
+        }
+    }
+}

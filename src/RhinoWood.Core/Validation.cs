@@ -32,7 +32,7 @@ namespace RhinoWood.Core.Validation
         {
             var v = new Validator();
             v.Register(new AllowanceRule()); v.Register(new CrossGrainRule()); v.Register(new MovementRule());
-            v.Register(new WasteRule()); v.Register(new SlendernessRule()); v.Register(new StockRule()); v.Register(new StabilityRule());
+            v.Register(new WasteRule()); v.Register(new SlendernessRule()); v.Register(new StockRule()); v.Register(new StabilityRule()); v.Register(new ShelfDeflectionRule()); v.Register(new SpeciesMixRule());
             return v;
         }
 
@@ -110,7 +110,7 @@ namespace RhinoWood.Core.Validation
                         if (disp > hw.TravelAllowance + 1e-9)
                             yield return new Issue { Severity = Severity.Warning, Code = "MOVEMENT_FASTENER", SubjectId = grp.First().Id, Message = string.Format(CultureInfo.InvariantCulture, "{0} on {1}: expected movement {2:0.0} mm exceeds fastener travel {3:0.0} mm; use slotted holes or more flexible fasteners.", hw.Model, grp.First().HostPartId, disp, hw.TravelAllowance) };
                     }
-                    if (!c.Model.HardwareInstalls.Any(x => x.MatePartId == part.Id) && !c.Model.Joints.Any(x => x.PartAId == part.Id || x.PartBId == part.Id) && part.Finished.Width > 150)
+                    if (!c.Model.HardwareInstalls.Any(x => x.MatePartId == part.Id) && !c.Model.HardwareInstalls.Any(x => x.HostPartId == part.Id && c.Library.Hardware.TryGetValue(x.HardwareId, out var hh) && hh.Category == "Hinge") && !c.Model.Joints.Any(x => x.PartAId == part.Id || x.PartBId == part.Id) && part.Finished.Width > 150)
                         yield return new Issue { Severity = Severity.Warning, Code = "MOVEMENT_UNFASTENED", SubjectId = part.Id, Message = part.Id + ": wide solid-wood panel has no movement-compatible fasteners defined." };
                 }
             }
@@ -176,13 +176,64 @@ namespace RhinoWood.Core.Validation
             var size = m.Bounds.Size;
             double h = size.Z;
             if (Storage.Contains(m.Category) && SafetyRules.RequiresStabilityCheck(h, massKg))
-                yield return new Issue { Severity = Severity.Warning, Code = "STABILITY_STORAGE", Message = string.Format(CultureInfo.InvariantCulture, "R10 (EN 14749): height {0:0} mm and mass {1:0} kg exceed the stability thresholds - add a wall-anchor kit + warning label and verify tip-over with drawers open and loaded (0.2 kg/dm3).", h, massKg) };
+            {
+                bool kit = m.HardwareInstalls.Any(x => x.HardwareId == "ANTITIP-KIT");
+                yield return new Issue { Severity = kit ? Severity.Info : Severity.Warning, Code = "STABILITY_STORAGE", Message = string.Format(CultureInfo.InvariantCulture, "R10 (EN 14749): height {0:0} mm and mass {1:0} kg exceed the stability thresholds - " + (kit ? "anti-tip kit included; fix it to the wall, add the warning label and verify tip-over with drawers open and loaded (0.2 kg/dm3)." : "add a wall-anchor kit + warning label and verify tip-over with drawers open and loaded (0.2 kg/dm3)."), h, massKg) };
+            }
             if (m.Category == "Tables")
             {
                 var top = m.Families.FirstOrDefault(f => f.Type == PartType.Top);
                 double area = top == null ? 0 : top.Finished.Length * top.Finished.Width / 1e6;
                 if (top != null && SafetyRules.IsDelicateTable(area, h, massKg))
                     yield return new Issue { Severity = Severity.Info, Code = "STABILITY_TABLE", Message = string.Format(CultureInfo.InvariantCulture, "R11 (EN 12521): small table (top {0:0.00} m2, H {1:0} mm, {2:0} kg) falls in the 'delicate table' stability-check range.", area, h, massKg) };
+            }
+        }
+    }
+}
+
+namespace RhinoWood.Core.Validation
+{
+    /// <summary>FUR-SHF-001..004 / R13: a solid shelf under its storage load (0.65 kg/dm³ of the storage volume above it) must not sag more than span/300.</summary>
+    internal sealed class ShelfDeflectionRule : IValidationRule
+    {
+        public string Code => "SHELF_DEFLECTION";
+        public IEnumerable<Issue> Check(ValidationContext c)
+        {
+            var shelves = c.Model.Families.Where(f => f.Type == PartType.Shelf).SelectMany(f => f.Instances.Select(i => (fam: f, part: i))).ToList();
+            foreach (var (fam, part) in shelves)
+            {
+                var b = part.Bounds;
+                // storage height above this shelf: distance to the next shelf / cap that overlaps it in plan; the model top otherwise
+                double top = c.Model.AllParts.Where(o => o.Id != part.Id && o.Bounds.Min.Z >= b.Max.Z - 1e-6 && o.Bounds.Min.X < b.Max.X - 1 && o.Bounds.Max.X > b.Min.X + 1 && o.Bounds.Min.Y < b.Max.Y - 1 && o.Bounds.Max.Y > b.Min.Y + 1)
+                    .Select(o => o.Bounds.Min.Z).DefaultIfEmpty(c.Model.Bounds.Max.Z).Min();
+                double hs = Math.Max(50, top - b.Max.Z);
+                var f = part.Finished; double span = Math.Max(part.Bounds.Size.X, part.Bounds.Size.Y) > part.Bounds.Size.X ? part.Bounds.Size.Y : part.Bounds.Size.X;
+                double depth = Math.Min(part.Bounds.Size.X, part.Bounds.Size.Y), t = part.Bounds.Size.Z;
+                if (span <= 0 || depth <= 0 || t <= 0) continue;
+                double massKg = 0.65 * (span * depth * hs / 1e6), q = massKg * 9.81 / span;                 // N/mm (distributed)
+                double E = c.Library.Species.TryGetValue(fam.SpeciesId, out var sp) && sp.YoungModulusMPa > 0 ? sp.YoungModulusMPa : 11000;
+                double I = depth * t * t * t / 12, delta = 5 * q * Math.Pow(span, 4) / (384 * E * I);
+                double limit = span / 300.0;
+                if (delta > limit)
+                    yield return new Issue { Severity = Severity.Warning, Code = Code, SubjectId = part.Id, Message = string.Format(CultureInfo.InvariantCulture, "{0}: sageata estimată {1:0.0} mm depășește {2:0.0} mm (L/300) sub {3:0} kg; scurtează deschiderea, ingroașă raftul sau adaugă o traversă/cant structural.", part.Id, delta, limit, massKg) };
+            }
+        }
+    }
+
+    /// <summary>MIX-003 / MIX-005: species glued together must move alike; a joint takes the strength of the weaker species.</summary>
+    internal sealed class SpeciesMixRule : IValidationRule
+    {
+        public string Code => "SPECIES_MIX";
+        public IEnumerable<Issue> Check(ValidationContext c)
+        {
+            foreach (var j in c.Model.Joints)
+            {
+                var fa = c.Model.FamilyOf(j.PartAId); var fb = c.Model.FamilyOf(j.PartBId);
+                if (fa == null || fb == null || fa.SpeciesId == fb.SpeciesId) continue;
+                if (!c.Library.Species.TryGetValue(fa.SpeciesId, out var sa) || !c.Library.Species.TryGetValue(fb.SpeciesId, out var sb)) continue;
+                double diff = Math.Abs(sa.DiffShrinkTangentialPct - sb.DiffShrinkTangentialPct);
+                if (diff > 0.05 + 1e-9)
+                    yield return new Issue { Severity = Severity.Warning, Code = Code, SubjectId = j.Id, Message = string.Format(CultureInfo.InvariantCulture, "MIX-003: {0} ({1}) și {2} ({3}) se contractă diferit ({4:0.00} %/% față de {5:0.00} %/%); evită încleierea pe lățime mare.", j.PartAId, fa.SpeciesId, j.PartBId, fb.SpeciesId, sa.DiffShrinkTangentialPct, sb.DiffShrinkTangentialPct) };
             }
         }
     }

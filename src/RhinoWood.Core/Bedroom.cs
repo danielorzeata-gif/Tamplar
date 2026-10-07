@@ -40,7 +40,7 @@ namespace RhinoWood.Core.Projects
     /// <summary>The first bedroom collection (Fișa dormitor): bed + 2 nightstands + dresser with one set of choices, one purchase plan and a tidy layout.</summary>
     public static class BedroomSet
     {
-        public static Room Create(Workspace ws, string tier = "STANDARD", string speciesId = "OAK", string name = "Dormitor")
+        public static Room Create(Workspace ws, string tier = "STANDARD", string speciesId = "OAK", string name = "Dormitor", bool wardrobe = false)
         {
             var room = ws.AddRoom(name);
             WoodProject Mk(string type, string nm) { var p = WoodProject.Create(type, nm, speciesId, ws.Library); return p; }
@@ -48,6 +48,7 @@ namespace RhinoWood.Core.Projects
             room.AddPiece("Noptieră stânga", Mk("casework.nightstand", "Noptieră stânga"));
             room.AddPiece("Noptieră dreapta", Mk("casework.nightstand", "Noptieră dreapta"));
             room.AddPiece("Comodă", Mk("casework.dresser", "Comodă"));
+            if (wardrobe) room.AddPiece("Dulap", Mk("casework.wardrobe", "Dulap"));
             room.ApplyTier(tier);
             Layout(room);
             return room;
@@ -67,6 +68,12 @@ namespace RhinoWood.Core.Projects
                 var s = ns[i].Project.Recalculate().Model.Bounds.Size;
                 bool left = i % 2 == 0;
                 ns[i].Project.Placement = new Placement { RotZ = 180, X = left ? -(s.X + 60) : bw + 60, Y = 0 };
+            }
+            var wr = room.Pieces.FirstOrDefault(p => p.Project.Furniture.TypeId == "casework.wardrobe");
+            if (wr != null)
+            {
+                var s = wr.Project.Recalculate().Model.Bounds.Size;
+                wr.Project.Placement = new Placement { RotZ = 270, X = bw + 1000, Y = 0 };
             }
             if (dr != null)
             {

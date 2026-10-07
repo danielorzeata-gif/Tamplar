@@ -130,7 +130,9 @@ namespace RhinoWood.Plugin.UI
                 Muted("O cameră grupează mai multe piese care împart aceleași alegeri (esență, deschiderea sertarelor, variantă) și o singură debitare.");
                 var tiers = new AtSegmented("ECONOMA", "STANDARD", "PREMIUM") { SelectedIndex = 1 };
                 Add(Labeled("Variantă", tiers));
-                Add(Button("Dormitor nou: pat + 2 noptiere + comodă", () => WoodActions.NewBedroom(tiers.Selected), BtnVariant.Primary));
+                var wr = new CheckBox { Text = "Adaugă și un dulap", Font = Tk.Label, TextColor = Tk.Ink };
+                Add(wr);
+                Add(Button("Dormitor nou: pat + 2 noptiere + comodă", () => WoodActions.NewBedroom(tiers.Selected, wr.Checked == true), BtnVariant.Primary));
                 return;
             }
             Text(room.Name + " · " + room.Pieces.Count + " piese");

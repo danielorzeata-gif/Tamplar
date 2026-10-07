@@ -104,6 +104,9 @@ namespace RhinoWood.Core.Furniture
             r.Register(new NightstandDefinition());
             r.Register(new DresserDefinition());
             r.Register(new BedDefinition());
+            r.Register(new BenchDefinition());
+            r.Register(new WardrobeDefinition());
+            r.Register(new ShelvingDefinition());
             return r;
         }
     }
@@ -123,13 +126,24 @@ namespace RhinoWood.Core.Furniture
     }
 
     /// <summary>Solid-wood dining table: top (edge-glued strips), 4 legs, 4 aprons, mortise &amp; tenon, tabletop fasteners.</summary>
-    public sealed class TableDefinition : IFurnitureDefinition
+    public class TableDefinition : IFurnitureDefinition
     {
-        public string TypeId => "table.dining";
-        public string Name => "Solid-wood dining table";
-        public string Category => "Tables";
+        public string TypeId { get; }
+        public string Name { get; }
+        public string Category { get; }
 
-        public IReadOnlyList<ParameterDef> Parameters { get; } = new[]
+        public TableDefinition() : this("table.dining", "Solid-wood dining table", "Tables", null) { }
+
+        /// <summary>Variants of the frame-and-top construction (bench) reuse the whole table logic and only change identity and parameter ranges.</summary>
+        protected TableDefinition(string typeId, string name, string category, Func<ParameterDef, ParameterDef> adjust)
+        {
+            TypeId = typeId; Name = name; Category = category;
+            Parameters = BaseParameters().Select(p => adjust == null ? p : adjust(p)).ToList();
+        }
+
+        public IReadOnlyList<ParameterDef> Parameters { get; }
+
+        private static ParameterDef[] BaseParameters() => new[]
         {
             new ParameterDef { Key = "length", Label = "Length", Default = 1800, Min = 600, Max = 3600, Group = "Main" },
             new ParameterDef { Key = "width", Label = "Width", Default = 900, Min = 400, Max = 1400, Group = "Main" },
@@ -368,6 +382,30 @@ namespace RhinoWood.Core.Furniture
             foreach (var i in f.Instances)
                 c.Instances.Add(new PartInstance { Id = i.Id, FamilyId = i.FamilyId, Index = i.Index, Bounds = i.Bounds, LengthAxis = i.LengthAxis, WidthAxis = i.WidthAxis, ThicknessAxis = i.ThicknessAxis });
             return c;
+        }
+    }
+}
+
+namespace RhinoWood.Core.Furniture
+{
+    /// <summary>Bench (băncuță): the table construction with bench proportions (seat 440–480 mm, [EN 12520 / ergonomics sheet]).</summary>
+    public sealed class BenchDefinition : TableDefinition
+    {
+        public BenchDefinition() : base("casework.bench", "Solid-wood bench", "Benches", Adjust) { }
+
+        private static ParameterDef Adjust(ParameterDef p)
+        {
+            double lo = p.Min, hi = p.Max, def = p.Default;
+            switch (p.Key)
+            {
+                case "length": def = 1300; lo = 600; hi = 2000; break;
+                case "width": def = 380; lo = 250; hi = 500; break;
+                case "height": def = 450; lo = 400; hi = 500; break;
+                case "topThickness": def = 40; lo = 25; hi = 60; break;
+                case "apronHeight": def = 70; break;
+                case "overhang": def = 30; hi = 120; break;
+            }
+            return new ParameterDef { StyleKind = p.StyleKind, StyleKey = p.StyleKey, Key = p.Key, Label = p.Label, Unit = p.Unit, Default = def, Min = lo, Max = hi, Group = p.Group, Advanced = p.Advanced, Description = p.Description, AutoWhenZero = p.AutoWhenZero };
         }
     }
 }

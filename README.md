@@ -76,3 +76,6 @@ See `docs/` for details and `CHANGELOG.md` for the release notes.
 
 ## Pornire rapidă
 După instalare, în Rhino scrie `WoodStart`. Se deschide fereastra Atelier: primul tab **Configurare**, apoi taburi independente pentru restul funcțiilor (Proiect, Afișare, Optimizare, Suprascrieri, Fișă tehnică, Documente, Verificări, Setări, Materiale, Despre). Verifică versiunea în tabul **Despre** sau cu `WoodAbout`.
+
+## Piese disponibile (WoodStart → Proiect → Piesă nouă, sau `WoodNew`)
+Masă, noptieră, comodă (coloane × sertare), pat (tăblie, bulon ascuns), dulap, etajeră, băncuță; `WoodBedroom` creează un dormitor complet (pat + 2 noptiere + comodă, opțional dulap) cu alegeri comune și debitare globală.
