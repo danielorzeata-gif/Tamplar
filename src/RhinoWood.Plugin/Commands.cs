@@ -307,6 +307,18 @@ namespace RhinoWood.Plugin
         }
     }
 
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f0f")]
+    public class WoodAboutCommand : Command
+    {
+        public override string EnglishName => "WoodAbout";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            RhinoApp.WriteLine("Rhino Wood " + RhinoWood.Plugin.UI.BuildInfo.Text);
+            RhinoApp.WriteLine("Fișier încărcat: " + RhinoWood.Plugin.UI.BuildInfo.Path);
+            return Result.Success;
+        }
+    }
+
     [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f0c")]
     public class WoodAddSpeciesCommand : Command
     {

@@ -93,6 +93,7 @@ namespace RhinoWood.Plugin.UI
                 Padding = new Padding(12, 8), Spacing = new Size(8, 0), BackgroundColor = Tk.Surface,
                 Rows = { new TableRow(_previewBtn, new TableCell(null, true), gen) }
             };
+            var version = new Label { Text = "Rhino Wood " + BuildInfo.Text, Font = Tk.Caption, TextColor = Tk.InkMuted };
             if (p == null) { _previewBtn.Enabled = false; gen.Enabled = false; }
 
             Content = new TableLayout
@@ -101,7 +102,8 @@ namespace RhinoWood.Plugin.UI
                 {
                     new TableRow(header),
                     new TableRow(new Scrollable { Content = body, Border = BorderType.None, ExpandContentWidth = true, BackgroundColor = Tk.Surface }) { ScaleHeight = true },
-                    new TableRow(footer)
+                    new TableRow(footer),
+                    new TableRow(new StackLayout { Padding = new Padding(12, 0, 12, 6), Items = { version } })
                 }
             };
         }

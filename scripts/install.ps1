@@ -5,7 +5,7 @@
 param([string]$From)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-if (-not $From) { $From = Join-Path $root 'dist\RhinoWood-1.0.0' }
+if (-not $From) { $From = Join-Path $root 'dist\RhinoWood-1.1.0' }
 if (-not (Test-Path (Join-Path $From 'RhinoWood.rhp'))) { throw "RhinoWood.rhp not found in $From - run scripts\build.ps1 first." }
 $dest = Join-Path $env:APPDATA 'RhinoWood'
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
