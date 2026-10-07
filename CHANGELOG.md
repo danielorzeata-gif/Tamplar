@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- `WoodStart`: fereastră cu taburi independente. Primul tab **Configurare** = interfața Atelier; celelalte (Proiect, Afișare, Optimizare, Suprascrieri, Fișă tehnică, Documente, Verificări, Setări, Materiale, Despre) înlocuiesc comenzile din linia de comandă (care rămân disponibile).
+
 ## 1.1.0 (unreleased)
 - Selectable joints per connection (mortise-tenon, loose tenon, dowel, bridle, Japanese kusabi, biscuit, pocket screw) and tabletop
   fixing (Z-clip, figure-8, wooden button); rail lengths, tenons, holes and hardware follow the choice; choices persist.

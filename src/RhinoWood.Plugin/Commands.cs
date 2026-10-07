@@ -50,6 +50,32 @@ namespace RhinoWood.Plugin
             RhinoApp.RunScript("-_Zoom _Extents", false);
         }
 
+        /// <summary>Exports the PDF sheets (DESIGN or SALE); asks where to save. Returns a short message for the UI.</summary>
+        public static string ExportPdf(RhinoWood.Core.Reports.SheetMode sm)
+        {
+            if (P.Project == null) return "Nu există un proiect activ.";
+            var p = P.Project; var r = P.Recalculate();
+            var dlg = new Eto.Forms.SaveFileDialog { Title = "Salvează PDF-ul", FileName = p.Name + (sm == RhinoWood.Core.Reports.SheetMode.Sale ? " - oferta.pdf" : " - planse.pdf") };
+            dlg.Filters.Add(new Eto.Forms.FileFilter("PDF", ".pdf"));
+            if (dlg.ShowDialog(Rhino.UI.RhinoEtoApp.MainWindow) != Eto.Forms.DialogResult.Ok) return "Export anulat.";
+            var (ok, msg) = RhinoWood.Core.Reports.PdfExporter.ExportSheets(p, r, dlg.FileName, sm, null);
+            if (ok) { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dlg.FileName) { UseShellExecute = true }); } catch { } }
+            return ok ? "PDF salvat: " + msg : msg;
+        }
+
+        /// <summary>Adds a custom species (with the standard commercial profiles) to the user library.</summary>
+        public static string AddSpecies(string name, double price, double density, double tangentialPerPercent)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "Numele esenței este obligatoriu.";
+            var id = name.Trim().ToUpperInvariant().Replace(" ", "");
+            var plugin = P;
+            var user = File.Exists(plugin.UserLibraryPath) ? RhinoWood.Core.Projects.LibrarySerializer.DeserializeUser(File.ReadAllText(plugin.UserLibraryPath)) : new RhinoWood.Core.Libraries.WoodLibrary();
+            user.Species[id] = new WoodSpecies { Id = id, Name = name.Trim(), PricePerM3 = price, DensityKgM3 = density, TangentialMovementPerPercent = tangentialPerPercent, DiffShrinkTangentialPct = tangentialPerPercent * 100, SupplierId = "SUP-TIMBER", IsUserDefined = true, DataLabel = "[UNVERIFIED]", DataSource = "introdus de utilizator" };
+            foreach (var st in plugin.Library.StockFor("OAK")) user.Stock.Add(new StockItem { Id = id + "-" + st.Width + "x" + st.Thickness, SpeciesId = id, Width = st.Width, Thickness = st.Thickness, Lengths = st.Lengths.ToList(), SupplierId = "SUP-TIMBER" });
+            plugin.SaveUserLibrary(user); plugin.LoadLibrary();
+            return "Esența „" + name.Trim() + "” a fost adăugată cu profilele comerciale standard (editează user-library.json pentru dimensiuni și prețuri exacte).";
+        }
+
         /// <summary>Selects the Rhino objects of a part so a click on a cutting-list row highlights it in the viewport.</summary>
         public static void SelectPart(RhinoDoc doc, string partId)
         {
@@ -292,18 +318,12 @@ namespace RhinoWood.Plugin
         {
             if (!WoodActions.RequireProject()) return Result.Failure;
             var go = new GetOption(); go.SetCommandPrompt("Tip document PDF");
-            int design = go.AddOption("Design"), sale = go.AddOption("Vanzare");
+            go.AddOption("Design"); int sale = go.AddOption("Vanzare");
             go.AcceptNothing(true);
             var sm = RhinoWood.Core.Reports.SheetMode.Design;
             if (go.Get() == GetResult.Option && go.Option().Index == sale) sm = RhinoWood.Core.Reports.SheetMode.Sale;
-            var p = WoodActions.P.Project; var r = WoodActions.P.Recalculate();
-            var dlg = new Eto.Forms.SaveFileDialog { Title = "Salvează planșele PDF", FileName = p.Name + (sm == RhinoWood.Core.Reports.SheetMode.Sale ? " - oferta.pdf" : " - planse.pdf") };
-            dlg.Filters.Add(new Eto.Forms.FileFilter("PDF", ".pdf"));
-            if (dlg.ShowDialog(Rhino.UI.RhinoEtoApp.MainWindow) != Eto.Forms.DialogResult.Ok) return Result.Cancel;
-            var (ok, msg) = RhinoWood.Core.Reports.PdfExporter.ExportSheets(p, r, dlg.FileName, sm, null);
-            RhinoApp.WriteLine(ok ? "Rhino Wood: PDF salvat: " + msg : "Rhino Wood: " + msg);
-            if (ok) { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dlg.FileName) { UseShellExecute = true }); } catch { } }
-            return ok ? Result.Success : Result.Failure;
+            RhinoApp.WriteLine("Rhino Wood: " + WoodActions.ExportPdf(sm));
+            return Result.Success;
         }
     }
 
@@ -315,6 +335,22 @@ namespace RhinoWood.Plugin
         {
             RhinoApp.WriteLine("Rhino Wood " + RhinoWood.Plugin.UI.BuildInfo.Text);
             RhinoApp.WriteLine("Fișier încărcat: " + RhinoWood.Plugin.UI.BuildInfo.Path);
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f10")]
+    public class WoodStartCommand : Command
+    {
+        public override string EnglishName => "WoodStart";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            if (WoodActions.P.Project == null)
+            {
+                WoodActions.P.PreviewOn = true;
+                WoodActions.P.SetProject(RhinoWood.Core.Projects.WoodProject.CreateTable("Masă sufragerie", "OAK", WoodActions.P.Library), generated: false);
+            }
+            RhinoWood.Plugin.UI.StartWindow.Open();
             return Result.Success;
         }
     }

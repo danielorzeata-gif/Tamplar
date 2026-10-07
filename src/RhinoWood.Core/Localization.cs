@@ -58,6 +58,24 @@ namespace RhinoWood.Core.Reports
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;
         public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g;
+        public static string DisplayMode(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Performanță" : m == Domain.DisplayMode.Normal ? "Normal" : m == Domain.DisplayMode.Engineering ? "Inginerie" : "Fabricație";
+        public static string DisplayModeInfo(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Piese simple; fără îmbinări, feronerie, fibră sau detalii de prelucrare. Pentru proiecte mari."
+            : m == Domain.DisplayMode.Normal ? "Geometria normală a mobilierului."
+            : m == Domain.DisplayMode.Engineering ? "Arată îmbinările, găurile, feroneria și direcția fibrei."
+            : "Geometrie exactă de fabricație cu marcaje pentru operații și scule.";
+        public static string Strategy(Domain.OptimizationStrategy s)
+        {
+            switch (s)
+            {
+                case Domain.OptimizationStrategy.MinPurchase: return "Achiziție minimă";
+                case Domain.OptimizationStrategy.MinWaste: return "Deșeu minim";
+                case Domain.OptimizationStrategy.MinCost: return "Cost minim";
+                case Domain.OptimizationStrategy.MinBoards: return "Cât mai puține bare";
+                case Domain.OptimizationStrategy.GrainFirst: return "Prioritate pentru fibră";
+                default: return "Echilibrat";
+            }
+        }
+        public static string OverrideNode(string node) => node == "leg.section" ? "Secțiune picior" : node == "apron.height" ? "Înălțime zargă" : node == "overhang" ? "Prelungire blat" : node == "leg.height" ? "Înălțime picior" : node;
         public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : fallback;
         public static string Feature(FeatureKind k) => Features.TryGetValue(k, out var v) ? v : k.ToString();
 

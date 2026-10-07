@@ -18,7 +18,7 @@ namespace RhinoWood.Plugin.UI
             bool show = p != null && plugin.PreviewOn && !plugin.Generated;
             if (!show) { if (Conduit.Enabled) { Conduit.Enabled = false; doc.Views.Redraw(); } _zoomed = false; return; }
             Conduit.Scale = RhinoMath.UnitScale(UnitSystem.Millimeters, doc.ModelUnitSystem);
-            Conduit.Prims = p.GenerateGeometry(DisplayMode.Engineering);
+            Conduit.Prims = p.GenerateGeometry(p.Settings.Display);
             Conduit.Enabled = true;
             if (!_zoomed && Conduit.Bounds.IsValid && doc.Views.ActiveView != null) { doc.Views.ActiveView.ActiveViewport.ZoomBoundingBox(Conduit.Bounds); _zoomed = true; }
             doc.Views.Redraw();

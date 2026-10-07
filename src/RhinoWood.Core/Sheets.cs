@@ -379,6 +379,24 @@ namespace RhinoWood.Core.Reports
             yield return OrderSheet(p, r);
         }
 
+
+        /// <summary>Plain-text reasons for the material need (theoretical → rough → optimized → commercial), in Romanian; shown in the Optimizare tab and on the order sheet.</summary>
+        public static List<string> OrderExplanation(WoodProject p, ProjectResult r)
+        {
+            var o = r.Optimization; var list = new List<string>();
+            int pieces = o.Boards.Where(b => !b.IsReserve).Sum(b => b.Pieces.Count);
+            int reuse = o.Boards.Where(b => !b.IsReserve).Sum(b => Math.Max(0, b.Pieces.Count - 1));
+            var buy = string.Join(", ", o.Purchase.Select(l => l.Quantity + " × " + Ro.SpeciesName(l.Item.SpeciesId) + " " + N(Math.Min(l.Item.Width, l.Item.Thickness)) + "×" + N(Math.Max(l.Item.Width, l.Item.Thickness)) + "×" + N(l.Length)));
+            list.Add("Necesar teoretic: " + N(o.TheoreticalFinishedM3, "0.0000") + " m³ de piese finite (" + N(o.TheoreticalLinearM, "0.0") + " m liniari).");
+            list.Add("Cu adaosurile de prelucrare (rindeluire, tăiere la lungime): " + N(o.RoughRequiredM3, "0.0000") + " m³ în " + pieces + " bucăți brute.");
+            list.Add("După optimizarea globală a tuturor pieselor (kerf " + N(p.Settings.Rules.SawKerf, "0.#") + " mm): " + N(o.OptimizedManufacturingM3, "0.0000") + " m³ pe " + o.Boards.Count(b => !b.IsReserve) + " bare; " + reuse + " bucăți se taie din restul unei bare deja începute.");
+            list.Add("Necesar comercial (lungimi standard, cu rezerva): " + buy + " = " + N(o.PurchasedM3, "0.0000") + " m³; piesele brute ocupă " + N(100 * o.RoughRequiredM3 / Math.Max(1e-9, o.PurchasedM3), "0") + "% din material.");
+            list.Add("Resturi reutilizabile " + N(o.ReusableRemnantM3, "0.0000") + " m³, deșeu " + N(o.ScrapM3, "0.0000") + " m³, pierderi de prelucrare (kerf, capete, surplus de secțiune, rindeluire) " + N(o.ProcessWasteM3, "0.0000") + " m³.");
+            int extra = o.Boards.Count(b => b.IsReserve);
+            list.Add("Rezerva de " + string.Join(", ", o.ReservePercentBySpecies.Select(kv => N(kv.Value, "0.#") + "% " + Ro.SpeciesName(kv.Key))) + " se aplică o singură dată, după optimizare: " + (extra == 0 ? "este acoperită de resturile reutilizabile, fără bare în plus." : "s-au adăugat " + extra + " bare de rezervă."));
+            return list;
+        }
+
         private static Sheet OrderSheet(WoodProject p, ProjectResult r)
         {
             var o = r.Optimization; var cur = r.Cost.Currency;
@@ -388,16 +406,7 @@ namespace RhinoWood.Core.Reports
             sb.Append($"<tr class='tot'><td colspan='6'>Material</td><td class='num'>{E(Money.Format(o.TotalCost, cur))}</td></tr></table>");
             sb.Append($"<h2>Cost de producție</h2><table class='narrow'><tr><td>Material</td><td class='num'>{E(Money.Format(r.Cost.RawMaterial, cur))}</td></tr><tr><td>Feronerie și mărunțișuri</td><td class='num'>{E(Money.Format(r.Cost.Hardware + r.Cost.Consumables, cur))}</td></tr><tr><td>Manoperă</td><td class='num'>{E(Money.Format(r.Cost.Labor, cur))}</td></tr><tr class='tot'><td>Cost producție</td><td class='num big'>{E(Money.Format(r.Cost.Total, cur))}</td></tr></table>");
             sb.Append("</div><div><h2>De ce acest necesar</h2><ol class='steps'>");
-            int pieces = o.Boards.Where(b => !b.IsReserve).Sum(b => b.Pieces.Count);
-            int reuse = o.Boards.Where(b => !b.IsReserve).Sum(b => Math.Max(0, b.Pieces.Count - 1));
-            var buy = string.Join(", ", o.Purchase.Select(l => l.Quantity + " × " + Ro.SpeciesName(l.Item.SpeciesId) + " " + N(Math.Min(l.Item.Width, l.Item.Thickness)) + "×" + N(Math.Max(l.Item.Width, l.Item.Thickness)) + "×" + N(l.Length)));
-            sb.Append("<li>Necesar teoretic: " + N(o.TheoreticalFinishedM3, "0.0000") + " m³ de piese finite (" + N(o.TheoreticalLinearM, "0.0") + " m liniari).</li>");
-            sb.Append("<li>Cu adaosurile de prelucrare (rindeluire, tăiere la lungime): " + N(o.RoughRequiredM3, "0.0000") + " m³ în " + pieces + " bucăți brute.</li>");
-            sb.Append("<li>După optimizarea globală a tuturor pieselor (kerf " + N(p.Settings.Rules.SawKerf, "0.#") + " mm): " + N(o.OptimizedManufacturingM3, "0.0000") + " m³ pe " + o.Boards.Count(b => !b.IsReserve) + " bare; " + reuse + " bucăți se taie din restul unei bare deja începute.</li>");
-            sb.Append("<li>Necesar comercial (lungimi standard, cu rezerva): " + E(buy) + " = " + N(o.PurchasedM3, "0.0000") + " m³; piesele brute ocupă " + N(100 * o.RoughRequiredM3 / Math.Max(1e-9, o.PurchasedM3), "0") + "% din material.</li>");
-            sb.Append("<li>Resturi reutilizabile " + N(o.ReusableRemnantM3, "0.0000") + " m³, deșeu " + N(o.ScrapM3, "0.0000") + " m³, pierderi de prelucrare (kerf, capete, surplus de secțiune, rindeluire) " + N(o.ProcessWasteM3, "0.0000") + " m³.</li>");
-            int extra = o.Boards.Count(b => b.IsReserve);
-            sb.Append("<li>Rezerva de " + string.Join(", ", o.ReservePercentBySpecies.Select(kv => N(kv.Value, "0.#") + "% " + Ro.SpeciesName(kv.Key))) + " se aplică o singură dată, după optimizare: " + (extra == 0 ? "este acoperită de resturile reutilizabile, fără bare în plus." : "s-au adăugat " + extra + " bare de rezervă.") + "</li>");
+            foreach (var li in OrderExplanation(p, r)) sb.Append("<li>" + E(li) + "</li>");
             sb.Append("</ol></div></div>");
             return new Sheet { Id = "order", Title = p.Name + " · necesar lucrare și cost", Body = sb.ToString() };
         }

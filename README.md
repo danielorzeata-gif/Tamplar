@@ -72,3 +72,7 @@ doors, windows, hardware, finishing, ~165 sourced rules with verification labels
 Next steps: `docs/ROADMAP_V2.md`.
 
 See `docs/` for details and `CHANGELOG.md` for the release notes.
+
+
+## Pornire rapidă
+După instalare, în Rhino scrie `WoodStart`. Se deschide fereastra Atelier: primul tab **Configurare**, apoi taburi independente pentru restul funcțiilor (Proiect, Afișare, Optimizare, Suprascrieri, Fișă tehnică, Documente, Verificări, Setări, Materiale, Despre). Verifică versiunea în tabul **Despre** sau cu `WoodAbout`.
