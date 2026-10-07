@@ -1,7 +1,7 @@
 # Architecture
 
 ## Technical stack
-- **C# / .NET**: `RhinoWood.Core` targets `netstandard2.1` (no Rhino dependency → fully testable headless); the plugin targets
+- **C# / .NET**: `RhinoWood.Core` targets `netstandard2.1` (and its sources are compiled into the plugin so `RhinoWood.rhp` is a single self-contained file) (no Rhino dependency → fully testable headless); the plugin targets
   `net7.0-windows` (Rhino 8 default runtime) with **RhinoCommon 8** and **Eto** (panel).
 - **Persistence**: System.Text.Json files (embedded, no server) behind `ProjectSerializer` / `LibrarySerializer`.
 - **UI**: Eto dockable panel + command-line commands; Grasshopper and Excel are optional and not required.
