@@ -219,6 +219,21 @@ namespace RhinoWood.Core.Libraries
             lib.Hardware["SCR-4x16"] = new HardwareItem { Id = "SCR-4x16", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x16", Dimensions = new Vec3(16, 4, 4), UnitPrice = 0.03 };
             lib.Hardware["SCR-4x35"] = new HardwareItem { Id = "SCR-4x35", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x35", Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.05 };
             lib.Hardware["WSH-4"] = new HardwareItem { Id = "WSH-4", Category = "Washers", Manufacturer = "Generic", Model = "Washer 4", Dimensions = new Vec3(1, 12, 12), UnitPrice = 0.02 };
+            lib.Hardware["BED-BOLT"] = new HardwareItem
+            {
+                Id = "BED-BOLT", Category = "Bed bolt", Manufacturer = "Generic", Model = "Hidden bed bolt M8 (stainless, with barrel nut)", Dimensions = new Vec3(90, 8, 8), UnitPrice = 12,
+                InstallationNotesRo = "Bulon M8 prin picior în capătul lonjeronului; piuliță cilindrică în lonjeron; capul acoperit cu dop Ø20 (demontabil pentru transport).",
+                InstallationNotes = "M8 bolt through the leg into the rail end with a barrel nut in the rail; head hidden by a Ø20 plug (knock-down for transport).",
+                FastenersPerUnit = { { "BARREL-NUT-M8", 1 }, { "PLUG-20", 1 } },
+                Pattern =
+                {
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.BlindHole, U = 0, V = 0, Diameter = 8, Depth = 60, Purpose = "Bolt bore in the rail end" },
+                    new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ThroughHole, U = 0, V = 0, Diameter = 8, Depth = 70, Purpose = "Bolt hole through the leg" },
+                    new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.Counterbore, U = 0, V = 0, Diameter = 20, Depth = 15, Purpose = "Plug recess" },
+                }
+            };
+            lib.Hardware["BARREL-NUT-M8"] = new HardwareItem { Id = "BARREL-NUT-M8", Category = "Fasteners", Manufacturer = "Generic", Model = "Barrel nut M8 (12x20)", Dimensions = new Vec3(20, 12, 12), UnitPrice = 2 };
+            lib.Hardware["PLUG-20"] = new HardwareItem { Id = "PLUG-20", Category = "Fasteners", Manufacturer = "Generic", Model = "Wood plug 20 mm", Dimensions = new Vec3(10, 20, 20), UnitPrice = 0.5 };
             lib.Hardware["HANDLE-128"] = new HardwareItem
             {
                 Id = "HANDLE-128", Category = "Handle", Manufacturer = "Generic", Model = "Drawer handle 128 mm", Dimensions = new Vec3(128, 12, 30), UnitPrice = 22,

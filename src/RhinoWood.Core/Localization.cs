@@ -21,6 +21,8 @@ namespace RhinoWood.Core.Reports
         {
             ["F-TOP"] = "Blat (încleiat din lamele)", ["F-LEG"] = "Picior", ["F-APRON-L"] = "Zargă lungă", ["F-APRON-S"] = "Zargă scurtă",
             ["F-DR-CAP"] = "Capac", ["F-DR-SIDE"] = "Lateral", ["F-DR-BOT"] = "Fund", ["F-DR-SEP"] = "Separator", ["F-DR-LEG"] = "Picior",
+            ["F-BED-HLEG"] = "Picior tăblie", ["F-BED-FLEG"] = "Picior capăt", ["F-BED-HRAIL"] = "Traversă capăt (cap)", ["F-BED-FRAIL"] = "Traversă capăt (picioare)", ["F-BED-SRAIL"] = "Lonjeron", ["F-BED-TRAIL"] = "Traversă sus tăblie",
+            ["F-BED-PANEL"] = "Panou tăblie", ["F-BED-LEDGER"] = "Riglă sprijin", ["F-BED-SLAT"] = "Șipcă somieră", ["F-BED-BEAM"] = "Grindă centrală", ["F-BED-CLEG"] = "Picior central",
             ["F-NS-CAP"] = "Capac", ["F-NS-SIDE"] = "Lateral", ["F-NS-FRONT"] = "Față sertar", ["F-NS-LEG"] = "Picior", ["F-NS-BOT"] = "Fund", ["F-NS-SHELF"] = "Poliță nișă",
             ["F-NS-DSIDE"] = "Sertar · lateral", ["F-NS-DFRONT"] = "Sertar · față interioară", ["F-NS-DBACK"] = "Sertar · spate"
         };
@@ -34,7 +36,7 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Hardware = new Dictionary<string, string>
         {
             ["TOP-ZCLIP"] = "Clips Z 30×20", ["TOP-FIGURE8"] = "Fixare figure-8", ["TOP-BUTTON"] = "Buton de lemn", ["TOP-SLOTSCREW"] = "Șurub în gaură alungită 4×35 + șaibă", ["TOP-SLOTSCREW-L"] = "Șurub în gaură alungită lungă 4×35 + șaibă",
-            ["HANDLE-128"] = "Mâner sertar 128 mm", ["PUSH-OPEN"] = "Mecanism push-to-open", ["ANTITIP-KIT"] = "Kit anti-basculare (fixare în perete)", ["SLIDE-SC"] = "Glisieră ascunsă soft-close 350 (pereche)", ["FOOT-LEVEL"] = "Patină reglabilă picior", ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
+            ["BED-BOLT"] = "Bulon de pat M8 ascuns (piuliță cilindrică)", ["BARREL-NUT-M8"] = "Piuliță cilindrică M8", ["PLUG-20"] = "Dop de lemn Ø20", ["HANDLE-128"] = "Mâner sertar 128 mm", ["PUSH-OPEN"] = "Mecanism push-to-open", ["ANTITIP-KIT"] = "Kit anti-basculare (fixare în perete)", ["SLIDE-SC"] = "Glisieră ascunsă soft-close 350 (pereche)", ["FOOT-LEVEL"] = "Patină reglabilă picior", ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
         };
         private static readonly Dictionary<FeatureKind, string> Features = new Dictionary<FeatureKind, string>
         {
@@ -58,11 +60,11 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Params = new Dictionary<string, string>
         {
             ["length"] = "Lungime", ["width"] = "Lățime", ["height"] = "Înălțime", ["topThickness"] = "Grosime blat", ["legSectionUser"] = "Secțiune picior (0 = regulă)",
-            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat", ["depth"] = "Adâncime", ["legHeight"] = "Înălțime picioare", ["panelThickness"] = "Grosime panouri", ["drawerHeight"] = "Înălțime față sertar", ["columns"] = "Coloane", ["drawers"] = "Sertare pe coloană", ["gradation"] = "Gradare fronturi (cele de jos mai înalte)"
+            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat", ["depth"] = "Adâncime", ["legHeight"] = "Înălțime picioare", ["panelThickness"] = "Grosime panouri", ["drawerHeight"] = "Înălțime față sertar", ["mattressW"] = "Lățime saltea", ["mattressL"] = "Lungime saltea", ["clearance"] = "Spațiu sub pat", ["footHeight"] = "Înălțime picioare capăt", ["headHeight"] = "Înălțime tăblie", ["slatPitch"] = "Pas șipci somieră", ["columns"] = "Coloane", ["drawers"] = "Sertare pe coloană", ["gradation"] = "Gradare fronturi (cele de jos mai înalte)"
         };
         private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
         {
-            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp", ["frontStyle"] = "Deschidere față sertar"
+            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp", ["frontStyle"] = "Deschidere față sertar", ["materialC"] = "Esență structură ascunsă (clasa C)", ["jointRail"] = "Îmbinare traverse – picior"
         };
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;

@@ -192,6 +192,8 @@ namespace RhinoWood.Core.Domain
         public bool VisualGrainRequired { get; set; }
         /// <summary>True for panels made of edge-glued strips (RoughPieces count = strips per part); strips are drawn separately and joined with biscuits.</summary>
         public bool EdgeGlued { get; set; }
+        /// <summary>A panel floating in grooves (headboard, door, back): free to move, so it needs no fasteners.</summary>
+        public bool Floating { get; set; }
         /// <summary>Visibility class (A = visible closed, B = visible when open, C = hidden); drives the species per variant.</summary>
         public char VisClass { get; set; } = 'A';
         public string GrainGroup { get; set; }

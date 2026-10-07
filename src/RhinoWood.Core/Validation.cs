@@ -96,6 +96,7 @@ namespace RhinoWood.Core.Validation
                 var sp = c.Library.GetSpecies(fam.SpeciesId);
                 foreach (var part in fam.Instances)
                 {
+                    if (fam.Floating) { yield return new Issue { Severity = Severity.Info, Code = "MOVEMENT_INFO", SubjectId = part.Id, Message = string.Format(CultureInfo.InvariantCulture, "{0}: panel plutitor în canale; mișcarea sezonieră estimată {1:0.0} mm este preluată de joc.", part.Id, part.Finished.Width * sp.TangentialMovementPerPercent * dMc) }; continue; }
                     // movement is across the grain, in the width direction when grain runs along the length
                     var axis = part.WidthAxis;
                     double width = part.Finished.Width;

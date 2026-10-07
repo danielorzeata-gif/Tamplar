@@ -290,3 +290,69 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class BedTests
+    {
+        private static WoodProject Bed(string tier = "STANDARD") { var p = WoodProject.Create("casework.bed", "Pat"); p.ApplyTier(tier); return p; }
+
+        [Fact]
+        public void King_1600x2000_HasTheSheetStructure()
+        {
+            var r = Bed().Recalculate();
+            Assert.False(r.HasErrors, string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.Empty(r.Optimization.Unplaced);
+            Assert.Equal(16, r.Model.AllParts.Count(p => p.Id.StartsWith("SLAT")));
+            Assert.Equal(1604, r.Model.FindPart("SLAT-1").Finished.Length, 6);                       // mattress + 4
+            Assert.Equal(2, r.Model.AllParts.Count(p => p.Id.StartsWith("HLEG"))); Assert.Equal(1000, r.Model.FindPart("HLEG-1").Finished.Length, 6); Assert.Equal(430, r.Model.FindPart("FLEG-1").Finished.Length, 6);
+            Assert.Equal(4, r.Model.HardwareInstalls.Count(h => h.HardwareId == "BED-BOLT"));
+            Assert.Equal(4, r.Model.AllParts.Where(p => p.Id.StartsWith("SRAIL")).Sum(p => p.Features.Count(f => f.Kind == RhinoWood.Core.Domain.FeatureKind.BlindHole)));
+            Assert.All(r.Model.AllParts.Where(p => p.Id.StartsWith("HLEG") || p.Id.StartsWith("FLEG")), p => Assert.Contains(p.Features, f => f.Kind == RhinoWood.Core.Domain.FeatureKind.Counterbore));
+            Assert.All(r.Model.AllParts.Where(p => p.Id.StartsWith("HLEG")), p => Assert.Contains(p.Features, f => f.Kind == RhinoWood.Core.Domain.FeatureKind.Dado));
+        }
+
+        [Fact]
+        public void SlatCount_FollowsTheMattressLength_AndSheetOfHiddenParts()
+        {
+            var p = Bed(); p.SetParameter("mattressL", 2200); var a = p.Recalculate();
+            Assert.True(a.Model.AllParts.Count(x => x.Id.StartsWith("SLAT")) > 16);
+            Assert.All(a.Model.Families.Where(f => f.VisClass == 'C'), f => Assert.Equal("PINE", f.SpeciesId));
+            Assert.All(Bed("PREMIUM").Recalculate().Model.Families, f => Assert.Equal("OAK", f.SpeciesId));
+        }
+
+        [Fact]
+        public void NoSolidsOverlap_InTheBed()
+        {
+            var r = Bed().Recalculate(); var parts = r.Model.AllParts.ToList();
+            for (int i = 0; i < parts.Count; i++) for (int j = i + 1; j < parts.Count; j++)
+            {
+                var a = parts[i].Bounds; var b = parts[j].Bounds;
+                double dx = System.Math.Min(a.Max.X, b.Max.X) - System.Math.Max(a.Min.X, b.Min.X), dy = System.Math.Min(a.Max.Y, b.Max.Y) - System.Math.Max(a.Min.Y, b.Min.Y), dz = System.Math.Min(a.Max.Z, b.Max.Z) - System.Math.Max(a.Min.Z, b.Min.Z);
+                bool panelTongue = parts[i].Id == "PANEL-1" || parts[j].Id == "PANEL-1";
+                if (!panelTongue) Assert.False(dx > 0.01 && dy > 0.01 && dz > 0.01, parts[i].Id + " overlaps " + parts[j].Id);
+            }
+        }
+
+        [Fact] public void AllSheetsBuild() { var p = Bed(); var r = p.Recalculate(); Assert.All(RhinoWood.Core.Reports.SheetBuilder.Build(p, r, RhinoWood.Core.Reports.SheetMode.Design), s => Assert.False(string.IsNullOrWhiteSpace(s.Body))); }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    public class NoOverlapTests
+    {
+        [Theory] [InlineData("casework.nightstand")] [InlineData("casework.dresser")] [InlineData("table.dining")]
+        public void PartsDoNotPenetrateEachOther(string type)
+        {
+            var p = WoodProject.Create(type, "x"); var r = p.Recalculate(); var parts = r.Model.AllParts.ToList();
+            for (int i = 0; i < parts.Count; i++) for (int j = i + 1; j < parts.Count; j++)
+            {
+                var a = parts[i].Bounds; var b = parts[j].Bounds;
+                double dx = System.Math.Min(a.Max.X, b.Max.X) - System.Math.Max(a.Min.X, b.Min.X), dy = System.Math.Min(a.Max.Y, b.Max.Y) - System.Math.Max(a.Min.Y, b.Min.Y), dz = System.Math.Min(a.Max.Z, b.Max.Z) - System.Math.Max(a.Min.Z, b.Min.Z);
+                bool jointed = r.Model.Joints.Any(q => (q.PartAId == parts[i].Id && q.PartBId == parts[j].Id) || (q.PartAId == parts[j].Id && q.PartBId == parts[i].Id)) && type == "table.dining";   // tenons enter mortises
+                if (!jointed) Assert.False(dx > 0.01 && dy > 0.01 && dz > 0.01, parts[i].Id + " overlaps " + parts[j].Id);
+            }
+        }
+    }
+}

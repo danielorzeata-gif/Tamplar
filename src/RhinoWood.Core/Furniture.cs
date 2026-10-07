@@ -103,6 +103,7 @@ namespace RhinoWood.Core.Furniture
             r.Register(new TableDefinition());
             r.Register(new NightstandDefinition());
             r.Register(new DresserDefinition());
+            r.Register(new BedDefinition());
             return r;
         }
     }
@@ -362,7 +363,7 @@ namespace RhinoWood.Core.Furniture
                 Id = f.Id, Name = f.Name, Type = f.Type, Assembly = f.Assembly, SpeciesId = f.SpeciesId, Finished = f.Finished,
                 RoughPieces = f.RoughPieces.Select(r => new RoughPieceSpec { CountPerPart = r.CountPerPart, Rough = r.Rough, Role = r.Role }).ToList(),
                 GrainAxis = f.GrainAxis, GrainAlongLength = f.GrainAlongLength, RequiresGrainContinuity = f.RequiresGrainContinuity,
-                VisualGrainRequired = f.VisualGrainRequired, EdgeGlued = f.EdgeGlued, VisClass = f.VisClass, GrainGroup = f.GrainGroup, Notes = f.Notes
+                VisualGrainRequired = f.VisualGrainRequired, EdgeGlued = f.EdgeGlued, Floating = f.Floating, VisClass = f.VisClass, GrainGroup = f.GrainGroup, Notes = f.Notes
             };
             foreach (var i in f.Instances)
                 c.Instances.Add(new PartInstance { Id = i.Id, FamilyId = i.FamilyId, Index = i.Index, Bounds = i.Bounds, LengthAxis = i.LengthAxis, WidthAxis = i.WidthAxis, ThicknessAxis = i.ThicknessAxis });
