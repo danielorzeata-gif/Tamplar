@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0
+## 1.3.0
 - **Rosturi între scânduri**: scândurile unui lateral, blat sau uși se îmbină doar cu **lamele (biscuiți)** sau **cep liber** (canal continuu 6 mm pe cant + pană de lemn tare 6×19, în BOM la metru); alegere în „Îmbinări și materiale”. **Panourile** între ele: dibluri, lamele, cep liber (loose tenon), **canal (dado, panoul intră în canal)** sau șuruburi ascunse în buzunar — la noptieră, comodă și dulap.
 - **Lista de prețuri CSV** (tab Materiale): exportă / importă specii (lei/m³, acceptă „2.800”), feronerie și parametri (tarif, marjă, regie, TVA, factori de randament, transport); valorile importate se rețin pentru proiectele noi. Fișa de referință `knowledge/Wood/10_PRICES/PRETURI_REFERINTA_LEMN.md` integrată: încredere pe specie (●●●/●●○/●○○), interval RO, rășinoase 900 lei/m³, factori de randament pe formă (semifabricate 1,2 · tivit A 1,45 · tivit B 1,7 · netivit 2,0 · rustic 2,25), transport (km × lei/km), avertisment sub comanda minimă (1 palet ≈ 1–1,5 m³).
 - **Prețuri pe specie** (lei/m³, lemn uscat 8–10 %, tivit, clasa A/B): stejar 2.800, nuc 3.200, frasin 1.950, ulm 1.750, cireș 1.700, salcâm 1.600, paltin 1.450, tei 1.400, fag 1.300, arin 1.100, plop 900, carpen 800. Proveniența fiecărui preț e marcată: stejar și fag `[REF]` (medii din anunțuri RO: 2.225 / 1.065), restul `[ESTIMARE]` (lista DE feb. 2026 × ~0,26) — de verificat la Nordik Express 0745 525 203 înainte de ofertă; proiectul avertizează când folosește prețuri estimate. Preț placă încleiată lei/m² la 29 și 55 mm (stejar 29 mm ≈ 81).

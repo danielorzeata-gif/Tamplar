@@ -7,7 +7,7 @@ namespace RhinoWood.Plugin.UI
     /// <summary>Which build is loaded and from where - the first thing to check when the panel does not look like the latest version.</summary>
     public static class BuildInfo
     {
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
         public static string Path => Assembly.GetExecutingAssembly().Location;
         public static string Text
         {

@@ -9,7 +9,7 @@
     <NoWarn>NU1701;CS1591</NoWarn>
     <AssemblyName>RhinoWood</AssemblyName>
     <RootNamespace>RhinoWood.Plugin</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Product>Rhino Wood - Woodworking CAD, Engineering and Manufacturing</Product>
     <Company>Rhino Wood</Company>

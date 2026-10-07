@@ -12,7 +12,7 @@ try {
   if (-not $SkipTests) { dotnet test tests/RhinoWood.Tests/RhinoWood.Tests.csproj -c $Configuration; if ($LASTEXITCODE) { throw 'Tests failed' } }
   dotnet build src/RhinoWood.Plugin/RhinoWood.Plugin.csproj -c $Configuration
   if ($LASTEXITCODE) { throw 'Plugin build failed' }
-  $ver = '1.2.0'
+  $ver = '1.3.0'
   $out = Join-Path $root "dist\RhinoWood-$ver"
   if (Test-Path $out) { Remove-Item $out -Recurse -Force }
   New-Item -ItemType Directory -Path $out | Out-Null
