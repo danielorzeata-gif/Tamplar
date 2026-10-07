@@ -46,7 +46,10 @@ namespace RhinoWood.Plugin
         public static void Generate(RhinoDoc doc)
         {
             if (!RequireProject()) return;
+            if (P.Room != null) { GenerateRoom(doc); return; }     // a room is always generated as a whole (otherwise the rest stays a preview "ghost")
             P.Generated = true;
+            int gone = RhinoSync.RemoveOtherProjects(doc, new[] { P.Project.Id });
+            if (gone > 0) RhinoApp.WriteLine("Rhino Wood: au fost șterse " + gone + " obiecte rămase de la alte proiecte.");
             Refresh(doc, true);
             RhinoApp.RunScript("-_Zoom _Extents", false);
         }
@@ -58,12 +61,15 @@ namespace RhinoWood.Plugin
             var room = RhinoWood.Core.Projects.BedroomSet.Create(ws, tier, "OAK", "Dormitor", wardrobe);
             P.PreviewOn = true;
             P.SetRoom(ws, room, generated: false);
+            CleanOtherProjects();
         }
 
         /// <summary>Writes every piece of the active room into the document (idempotent).</summary>
         public static void SyncRoom(RhinoDoc doc)
         {
             if (P.Room == null || doc == null) return;
+            int gone = RhinoSync.RemoveOtherProjects(doc, P.Room.Pieces.Select(x => x.Project.Id).ToList());
+            if (gone > 0) RhinoApp.WriteLine("Rhino Wood: au fost șterse " + gone + " obiecte rămase de la alte proiecte.");
             foreach (var piece in P.Room.Pieces)
                 RhinoSync.Sync(doc, piece.Project, piece.Project.GenerateGeometry(), piece.Project.CustomComponents);
             P.SaveToDocument(doc);
@@ -85,6 +91,16 @@ namespace RhinoWood.Plugin
             var name = RhinoWood.Core.Reports.Ro.FurnitureName(typeId, def.Name);
             P.PreviewOn = true;
             P.SetProject(RhinoWood.Core.Projects.WoodProject.Create(typeId, name, "OAK", P.Library), generated: false);
+            CleanOtherProjects();
+        }
+
+        /// <summary>A new draft replaces the previous work: its generated objects would otherwise stay in the viewport next to the new preview (ghosts). Undoable.</summary>
+        public static void CleanOtherProjects()
+        {
+            var doc = RhinoDoc.ActiveDoc; if (doc == null || P.Project == null) return;
+            var keep = P.Room != null ? P.Room.Pieces.Select(x => x.Project.Id).ToList() : new System.Collections.Generic.List<string> { P.Project.Id };
+            int n = RhinoSync.RemoveOtherProjects(doc, keep);
+            if (n > 0) RhinoApp.WriteLine("Rhino Wood: " + n + " obiecte ale proiectului anterior au fost șterse (Ctrl+Z le readuce).");
         }
 
         public static System.Collections.Generic.IEnumerable<(string id, string name)> FurnitureTypes() =>
@@ -433,6 +449,20 @@ namespace RhinoWood.Plugin
             WoodActions.NewBedroom("STANDARD");
             RhinoApp.WriteLine("Rhino Wood: dormitor creat (pat, 2 noptiere, comodă). Deschide WoodStart → tab Cameră.");
             RhinoWood.Plugin.UI.StartWindow.Open();
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f14")]
+    public class WoodCleanCommand : Command
+    {
+        public override string EnglishName => "WoodClean";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            var keep = WoodActions.P.Room != null ? WoodActions.P.Room.Pieces.Select(x => x.Project.Id).ToList() : new System.Collections.Generic.List<string>();
+            if (WoodActions.P.Room == null && WoodActions.P.Project != null && WoodActions.P.Generated) keep.Add(WoodActions.P.Project.Id);
+            int n = RhinoSync.RemoveOtherProjects(doc, keep);
+            RhinoApp.WriteLine("Rhino Wood: " + n + " obiecte șterse (rămase de la proiecte care nu mai sunt active).");
             return Result.Success;
         }
     }

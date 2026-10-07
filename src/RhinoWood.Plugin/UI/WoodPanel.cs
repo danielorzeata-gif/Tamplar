@@ -86,7 +86,7 @@ namespace RhinoWood.Plugin.UI
 
             _previewBtn = new AtButton(P.PreviewOn ? "Ascunde previzualizarea" : "Previzualizare", BtnVariant.Secondary);
             _previewBtn.Click += (s, e) => { P.PreviewOn = !P.PreviewOn; _previewBtn.Text = P.PreviewOn ? "Ascunde previzualizarea" : "Previzualizare"; PreviewService.Refresh(); };
-            var gen = new AtButton(P.Generated ? "Actualizează" : "Generează", BtnVariant.Primary);
+            var gen = new AtButton((P.Room != null ? P.RoomGenerated : P.Generated) ? "Actualizează" : "Generează", BtnVariant.Primary);
             gen.Click += (s, e) => { if (RhinoDoc.ActiveDoc != null && P.Project != null) { WoodActions.Generate(RhinoDoc.ActiveDoc); Application.Instance.AsyncInvoke(Rebuild); } };
             var footer = new TableLayout
             {

@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.2.0
+- **Fără fantome**: „Generează” dintr-o cameră scrie acum toată camera (înainte scria doar piesa activă, iar restul rămânea ca previzualizare dublată); la generare și la o piesă/cameră nouă se șterg obiectele rămase de la proiectele vechi (Ctrl+Z le readuce); comandă nouă `WoodClean`.
 - **Dulap** (`casework.wardrobe`): uși suprapuse cu balamale cu cupă 35 (2/3/4 după înălțimea ușii), bară de haine la 1520–1770 mm, polițe fixe deasupra barei, spate HDF, picioare reglabile, kit anti-basculare; mâner vertical, push-to-open sau canal pe muchia liberă.
 - **Etajeră** (`casework.shelving`): montanți + polițe în canale (adâncime 1/3, max 12 mm), spate HDF; verificare de săgeată a rafturilor (L/300 sub 0,65 kg/dm³).
 - **Băncuță** (`casework.bench`): construcția mesei cu proporții de bancă (înălțime 400–500, implicit 450).

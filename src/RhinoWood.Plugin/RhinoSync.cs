@@ -130,6 +130,19 @@ namespace RhinoWood.Plugin
             return rep;
         }
 
+        /// <summary>Deletes every Rhino Wood object whose project is not in <paramref name="keep"/> (leftovers of earlier projects: the "ghosts"). Returns how many were removed.</summary>
+        public static int RemoveOtherProjects(RhinoDoc doc, ICollection<string> keep)
+        {
+            var stale = doc.Objects.GetObjectList(new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = true, ObjectTypeFilter = ObjectType.AnyObject })
+                .Where(o => { var id = o.Attributes.GetUserString(KProject); return id != null && !keep.Contains(id); }).ToList();
+            if (stale.Count == 0) return 0;
+            uint undo = doc.BeginUndoRecord("Rhino Wood: șterge obiectele proiectelor vechi");     // Ctrl+Z restores them
+            foreach (var o in stale) doc.Objects.Delete(o, true);
+            doc.EndUndoRecord(undo);
+            doc.Views.Redraw();
+            return stale.Count;
+        }
+
         private static Guid AddGeometry(RhinoDoc doc, GeometryBase g, ObjectAttributes a)
         {
             if (g is Brep b) return doc.Objects.AddBrep(b, a);
