@@ -5,7 +5,7 @@
 param([string]$From)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-if (-not $From) { $From = Join-Path $root 'dist\RhinoWood-1.1.0' }
+if (-not $From) { $From = Join-Path $root 'dist\RhinoWood-1.2.0' }
 if (-not (Test-Path (Join-Path $From 'RhinoWood.rhp'))) { throw "RhinoWood.rhp not found in $From - run scripts\build.ps1 first." }
 $dest = Join-Path $env:APPDATA 'RhinoWood'
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -16,4 +16,4 @@ Write-Host ""
 Write-Host "In Rhino 8 (first time only):"
 Write-Host "  1. Type the command  PlugInManager  (opens Options > Plug-ins)"
 Write-Host "  2. Click 'Install...' and select:  $rhp"
-Write-Host "  3. Type  WoodNewTable  (type it, do not paste)"
+Write-Host "  3. Type  WoodStart  (type it, do not paste)"
