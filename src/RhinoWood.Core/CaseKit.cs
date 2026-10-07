@@ -13,6 +13,18 @@ namespace RhinoWood.Core.Furniture
     /// <summary>Shared building blocks of the casework / bed definitions: part families (single board or edge-glued strips), front styles, anti-tip kit.</summary>
     public static class CaseKit
     {
+        /// <summary>Boards that form a side or a top are edge-joined ONLY with biscuits or a loose spline (tongue); panels are joined to each other by the body-joint choice.</summary>
+        public static ChoiceDef EdgeJointChoice() => new ChoiceDef
+        {
+            StyleKind = StyleKind.Structure, StyleKey = "joint.edge", Key = "edgeJoint", Label = "Edge joint between boards", Group = "Joinery", Kind = "edgejoint", Default = "biscuit", Options = { "biscuit", "spline" },
+            Description = "How the boards of a side, top or door are joined edge to edge: biscuits (every ≤ pitch) or a continuous loose spline."
+        };
+
+        /// <summary>Joint options for panel-to-panel body joints: dowels, biscuits, loose tenon, housing (dado, the panel enters the groove) and hidden pocket screws.</summary>
+        public static readonly string[] BodyJoints = { "dowel", "biscuit", "loose-tenon", "dado", "pocket-screw" };
+        /// <summary>Depth by which a panel must reach into its neighbour for the dado housing (same rule as the dado joint).</summary>
+        public static double DadoDepth(string joint, double thickness) => joint == "dado" ? Math.Min(12, thickness / 3.0) : 0;
+
         public static readonly string[] FrontStyles = { "scoop", "handle", "push", "jrabbet" };
 
         public static Box3 B(double x0, double y0, double z0, double x1, double y1, double z1) => new Box3(new Vec3(x0, y0, z0), new Vec3(x1, y1, z1));

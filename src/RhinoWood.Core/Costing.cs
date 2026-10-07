@@ -78,7 +78,12 @@ namespace RhinoWood.Core.Costing
                     bom.Lines.Add(new BomLine { Category = "Fastener", Id = f.Id, Description = f.Model, Quantity = qty * fs.Value, Unit = "pcs", UnitCost = f.UnitPrice });
                 }
             }
-            foreach (var g in model.Biscuits.GroupBy(b => b.Size))
+            foreach (var g in model.Biscuits.Where(b => b.Size.StartsWith("spline")).GroupBy(b => b.Size))
+            {
+                double meters = g.Sum(b => Math.Max(b.Box.Size.X, Math.Max(b.Box.Size.Y, b.Box.Size.Z))) / 1000.0;
+                bom.Lines.Add(new BomLine { Category = "Fastener", Id = "SPLINE-6x19", Description = "Cep liber (pană) 6×19 mm", Quantity = Math.Round(meters, 2), Unit = "m", UnitCost = _settings.Rules.SplinePricePerM });
+            }
+            foreach (var g in model.Biscuits.Where(b => !b.Size.StartsWith("spline")).GroupBy(b => b.Size))
                 bom.Lines.Add(new BomLine { Category = "Fastener", Id = "BISCUIT-" + g.Key.TrimStart('#'), Description = "Lamelă (biscuit) " + g.Key, Quantity = g.Count(), Unit = "pcs", UnitCost = _settings.Rules.BiscuitPrice });
             cost.Hardware = bom.Lines.Where(l => l.Category == "Hardware" || l.Category == "Fastener").Sum(l => l.Total);
 

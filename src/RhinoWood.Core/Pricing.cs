@@ -13,9 +13,10 @@ namespace RhinoWood.Core.Projects
         public double Material { get; set; }
         public double Hardware { get; set; }
         public double Consumables { get; set; }
+        public double Transport { get; set; }
         public double Labor { get; set; }
         public double LaborHours { get; set; }
-        public double DirectCost => Material + Hardware + Consumables + Labor;
+        public double DirectCost => Material + Hardware + Consumables + Transport + Labor;
         public double Overhead { get; set; }
         public double ProductionCost => DirectCost + Overhead;
         public int Parts { get; set; }
@@ -50,7 +51,8 @@ namespace RhinoWood.Core.Projects
         public double Factor { get; set; }
         public string Form { get; set; }
 
-        public static double FactorOf(ProjectSettings s) => s.LumberForm == "Blanks" ? s.YieldBlanks : s.LumberForm == "Unedged" ? s.YieldUnedged : s.YieldEdged;
+        public static double FactorOf(ProjectSettings s) => s.LumberForm == "Blanks" ? s.YieldBlanks : s.LumberForm == "EdgedA" ? s.YieldEdgedA : s.LumberForm == "Unedged" ? s.YieldUnedged : s.LumberForm == "Rustic" ? s.YieldRustic : s.YieldEdged;
+        public const double TypicalMinimumOrderM3 = 1.0;     // 1 pallet ~ 1-1.5 m3 (3 m3 at some sellers)
 
         public static OrderEstimate Compute(WoodProject p, ProjectResult r)
         {
@@ -85,7 +87,8 @@ namespace RhinoWood.Core.Projects
             };
             foreach (var sid in r.Model.Families.Select(f => f.SpeciesId).Distinct())
                 if (p0 != null && p0.Library.Species.TryGetValue(sid, out var spp) && spp.PriceLabel != "[REF]") b.UnverifiedPrices.Add(Ro.SpeciesName(sid) + " " + spp.PriceLabel);
-            b.Overhead = Math.Round((b.Material + b.Hardware + b.Consumables + b.Labor) * s.OverheadPercent / 100.0, 2);
+            b.Transport = Math.Round(s.DeliveryKm * s.TransportLeiPerKm, 2);
+            b.Overhead = Math.Round((b.Material + b.Hardware + b.Consumables + b.Transport + b.Labor) * s.OverheadPercent / 100.0, 2);
             b.Operations = r.Manufacturing == null ? 0 : r.Manufacturing.Operations.Count(o => o.FeatureId != null && (o.Type == OperationType.Mortise || o.Type == OperationType.Tenon || o.Type == OperationType.Slot || o.Type == OperationType.Rout || o.Type == OperationType.Drill));
             b.OperationMinutes = r.Manufacturing == null ? 0 : r.Manufacturing.Operations.Where(o => o.FeatureId != null).Sum(o => o.Minutes);
             b.Complexity = Math.Max(0, Math.Min(1, b.MinutesPerPart / 12.0));

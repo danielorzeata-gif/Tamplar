@@ -146,7 +146,7 @@ namespace RhinoWood.Core.Display
                     var key = "BSC|" + b.Id + "|" + b.Box;
                     all.AddRange(_cache.GetOrAdd(key, () => new List<GeometryPrimitive>
                     {
-                        new GeometryPrimitive { Key = b.Id, PartId = b.PartId, Kind = PrimKind.Box, Category = PrimCategory.Hardware, Box = b.Box, Label = "Lamelă " + b.Size + " (biscuit)", Version = Hashing.Short(b.Box.ToString()) }
+                        new GeometryPrimitive { Key = b.Id, PartId = b.PartId, Kind = PrimKind.Box, Category = PrimCategory.Hardware, Box = b.Box, Label = b.Size.StartsWith("spline") ? "Cep liber (pană) " + b.Size.Substring(7) : "Lamelă " + b.Size + " (biscuit)", Version = Hashing.Short(b.Box.ToString()) }
                     }));
                 }
             if (mode >= DisplayMode.Engineering)

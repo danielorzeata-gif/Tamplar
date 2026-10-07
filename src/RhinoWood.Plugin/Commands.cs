@@ -59,6 +59,7 @@ namespace RhinoWood.Plugin
         {
             var ws = new RhinoWood.Core.Workspaces.Workspace("Dormitor", P.Library);
             var room = RhinoWood.Core.Projects.BedroomSet.Create(ws, tier, "OAK", "Dormitor", wardrobe);
+            foreach (var pc in room.Pieces) ApplyPriceDefaults(pc.Project);
             P.PreviewOn = true;
             P.SetRoom(ws, room, generated: false);
             CleanOtherProjects();
@@ -90,7 +91,8 @@ namespace RhinoWood.Plugin
             var def = types.Get(typeId);
             var name = RhinoWood.Core.Reports.Ro.FurnitureName(typeId, def.Name);
             P.PreviewOn = true;
-            P.SetProject(RhinoWood.Core.Projects.WoodProject.Create(typeId, name, "OAK", P.Library), generated: false);
+            var np = RhinoWood.Core.Projects.WoodProject.Create(typeId, name, "OAK", P.Library); ApplyPriceDefaults(np);
+            P.SetProject(np, generated: false);
             CleanOtherProjects();
         }
 
@@ -167,6 +169,48 @@ namespace RhinoWood.Plugin
             double minX = prims.Count == 0 ? 0 : prims.Min(p => p.Box.Min.X), minY = prims.Count == 0 ? 0 : prims.Min(p => p.Box.Min.Y);
             string msg = PalletExport.Run(doc, plan, name, id, minX, minY - 3500 - (plan.Pallets.Count == 0 ? 0 : plan.Pallets.Max(q => q.Spec.W)));
             return msg + "\n" + plan.Report;
+        }
+
+        // ------------------------------------------------------------------------------------------- price list
+        private static string PriceDefaultsPath => Path.Combine(P.SettingsDirectory, "price-defaults.json");
+
+        /// <summary>Applies the price parameters remembered from earlier imports to a new project.</summary>
+        public static void ApplyPriceDefaults(RhinoWood.Core.Projects.WoodProject project)
+        {
+            try
+            {
+                if (project == null || !File.Exists(PriceDefaultsPath)) return;
+                var d = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, double>>(File.ReadAllText(PriceDefaultsPath));
+                RhinoWood.Core.Projects.PriceList.ApplyParameters(d, project.Settings); project.Rebuild();
+            }
+            catch (Exception ex) { RhinoApp.WriteLine("Rhino Wood: prețurile implicite nu au putut fi citite (" + ex.Message + ")."); }
+        }
+
+        public static string ExportPrices(Eto.Forms.Control owner)
+        {
+            var dlg = new Eto.Forms.SaveFileDialog { Title = "Exportă lista de prețuri", FileName = "lista-preturi.csv" };
+            dlg.Filters.Add(new Eto.Forms.FileFilter("CSV", ".csv"));
+            if (dlg.ShowDialog(owner) != Eto.Forms.DialogResult.Ok) return "Export anulat.";
+            var s = P.Project?.Settings ?? new RhinoWood.Core.Rules.ProjectSettings();
+            File.WriteAllText(dlg.FileName, RhinoWood.Core.Projects.PriceList.Export(P.Library, s), new System.Text.UTF8Encoding(true));
+            return "Lista de prețuri a fost salvată: " + dlg.FileName + " (deschide-o în Excel, schimbă coloana „pret”, apoi importă-o înapoi).";
+        }
+
+        public static string ImportPrices(Eto.Forms.Control owner)
+        {
+            var dlg = new Eto.Forms.OpenFileDialog { Title = "Importă lista de prețuri (CSV)" };
+            dlg.Filters.Add(new Eto.Forms.FileFilter("CSV", ".csv"));
+            if (dlg.ShowDialog(owner) != Eto.Forms.DialogResult.Ok) return "Import anulat.";
+            var user = File.Exists(P.UserLibraryPath) ? RhinoWood.Core.Projects.LibrarySerializer.DeserializeUser(File.ReadAllText(P.UserLibraryPath)) : new RhinoWood.Core.Libraries.WoodLibrary();
+            var settings = P.Project?.Settings ?? new RhinoWood.Core.Rules.ProjectSettings();
+            var res = RhinoWood.Core.Projects.PriceList.Import(File.ReadAllText(dlg.FileName), P.Library, settings, user);
+            P.SaveUserLibrary(user);
+            File.WriteAllText(PriceDefaultsPath, System.Text.Json.JsonSerializer.Serialize(res.Parameters));
+            // other pieces of the room share the parameters
+            if (P.Room != null) foreach (var piece in P.Room.Pieces) { RhinoWood.Core.Projects.PriceList.ApplyParameters(res.Parameters, piece.Project.Settings); piece.Project.Rebuild(); }
+            P.Project?.Rebuild();
+            var doc = RhinoDoc.ActiveDoc; if (doc != null) Refresh(doc, false); else P.Recalculate();
+            return "Import: " + res + ".";
         }
 
         /// <summary>Applies a suggested solution and refreshes the document / preview.</summary>

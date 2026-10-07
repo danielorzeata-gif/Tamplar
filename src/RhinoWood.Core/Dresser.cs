@@ -41,14 +41,15 @@ namespace RhinoWood.Core.Furniture
             new TierDef { Id = Furniture.Tiers.Premium, Meta = "stejar integral", Choices = { ["materialB"] = "OAK", ["jointBody"] = "dowel" } },
         };
 
-        public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new List<ChoiceDef>
         {
             new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "material.interior", Key = "materialB", Label = "Interior (class B) species", Group = "Materials", Kind = "species", Default = "ASH", Options = { "OAK", "ASH", "SPRUCE", "PINE" },
                 Description = "Species of the parts seen only when a drawer is open (drawer boxes, bottom, separators)." },
-            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit" },
+            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit", "loose-tenon", "dado", "pocket-screw" },
                 Description = "Joint between the body panels (no visible screws)." },
             new ChoiceDef { StyleKind = StyleKind.Aspect, StyleKey = "front.style", Key = "frontStyle", Label = "Front opening", Group = "Drawer", Kind = "frontstyle", Default = "scoop", Options = { "scoop", "handle", "push", "jrabbet" },
                 Description = "How the drawers open. The same in the whole room." },
+            CaseKit.EdgeJointChoice(),
         };
 
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
@@ -81,14 +82,15 @@ namespace RhinoWood.Core.Furniture
             double W = r.Get<double>("width"), D = r.Get<double>("depth"), H = r.Get<double>("height"), legH = r.Get<double>("legHeight"), t = r.Get<double>("panelThickness"), grad = r.Get<double>("gradation");
             int cols = Math.Max(1, (int)Math.Round(r.Get<double>("columns"))), n = Math.Max(1, (int)Math.Round(r.Get<double>("drawers")));
             var L = new Layout();
+            double dd = CaseKit.DadoDepth(joint, t);
 
             double bx0 = 10, bx1 = 10 + W, yb0 = t, yb1 = D - 5, zTop = H - t, slide = 12.7;
             double iw = W - 2 * t, cw = (iw - (cols - 1) * t) / cols, latD = yb1 - yb0;
 
             var cap = CaseKit.Family(ctx, "F-DR-CAP", "Cap", PartType.Panel, spA, new Dims(W + 20, D, t), Axis.X, 'A', true); CaseKit.Add(cap, "CAP-1", CaseKit.B(0, 0, zTop, W + 20, D, H), Axis.X, Axis.Y, Axis.Z);
-            var side = CaseKit.Family(ctx, "F-DR-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH, latD, t), Axis.Z, 'A', true);
-            CaseKit.Add(side, "SIDE-1", CaseKit.B(bx0, yb0, legH, bx0 + t, yb1, zTop), Axis.Z, Axis.Y, Axis.X); CaseKit.Add(side, "SIDE-2", CaseKit.B(bx1 - t, yb0, legH, bx1, yb1, zTop), Axis.Z, Axis.Y, Axis.X);
-            var bot = CaseKit.Family(ctx, "F-DR-BOT", "Bottom", PartType.Panel, spB, new Dims(iw, latD, t), Axis.X, 'B', true); CaseKit.Add(bot, "BOT-1", CaseKit.B(bx0 + t, yb0, legH, bx1 - t, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
+            var side = CaseKit.Family(ctx, "F-DR-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH + dd, latD, t), Axis.Z, 'A', true);
+            CaseKit.Add(side, "SIDE-1", CaseKit.B(bx0, yb0, legH, bx0 + t, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X); CaseKit.Add(side, "SIDE-2", CaseKit.B(bx1 - t, yb0, legH, bx1, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X);
+            var bot = CaseKit.Family(ctx, "F-DR-BOT", "Bottom", PartType.Panel, spB, new Dims(iw + 2 * dd, latD, t), Axis.X, 'B', true); CaseKit.Add(bot, "BOT-1", CaseKit.B(bx0 + t - dd, yb0, legH, bx1 - t + dd, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
             L.Families.AddRange(new[] { cap, side, bot });
 
             void J(string type, string a, bool atStart, string b, Dictionary<string, double> p = null) => L.Requests.Add(new JointEngine.Request { JointTypeId = type, PartAId = a, PartBId = b, AAtStart = atStart, Params = p ?? new Dictionary<string, double>() });
@@ -177,7 +179,7 @@ namespace RhinoWood.Core.Furniture
             }).ToList();
             CaseKit.AntiTip(installs, model, ctx.Library, L.AntiTipHost, L.AntiTipPoint);
             new HardwareInstaller(ctx.Library).Install(model, installs);
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             CaseKit.AddFrontFeatures(model, g.Get<string>("frontStyle"));
             return model;
         }

@@ -40,6 +40,8 @@ namespace RhinoWood.Core.Rules
         public double LaborRatePerHour { get; set; } = 90;
         public double GluePricePerM2 { get; set; } = 1.2;
         public double BiscuitPrice { get; set; } = 0.25;
+        /// <summary>Loose spline strip (6 x 19 mm hardwood), lei per metre.</summary>
+        public double SplinePricePerM { get; set; } = 3;
         public double HdfPricePerM2 { get; set; } = 12;
         public double FinishPricePerM2 { get; set; } = 4.5;
         public double GlueLinesPerJointM2 { get; set; } = 1.0;
@@ -64,11 +66,16 @@ namespace RhinoWood.Core.Rules
         public double VatPercent { get; set; } = 21;
         /// <summary>The price without VAT is rounded UP to this step (0 = no rounding).</summary>
         public double PriceRounding { get; set; } = 10;
-        /// <summary>Quick order estimate = finished volume x yield factor. Edged (tivit) class B 1.7; unedged (netivit) 1.8-2.2 (2.0); blanks (semifabricate) 1.2.</summary>
+        /// <summary>Quick order estimate = finished volume x yield factor: Blanks 1.15-1.25, EdgedA 1.4-1.5, Edged (class B/AB) 1.6-1.8, Unedged 1.8-2.2, Rustic (class C) 2.0-2.5.</summary>
         public string LumberForm { get; set; } = "Edged";
+        public double YieldBlanks { get; set; } = 1.2;
+        public double YieldEdgedA { get; set; } = 1.45;
         public double YieldEdged { get; set; } = 1.7;
         public double YieldUnedged { get; set; } = 2.0;
-        public double YieldBlanks { get; set; } = 1.2;
+        public double YieldRustic { get; set; } = 2.25;
+        /// <summary>Transport of the lumber to the workshop: km x lei/km (van 3-6 lei/km); 0 km = delivered free.</summary>
+        public double DeliveryKm { get; set; } = 0;
+        public double TransportLeiPerKm { get; set; } = 4.5;
         public DisplayMode Display { get; set; } = DisplayMode.Normal;
         public bool ShowGrain { get; set; }
 

@@ -186,10 +186,11 @@ namespace RhinoWood.Plugin.UI
         }
 
         private static string OptionLabel(WoodProject p, ChoiceDef c, string id) =>
-            c.Kind == "joint" ? Ro.Joint(p.Joints.Get(id)) : c.Kind == "frontstyle" ? Ro.FrontStyle(id) : c.Kind == "species" ? Ro.SpeciesName(id, p.Library.Species.TryGetValue(id, out var sp0) ? sp0.Name : id) : Ro.HardwareName(id, p.Library.Hardware.TryGetValue(id, out var h) ? h.Model : id);
+            c.Kind == "joint" ? Ro.Joint(p.Joints.Get(id)) : c.Kind == "edgejoint" ? Ro.EdgeJoint(id) : c.Kind == "frontstyle" ? Ro.FrontStyle(id) : c.Kind == "species" ? Ro.SpeciesName(id, p.Library.Species.TryGetValue(id, out var sp0) ? sp0.Name : id) : Ro.HardwareName(id, p.Library.Hardware.TryGetValue(id, out var h) ? h.Model : id);
 
         private static string OptionNote(WoodProject p, ChoiceDef c, string id)
         {
+            if (c.Kind == "edgejoint") return id == "spline" ? "canal continuu pe cant + pană de lemn tare 6×19" : "lamele #20/#10, la cel mult pasul setat";
             if (c.Kind == "frontstyle") return "aceeași în toată camera (set Aspect)";
             if (c.Kind == "species") return p.Library.Species.TryGetValue(id, out var sp1) ? "contragere tangențială " + (sp1.DiffShrinkTangentialPct).ToString("0.00", CultureInfo.InvariantCulture) + " %/% · " + sp1.DataLabel : "";
             if (c.Kind != "joint") return p.Library.Hardware.TryGetValue(id, out var h) ? "cursă " + h.TravelAllowance.ToString("0.#", CultureInfo.InvariantCulture) + " mm" : "";
@@ -268,6 +269,7 @@ namespace RhinoWood.Plugin.UI
                 {
                     ("Material", Money.Format(pb.Material, cur)),
                     ("Feronerie și mărunțișuri", Money.Format(pb.Hardware + pb.Consumables, cur)),
+                    ("Transport material", Money.Format(pb.Transport, cur)),
                     ("Manoperă · " + pb.LaborHours.ToString("0.#", CultureInfo.InvariantCulture) + " h", Money.Format(pb.Labor, cur)),
                     ("Regie", Money.Format(pb.Overhead, cur))
                 }, "Cost producție", Money.Format(pb.ProductionCost, cur)));
@@ -275,6 +277,8 @@ namespace RhinoWood.Plugin.UI
                 _cost.Add(AtPrice.Build(new List<(string, string)> { ("Preț fără TVA", Money.Format(pb.PriceExVat, cur)), ("TVA " + pb.VatPercent.ToString("0.#", CultureInfo.InvariantCulture) + " %", Money.Format(pb.Vat, cur)) }, "Preț de vânzare cu TVA", Money.Format(pb.PriceIncVat, cur)));
                 var qe = OrderEstimate.Compute(p, r);
                 _cost.Add(new Label { Text = "Estimare rapidă de comandă: volum finit × " + qe.Factor.ToString("0.0#", CultureInfo.InvariantCulture) + " = " + qe.OrderM3.ToString("0.000", CultureInfo.InvariantCulture) + " m³ ≈ " + Money.Format(qe.Cost, cur) + " (planul optimizat: " + r.Optimization.PurchasedM3.ToString("0.000", CultureInfo.InvariantCulture) + " m³ / " + Money.Format(r.Cost.RawMaterial, cur) + ")", Font = Tk.Caption, TextColor = Tk.InkMuted, Wrap = WrapMode.Word });
+                if (qe.OrderM3 < OrderEstimate.TypicalMinimumOrderM3)
+                    _cost.Add(new Label { Text = "▲ Sub comanda minimă tipică (1 palet ≈ 1–1,5 m³; uneori 3 m³): comandă împreună cu alte piese (cameră) sau plătești diferența.", Font = Tk.Caption, TextColor = Tk.Warn, Wrap = WrapMode.Word });
                 if (pb.UnverifiedPrices.Count > 0)
                     _cost.Add(new Label { Text = "▲ Prețuri estimate la: " + string.Join(", ", pb.UnverifiedPrices) + ". Verifică la furnizor înainte de ofertă (Nordik Express 0745 525 203).", Font = Tk.Caption, TextColor = Tk.Warn, Wrap = WrapMode.Word });
             }

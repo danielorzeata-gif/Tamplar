@@ -627,3 +627,95 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class JointOptionTests
+    {
+        [Theory]
+        [InlineData("casework.nightstand", "dowel")] [InlineData("casework.nightstand", "biscuit")] [InlineData("casework.nightstand", "loose-tenon")] [InlineData("casework.nightstand", "dado")] [InlineData("casework.nightstand", "pocket-screw")]
+        [InlineData("casework.dresser", "dado")] [InlineData("casework.dresser", "loose-tenon")] [InlineData("casework.dresser", "pocket-screw")] [InlineData("casework.dresser", "biscuit")]
+        [InlineData("casework.wardrobe", "dado")] [InlineData("casework.wardrobe", "loose-tenon")] [InlineData("casework.wardrobe", "pocket-screw")] [InlineData("casework.wardrobe", "biscuit")]
+        public void PanelJoint_AnyOption_BuildsWithoutErrors(string type, string joint)
+        {
+            var p = WoodProject.Create(type, "x"); p.SetChoice("jointBody", joint); var r = p.Recalculate();
+            Assert.False(r.HasErrors, type + "/" + joint + ": " + string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.Empty(r.Optimization.Unplaced);
+            Assert.Contains(r.Model.Joints, j => j.JointTypeId == joint);
+            if (joint == "dado") Assert.Contains(r.Model.AllParts.SelectMany(x => x.Features), f => f.Kind == RhinoWood.Core.Domain.FeatureKind.Dado);
+            if (joint == "dado") // the panels really reach into the housings: side top goes 1/3 thickness into the cap
+                Assert.True(r.Model.FindPart("SIDE-1").Bounds.Max.Z > r.Model.FindPart("CAP-1").Bounds.Min.Z);
+            Assert.All(RhinoWood.Core.Reports.SheetBuilder.Build(p, r, RhinoWood.Core.Reports.SheetMode.Design), s => Assert.False(string.IsNullOrWhiteSpace(s.Body)));
+        }
+
+        [Theory] [InlineData("table.dining")] [InlineData("casework.nightstand")] [InlineData("casework.dresser")] [InlineData("casework.wardrobe")] [InlineData("casework.shelving")] [InlineData("casework.bed")]
+        public void EdgeJoint_BiscuitOrSpline(string type)
+        {
+            var p = WoodProject.Create(type, "x");
+            var a = p.Recalculate(); Assert.NotEmpty(a.Model.Biscuits); Assert.All(a.Model.Biscuits, b => Assert.StartsWith("#", b.Size));
+            p.SetChoice("edgeJoint", "spline"); var r = p.Recalculate();
+            Assert.False(r.HasErrors, type + ": " + string.Join("\n", r.Issues.Where(i => i.Severity == RhinoWood.Core.Domain.Severity.Error)));
+            Assert.NotEmpty(r.Model.Biscuits); Assert.All(r.Model.Biscuits, b => Assert.StartsWith("spline", b.Size));
+            Assert.Contains(r.Bom.Lines, l => l.Id == "SPLINE-6x19" && l.Unit == "m" && l.Quantity > 0);
+            Assert.DoesNotContain(r.Bom.Lines, l => l.Id.StartsWith("BISCUIT"));
+            // a continuous groove along the whole edge of a strip
+            var part = r.Model.AllParts.First(x => x.Features.Any(f => f.Purpose != null && f.Purpose.StartsWith("Spline groove")));
+            Assert.Contains(part.Features, f => f.Purpose.StartsWith("Spline groove") && f.Box.Size.X >= part.Finished.Length - 1e-6);
+        }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    public class PriceListTests
+    {
+        [Theory] [InlineData("2.800", 2800)] [InlineData("2800", 2800)] [InlineData("1 950", 1950)] [InlineData("2,5", 2.5)] [InlineData("0.25", 0.25)] [InlineData("12,50", 12.5)]
+        public void NumbersAcceptRomanianFormats(string text, double expected) { Assert.True(PriceList.TryNumber(text, out var v)); Assert.Equal(expected, v, 6); }
+
+        [Fact]
+        public void ExportThenImport_RoundTripsAndEditsApply()
+        {
+            var lib = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault(); var s = new RhinoWood.Core.Rules.ProjectSettings();
+            var csv = PriceList.Export(lib, s);
+            Assert.StartsWith(PriceList.Header, csv); Assert.Contains("specie;OAK;Stejar;2800", csv); Assert.Contains("regula;LaborRatePerHour", csv); Assert.Contains("setare;VatPercent", csv);
+            var edited = csv.Replace("specie;OAK;Stejar;2800", "specie;OAK;Stejar;2.950").Replace("regula;LaborRatePerHour;Tarif manoperă;90", "regula;LaborRatePerHour;Tarif manoperă;110");
+            var lib2 = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault(); var s2 = new RhinoWood.Core.Rules.ProjectSettings(); var user = new RhinoWood.Core.Libraries.WoodLibrary();
+            var res = PriceList.Import(edited, lib2, s2, user);
+            Assert.Equal(2950, lib2.Species["OAK"].PricePerM3); Assert.Equal(110, s2.Rules.LaborRatePerHour); Assert.Equal(2950, user.Species["OAK"].PricePerM3);
+            Assert.Equal("[REF]", lib2.Species["OAK"].PriceLabel);             // real-listing provenance is kept
+            Assert.Equal(110, res.Parameters["R.LaborRatePerHour"]);
+            Assert.True(res.Species >= 12 && res.Hardware > 5);
+            var s3 = new RhinoWood.Core.Rules.ProjectSettings(); PriceList.ApplyParameters(res.Parameters, s3); Assert.Equal(110, s3.Rules.LaborRatePerHour);
+        }
+
+        [Fact]
+        public void BadRows_AreReportedNotFatal()
+        {
+            var lib = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault(); var s = new RhinoWood.Core.Rules.ProjectSettings();
+            var res = PriceList.Import("tip;id;nume;pret\nspecie;NOPE;x;100\nspecie;OAK;x;abc\nregula;Nonsense;x;5\nspecie;ASH;Frasin;1.900\n", lib, s);
+            Assert.Equal(1, res.Species); Assert.Equal(1900, lib.Species["ASH"].PricePerM3); Assert.Equal(3, res.Messages.Count);
+        }
+
+        [Fact]
+        public void Reference_Confidence_Intervals_AndConifers()
+        {
+            var lib = RhinoWood.Core.Libraries.WoodLibrary.CreateDefault();
+            Assert.Equal(3, lib.Species["OAK"].PriceConfidence); Assert.Equal(3, lib.Species["BEECH"].PriceConfidence); Assert.Equal(2, lib.Species["ASH"].PriceConfidence); Assert.Equal(1, lib.Species["WALNUT"].PriceConfidence);
+            Assert.Equal((1800, 3500), (lib.Species["OAK"].PriceMin, lib.Species["OAK"].PriceMax)); Assert.Equal(900, lib.Species["SPRUCE"].PricePerM3);
+            Assert.All(lib.Species.Values.Where(x => x.PriceMax > 0), x => Assert.InRange(x.PricePerM3, x.PriceMin, x.PriceMax));
+            // the m2 table of the reference sheet
+            var m2 = new System.Collections.Generic.Dictionary<string, (double a, double b)> { ["OAK"] = (81, 154), ["BEECH"] = (38, 72), ["ASH"] = (57, 107), ["MAPLE"] = (42, 80), ["LINDEN"] = (41, 77), ["CHERRY"] = (49, 94), ["WALNUT"] = (93, 176), ["ROBINIA"] = (46, 88), ["ELM"] = (51, 96), ["ALDER"] = (32, 61), ["POPLAR"] = (26, 50), ["HORNBEAM"] = (23, 44) };
+            foreach (var kv in m2) { Assert.Equal(kv.Value.a, System.Math.Round(PanelPrice.PerM2(lib.Species[kv.Key].PricePerM3, 29), System.MidpointRounding.AwayFromZero)); Assert.Equal(kv.Value.b, System.Math.Round(PanelPrice.PerM2(lib.Species[kv.Key].PricePerM3, 55), System.MidpointRounding.AwayFromZero)); }
+        }
+
+        [Fact]
+        public void YieldForms_AndTransport()
+        {
+            var p = WoodProject.Create("table.dining", "t"); var r = p.Recalculate();
+            double Fa(string f) { p.Settings.LumberForm = f; return OrderEstimate.Compute(p, r).Factor; }
+            Assert.InRange(Fa("Blanks"), 1.15, 1.25); Assert.InRange(Fa("EdgedA"), 1.4, 1.5); Assert.InRange(Fa("Edged"), 1.6, 1.8); Assert.InRange(Fa("Unedged"), 1.8, 2.2); Assert.InRange(Fa("Rustic"), 2.0, 2.5);
+            double before = Pricing.Compute(p, r).PriceExVat; p.Settings.DeliveryKm = 200; var b = Pricing.Compute(p, r);
+            Assert.Equal(900, b.Transport, 6); Assert.True(b.PriceExVat > before);
+        }
+    }
+}

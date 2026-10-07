@@ -139,11 +139,16 @@ namespace RhinoWood.Core.Libraries
             Sp("ALDER", "Black alder", 550, 7700, 85, 47, 16, 17, 0.0, 0.0, null, "Good", 1100, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
             Sp("POPLAR", "Black poplar", 450, 8800, 55, 30, 10, 10, 0.13, 0.31, null, "Fair", 900, null, "[V-DATA]", LWF, "dowel");
             Sp("HORNBEAM", "Hornbeam", 750, 0, 0, 0, 0, 0, 0.20, 0.41, null, "Fair", 800, null, "[PROXY]", "density from memory, shrinkage proxy = beech (DIN 68100 value not in the knowledge base) - verify", "dowel", "mortise-tenon");
-            const string PriceEst = "estimare: lista de prețuri din Germania feb. 2026 × ~0,26 (raportul RO/DE la stejar și fag); verifică înainte de ofertă (Nordik Express 0745 525 203: frasin, paltin, tei, cireș, lemn uscat)";
-            foreach (var kv in new[] { "WALNUT", "ASH", "ELM", "CHERRY", "ROBINIA", "MAPLE", "LINDEN", "ALDER", "POPLAR", "HORNBEAM" })
-            { lib.Species[kv].PriceLabel = "[ESTIMARE]"; lib.Species[kv].PriceNote = PriceEst; }
-            lib.Species["OAK"].PriceLabel = "[REF]"; lib.Species["OAK"].PriceNote = "media anunțurilor românești 2.225 lei/m³; valoare de calcul puțin peste medie (anunțurile includ clasa C și lemn doar zvântat): 2.800";
-            lib.Species["BEECH"].PriceLabel = "[REF]"; lib.Species["BEECH"].PriceNote = "media anunțurilor românești 1.065 lei/m³; valoare de calcul: 1.300";
+            const string PriceEst = "estimare: lista de prețuri din Germania feb. 2026 (Mühlbauer Holz) × ~0,26 (raportul RO/DE la stejar și fag); verifică înainte de ofertă (Nordik Express 0745 525 203: frasin, paltin, tei, cireș, uscate 8–10 %)";
+            // (id, range min, range max, confidence 1-3)
+            foreach (var (id, lo, hi, conf) in new[] { ("OAK", 1800.0, 3500.0, 3), ("BEECH", 1000.0, 1500.0, 3), ("ASH", 1650.0, 2250.0, 2), ("MAPLE", 1200.0, 1650.0, 2), ("LINDEN", 1200.0, 1600.0, 1), ("CHERRY", 1450.0, 1950.0, 1),
+                ("WALNUT", 2700.0, 3700.0, 1), ("ROBINIA", 1400.0, 1900.0, 1), ("ELM", 1500.0, 2000.0, 1), ("ALDER", 950.0, 1300.0, 1), ("POPLAR", 800.0, 1000.0, 1), ("HORNBEAM", 650.0, 900.0, 1) })
+            { var sp = lib.Species[id]; sp.PriceMin = lo; sp.PriceMax = hi; sp.PriceConfidence = conf; if (conf < 3) { sp.PriceLabel = "[ESTIMARE]"; sp.PriceNote = PriceEst; } }
+            lib.Species["OAK"].PriceLabel = "[REF]"; lib.Species["OAK"].PriceNote = "media anunțurilor românești 2.225 lei/m³ (4 prețuri); valoare de lucru puțin peste medie (anunțurile includ clasa C și lemn doar zvântat): 2.800";
+            lib.Species["BEECH"].PriceLabel = "[REF]"; lib.Species["BEECH"].PriceNote = "media anunțurilor românești 1.065 lei/m³ (3 prețuri); valoare de lucru: 1.300";
+            // conifers: 900 lei/m3 at a Bucharest depot (spruce/fir) [REF]; pine not listed separately -> same category [ESTIMARE]
+            lib.Species["SPRUCE"].PricePerM3 = 900; lib.Species["SPRUCE"].PriceLabel = "[REF]"; lib.Species["SPRUCE"].PriceConfidence = 2; lib.Species["SPRUCE"].PriceNote = "rășinoase (molid/brad): 900 lei/m³ la depozit București";
+            lib.Species["PINE"].PricePerM3 = 900; lib.Species["PINE"].PriceLabel = "[ESTIMARE]"; lib.Species["PINE"].PriceConfidence = 2; lib.Species["PINE"].PriceNote = "pinul nu apare separat; aceeași categorie rășinoase (900 lei/m³)";
             // not covered by the verified report: kept as placeholders
             Sp("DOUGLAS", "Douglas fir", 530, 0, 0, 0, 0, 0, 0.18, 0.34, null, "Good", 520, null, "[UNVERIFIED]", "from memory - verify (Wood Handbook has US data)", "mortise-tenon", "bridle");
             Sp("MAHOGANY", "Mahogany", 550, 0, 0, 0, 0, 0, 0.20, 0.30, null, "Very good", 3000, 15, "[UNVERIFIED]", "from memory - verify", "mortise-tenon", "dovetail");

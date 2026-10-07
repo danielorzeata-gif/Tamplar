@@ -339,8 +339,11 @@ namespace RhinoWood.Plugin.UI
             var minRem = Field(Num(s.Rules.MinReusableRemnant)); var labor = Field(Num(s.Rules.LaborRatePerHour)); var margin = Field(Num(s.SalesMarginPercent));
             var cmargin = Field(Num(s.ComplexityMarginPercent)); var overhead = Field(Num(s.OverheadPercent)); var vat = Field(Num(s.VatPercent)); var round = Field(Num(s.PriceRounding));
             var cur = Field(s.Currency, 60);
-            var yE = Field(Num(s.YieldEdged)); var yU = Field(Num(s.YieldUnedged)); var yB = Field(Num(s.YieldBlanks));
-            var form = new DropDown { Font = Tk.Label }; form.Items.Add(new ListItem { Text = "Tivit (lemn fasonat pe laturi)", Key = "Edged" }); form.Items.Add(new ListItem { Text = "Netivit", Key = "Unedged" }); form.Items.Add(new ListItem { Text = "Semifabricate", Key = "Blanks" }); form.SelectedKey = s.LumberForm;
+            var yE = Field(Num(s.YieldEdged)); var yU = Field(Num(s.YieldUnedged)); var yB = Field(Num(s.YieldBlanks)); var yA = Field(Num(s.YieldEdgedA)); var yR = Field(Num(s.YieldRustic));
+            var km = Field(Num(s.DeliveryKm)); var kmRate = Field(Num(s.TransportLeiPerKm));
+            var form = new DropDown { Font = Tk.Label };
+            foreach (var (k, txt) in new[] { ("Blanks", "Semifabricate / frize calibrate A/B"), ("EdgedA", "Tivit uscat clasa A"), ("Edged", "Tivit uscat clasa B/AB"), ("Unedged", "Netivit uscat A/B"), ("Rustic", "Clasa C / rustic") }) form.Items.Add(new ListItem { Text = txt, Key = k });
+            form.SelectedKey = s.LumberForm;
             Heading("Material și debitare");
             Add(Labeled("Rezervă globală (aplicată o dată)", reserve, "%"));
             Add(Labeled("Grosime tăietură (kerf)", kerf, "mm"));
@@ -348,7 +351,9 @@ namespace RhinoWood.Plugin.UI
             Add(Labeled("Rest minim reutilizabil", minRem, "mm"));
             Heading("Estimare rapidă de comandă (volum finit × factor)");
             Add(Labeled("Formă de aprovizionare", form));
-            Add(Labeled("Factor tivit (clasa B)", yE, "×")); Add(Labeled("Factor netivit (1,8–2,2)", yU, "×")); Add(Labeled("Factor semifabricate", yB, "×"));
+            Add(Labeled("Semifabricate (1,15–1,25)", yB, "×")); Add(Labeled("Tivit clasa A (1,4–1,5)", yA, "×")); Add(Labeled("Tivit clasa B/AB (1,6–1,8)", yE, "×"));
+            Add(Labeled("Netivit (1,8–2,2)", yU, "×")); Add(Labeled("Clasa C / rustic (2,0–2,5)", yR, "×"));
+            Add(Labeled("Distanță transport material", km, "km (0 = livrare gratuită)")); Add(Labeled("Transport dubă", kmRate, "lei/km (3–6)"));
             Heading("Preț de vânzare");
             Add(Labeled("Tarif manoperă", labor, "lei/oră (75–100 uzual)"));
             Add(Labeled("Regie atelier", overhead, "% din costul direct"));
@@ -372,6 +377,10 @@ namespace RhinoWood.Plugin.UI
                 if (TryNum(yE.Text, out var y1)) s.YieldEdged = y1;
                 if (TryNum(yU.Text, out var y2)) s.YieldUnedged = y2;
                 if (TryNum(yB.Text, out var y3)) s.YieldBlanks = y3;
+                if (TryNum(yA.Text, out var y4)) s.YieldEdgedA = y4;
+                if (TryNum(yR.Text, out var y5)) s.YieldRustic = y5;
+                if (TryNum(km.Text, out var k1)) s.DeliveryKm = k1;
+                if (TryNum(kmRate.Text, out var k2)) s.TransportLeiPerKm = k2;
                 if (form.SelectedKey != null) s.LumberForm = form.SelectedKey;
                 if (!string.IsNullOrWhiteSpace(cur.Text)) s.Currency = cur.Text.Trim();
                 Prj.Rebuild(); Refresh();
@@ -388,9 +397,15 @@ namespace RhinoWood.Plugin.UI
         {
             Title("Materiale");
             Heading("Esențe în bibliotecă");
-            Muted("Preț lei/m³ (lemn uscat 8–10 %, tivit, clasa A/B) · preț plăcă încleiată lei/m² la 29 și 55 mm · proveniența prețului: [REF] anunțuri reale, [ESTIMARE] de verificat la furnizor.");
+            Muted("Preț de lucru lei/m³ (cherestea uscată 8–10 %, tivită, clasa A/B, fără TVA și transport) · interval probabil la producătorul RO · preț placă încleiată lei/m² la 29 și 55 mm brut · încredere ●●● anunțuri reale, ●●○ estimare + un reper RO, ●○○ doar estimare (verifică la furnizor).");
             foreach (var sp in P.Library.Species.Values.OrderByDescending(x => x.PricePerM3))
-                Mono(string.Format(CultureInfo.InvariantCulture, "{0,-18} {1,7:0}/m³  {2,5:0}/m² 29mm  {3,5:0}/m² 55mm  {4}", Ro.SpeciesName(sp.Id, sp.Name), sp.PricePerM3, PanelPrice.PerM2(sp.PricePerM3, 29), PanelPrice.PerM2(sp.PricePerM3, 55), sp.IsUserDefined ? "(utilizator)" : sp.PriceLabel));
+            {
+                string dots = sp.PriceConfidence >= 3 ? "●●●" : sp.PriceConfidence == 2 ? "●●○" : sp.PriceConfidence == 1 ? "●○○" : "···";
+                string range = sp.PriceMax > 0 ? string.Format(CultureInfo.InvariantCulture, "{0:0}–{1:0}", sp.PriceMin, sp.PriceMax) : "";
+                Mono(string.Format(CultureInfo.InvariantCulture, "{0,-16} {1,6:0}/m³ {2,-10} {3,4}/m² 29mm {4,4}/m² 55mm  {5} {6}", Ro.SpeciesName(sp.Id, sp.Name), sp.PricePerM3, range, Math.Round(PanelPrice.PerM2(sp.PricePerM3, 29), MidpointRounding.AwayFromZero), Math.Round(PanelPrice.PerM2(sp.PricePerM3, 55), MidpointRounding.AwayFromZero), dots, sp.IsUserDefined ? "(utilizator)" : sp.PriceLabel));
+            }
+            Muted("Costuri de adăugat peste prețul pe m³: transport (duba ~3–6 lei/km; unii livrează gratuit), uscare suplimentară pentru lemnul „zvântat”, comandă minimă (de regulă 1 palet ≈ 1–1,5 m³, uneori 3 m³). Dacă vânzătorul cubează la grosimea nominală (debitat 29, facturat 26), plătești cu ~10 % mai puțin pe m³ real.");
+            Row(Button("Exportă lista de prețuri (CSV)", () => _msg.Text = WoodActions.ExportPrices(this)), Button("Importă lista de prețuri (CSV)", () => { _msg.Text = WoodActions.ImportPrices(this); Rebuild(); Add(_msg); }));
             Heading("Adaugă esență");
             var name = Field("", 160); var price = Field("1500"); var dens = Field("650"); var tang = Field("0.0040");
             Add(Labeled("Nume", name)); Add(Labeled("Preț", price, "/m³")); Add(Labeled("Densitate", dens, "kg/m³"));

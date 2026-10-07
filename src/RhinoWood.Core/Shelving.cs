@@ -30,7 +30,7 @@ namespace RhinoWood.Core.Furniture
         };
 
         public IReadOnlyList<TierDef> Tiers { get; } = new TierDef[0];
-        public IReadOnlyList<ChoiceDef> Choices { get; } = new ChoiceDef[0];
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new List<ChoiceDef> { CaseKit.EdgeJointChoice() };
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
         public string NodeFor(string key) => key == "biscuitPitch" ? "biscuit.pitch" : key;
 
@@ -48,6 +48,7 @@ namespace RhinoWood.Core.Furniture
             var g = new DependencyGraph();
             double Val(string k) => v.TryGetValue(k, out var d) ? d : Parameters.First(p => p.Key == k).Default;
             g.AddInput("species", speciesId);
+            g.AddInput("edgeJoint", ch != null && ch.TryGetValue("edgeJoint", out var ej) ? ej : "biscuit");
             foreach (var p in Parameters) g.AddInput(NodeFor(p.Key), Val(p.Key));
             g.AddComputed("layout", new[] { "species", "width", "depth", "height", "shelves", "shelfThickness", "biscuit.pitch" }, r => Build(ctx, r));
             return g;
@@ -91,7 +92,7 @@ namespace RhinoWood.Core.Furniture
             var installs = new List<HardwareInstall>();
             CaseKit.AntiTip(installs, model, ctx.Library, L.AntiTipHost, L.AntiTipPoint);
             new HardwareInstaller(ctx.Library).Install(model, installs);
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             return model;
         }
     }

@@ -48,6 +48,7 @@ namespace RhinoWood.Core.Reports
             [FeatureKind.WedgeSlot] = "Tăietură pentru pană", [FeatureKind.Counterbore] = "Gaură în buzunar", [FeatureKind.Finger] = "Dinte", [FeatureKind.Dovetail] = "Coadă de rândunică"
         };
 
+        public static string EdgeJoint(string id) => id == "spline" ? "Cep liber (pană continuă)" : id == "biscuit" ? "Lamele (biscuiți)" : id;
         public static string FrontStyle(string id) => id == "scoop" ? "Scobitură (deget)" : id == "handle" ? "Mâner 128 mm" : id == "push" ? "Push-to-open" : id == "jrabbet" ? "Falț J (prindere pe muchie)" : id;
         public static string SpeciesName(string id, string fallback = null) => Species.TryGetValue(id ?? "", out var v) ? v : fallback ?? id;
         public static string Family(PartFamily f)
@@ -67,7 +68,7 @@ namespace RhinoWood.Core.Reports
         };
         private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
         {
-            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp", ["frontStyle"] = "Deschidere față sertar", ["materialC"] = "Esență structură ascunsă (clasa C)", ["jointRail"] = "Îmbinare traverse – picior"
+            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat", ["edgeJoint"] = "Rost între scânduri", ["materialB"] = "Esență interior (clasa B)", ["jointBody"] = "Îmbinare corp", ["frontStyle"] = "Deschidere față sertar", ["materialC"] = "Esență structură ascunsă (clasa C)", ["jointRail"] = "Îmbinare traverse – picior"
         };
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;

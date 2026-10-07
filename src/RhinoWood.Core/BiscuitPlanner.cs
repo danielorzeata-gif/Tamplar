@@ -15,8 +15,10 @@ namespace RhinoWood.Core.Furniture
     /// </summary>
     public static class BiscuitPlanner
     {
-        public static void Apply(FurnitureModel model, double pitch)
+        /// <summary>edge = "biscuit" (default) or "spline" (loose tongue: a continuous groove along the whole edge of both strips with a 6 mm strip glued in).</summary>
+        public static void Apply(FurnitureModel model, double pitch, string edge = "biscuit")
         {
+            if (edge == "spline") { ApplySpline(model); return; }
             int k = 0, fn = 0;
             foreach (var fam in model.Families.Where(f => f.EdgeGlued))
             {
@@ -42,6 +44,32 @@ namespace RhinoWood.Core.Furniture
                                 part.Features.Add(JointGeometry.Rect(part, slotLocal, FeatureKind.BiscuitSlot, slotLocal.Size.Y / 2, "Biscuit slot " + size + " (strip edge " + e + ")", "ROUT-SLOT-3", id, "BSL" + (++fn).ToString("000", CultureInfo.InvariantCulture)));
                                 model.Biscuits.Add(new BiscuitInstance { Id = id, PartId = part.Id, Edge = e, Size = size, Box = body });
                             }
+                }
+            }
+        }
+    
+        private static void ApplySpline(FurnitureModel model)
+        {
+            int k = 0, fn = 0;
+            foreach (var fam in model.Families.Where(f => f.EdgeGlued))
+            {
+                int strips = Math.Max(1, fam.RoughPieces.Sum(r => r.CountPerPart));
+                if (strips < 2) continue;
+                foreach (var part in fam.Instances)
+                {
+                    var fin = part.Finished; double L = fin.Length, W = fin.Width, T = fin.Thickness;
+                    if (T < 12) continue;
+                    int rows = T >= 45 ? 2 : 1; double sw = W / strips;
+                    for (int e = 1; e < strips; e++)
+                        for (int rw = 0; rw < rows; rw++)
+                        {
+                            double y = e * sw, z = rows == 1 ? T / 2 : T * (rw + 1) / 3.0;
+                            var groove = new Box3(new Vec3(0, y - 10, z - 3), new Vec3(L, y + 10, z + 3));
+                            var body = part.LocalBoxToWorld(new Box3(new Vec3(4, y - 9.5, z - 3), new Vec3(L - 4, y + 9.5, z + 3)));
+                            string id = "SPL-" + (++k).ToString("000", CultureInfo.InvariantCulture);
+                            part.Features.Add(JointGeometry.Rect(part, groove, FeatureKind.Slot, 10, "Spline groove 6 mm (strip edge " + e + ")", "ROUT-SLOT-3", id, "SGR" + (++fn).ToString("000", CultureInfo.InvariantCulture)));
+                            model.Biscuits.Add(new BiscuitInstance { Id = id, PartId = part.Id, Edge = e, Size = "spline 6x19", Box = body });
+                        }
                 }
             }
         }

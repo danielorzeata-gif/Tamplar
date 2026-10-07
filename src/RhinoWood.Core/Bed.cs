@@ -39,12 +39,13 @@ namespace RhinoWood.Core.Furniture
             new TierDef { Id = Furniture.Tiers.Premium, Meta = "stejar integral", Choices = { ["materialC"] = "OAK", ["jointRail"] = "loose-tenon" } },
         };
 
-        public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new List<ChoiceDef>
         {
             new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "material.hidden", Key = "materialC", Label = "Hidden structure (class C) species", Group = "Materials", Kind = "species", Default = "PINE", Options = { "OAK", "ASH", "PINE", "SPRUCE" },
                 Description = "Slats, ledgers, beam and centre leg: never seen. Sections are the same (they pass the deflection check in pine)." },
             new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.bed-rail", Key = "jointRail", Label = "End rails to legs", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "loose-tenon", "biscuit" },
                 Description = "Glued joint of the end rails and the headboard top rail. The side rails are always knock-down (bed bolts)." },
+            CaseKit.EdgeJointChoice(),
         };
 
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
@@ -163,7 +164,7 @@ namespace RhinoWood.Core.Furniture
                 MatePoint = h.MatePoint, MateNormal = h.MateNormal, MateAxisV = h.MateAxisV, Quantity = 1
             }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             return model;
         }
     }

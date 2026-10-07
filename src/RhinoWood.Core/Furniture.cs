@@ -176,6 +176,7 @@ namespace RhinoWood.Core.Furniture
             new ChoiceDef { Key = "topFixing", Label = "Tabletop fixing (long aprons)", Group = "Hardware", StyleKind = StyleKind.Structure, StyleKey = "top.fixing", Kind = "hardware", Default = "TOP-ZCLIP",
                 Options = { "TOP-ZCLIP", "TOP-FIGURE8", "TOP-BUTTON" },
                 Description = "How the solid-wood top is attached while still allowed to move across the grain." },
+            CaseKit.EdgeJointChoice(),
         };
 
         public string NodeFor(string key) => key == "apronHeight" ? "apron.height" : key == "apronThickness" ? "apron.thickness" : key == "biscuitPitch" ? "biscuit.pitch" : key;
@@ -189,7 +190,7 @@ namespace RhinoWood.Core.Furniture
 
             string Ch(string k) => ch != null && ch.TryGetValue(k, out var s) ? s : Choices.First(c => c.Key == k).Default;
             g.AddInput("species", speciesId);
-            g.AddInput("joint.long", Ch("jointApronLong")); g.AddInput("joint.short", Ch("jointApronShort")); g.AddInput("top.fixing", Ch("topFixing"));
+            g.AddInput("edgeJoint", Ch("edgeJoint")); g.AddInput("joint.long", Ch("jointApronLong")); g.AddInput("joint.short", Ch("jointApronShort")); g.AddInput("top.fixing", Ch("topFixing"));
             g.AddInput("length", Val("length")); g.AddInput("width", Val("width")); g.AddInput("height", Val("height"));
             g.AddInput("topThickness", Val("topThickness")); g.AddInput("legSectionUser", Val("legSectionUser"));
             g.AddInput("apron.height", Val("apronHeight")); g.AddInput("apron.thickness", Val("apronThickness"));
@@ -366,7 +367,7 @@ namespace RhinoWood.Core.Furniture
                 }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
 
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             return model;
         }
 

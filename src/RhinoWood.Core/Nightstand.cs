@@ -40,14 +40,15 @@ namespace RhinoWood.Core.Furniture
             new TierDef { Id = Furniture.Tiers.Premium, Meta = "stejar integral", Choices = { ["materialB"] = "OAK", ["jointBody"] = "dowel" } },
         };
 
-        public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new List<ChoiceDef>
         {
             new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "material.interior", Key = "materialB", Label = "Interior (class B) species", Group = "Materials", Kind = "species", Default = "ASH", Options = { "OAK", "ASH", "SPRUCE", "PINE" },
                 Description = "Species of the parts seen only when the drawer is open (drawer box, bottom, shelf). Class A (fronts, sides, cap, legs) uses the project species." },
-            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit" },
+            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit", "loose-tenon", "dado", "pocket-screw" },
                 Description = "Joint between the body panels (no visible screws)." },
             new ChoiceDef { StyleKind = StyleKind.Aspect, StyleKey = "front.style", Key = "frontStyle", Label = "Front opening", Group = "Drawer", Kind = "frontstyle", Default = "scoop", Options = { "scoop", "handle", "push", "jrabbet" },
                 Description = "How the drawer opens: finger scoop, handle (128 mm), push-to-open, or J finger rabbet. The same in the whole room." },
+            CaseKit.EdgeJointChoice(),
         };
 
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
@@ -67,7 +68,7 @@ namespace RhinoWood.Core.Furniture
             double Val(string k) => v.TryGetValue(k, out var d) ? d : Parameters.First(p => p.Key == k).Default;
             string Ch(string k) => ch != null && ch.TryGetValue(k, out var s) ? s : Choices.First(c => c.Key == k).Default;
             g.AddInput("species", speciesId);
-            g.AddInput("materialB", Ch("materialB")); g.AddInput("jointBody", Ch("jointBody")); g.AddInput("frontStyle", Ch("frontStyle"));
+            g.AddInput("materialB", Ch("materialB")); g.AddInput("jointBody", Ch("jointBody")); g.AddInput("frontStyle", Ch("frontStyle")); g.AddInput("edgeJoint", Ch("edgeJoint"));
             foreach (var p in Parameters) g.AddInput(NodeFor(p.Key), Val(p.Key));
             var deps = new[] { "species", "materialB", "jointBody", "frontStyle", "width", "depth", "height", "legHeight", "panelThickness", "drawerHeight", "biscuit.pitch" };
             g.AddComputed("layout", deps, r => Build(ctx, r));
@@ -84,6 +85,7 @@ namespace RhinoWood.Core.Furniture
             double W = r.Get<double>("width"), D = r.Get<double>("depth"), H = r.Get<double>("height"), legH = r.Get<double>("legHeight");
             double t = r.Get<double>("panelThickness"), dH = r.Get<double>("drawerHeight");
             var L = new Layout();
+            double dd = CaseKit.DadoDepth(joint, t);   // dado housing: panels reach into the grooves
 
             double x0 = 10, xe = W - 10, back = 5;
             double yb0 = t, yb1 = D - back;                  // body depth range (the drawer front occupies 0..t)
@@ -93,8 +95,8 @@ namespace RhinoWood.Core.Furniture
 
             // ---- class A
             var cap = Family(ctx, "F-NS-CAP", "Cap", PartType.Panel, spA, new Dims(W, D, t), Axis.X, 'A', true); Add(cap, "CAP-1", B(0, 0, zTop, W, D, H), Axis.X, Axis.Y, Axis.Z);
-            var side = Family(ctx, "F-NS-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH, latD, t), Axis.Z, 'A', true);
-            Add(side, "SIDE-1", B(x0, yb0, legH, x0 + t, yb1, zTop), Axis.Z, Axis.Y, Axis.X); Add(side, "SIDE-2", B(xe - t, yb0, legH, xe, yb1, zTop), Axis.Z, Axis.Y, Axis.X);
+            var side = Family(ctx, "F-NS-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH + dd, latD, t), Axis.Z, 'A', true);
+            Add(side, "SIDE-1", B(x0, yb0, legH, x0 + t, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X); Add(side, "SIDE-2", B(xe - t, yb0, legH, xe, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X);
             double frontW = xe - x0 - 3, frontH = dH;
             var front = Family(ctx, "F-NS-FRONT", "Drawer front", PartType.Drawer, spA, new Dims(frontW, frontH, t), Axis.X, 'A', true);
             Add(front, "FRONT-1", B(x0 + 1.5, 0, zShelf1 + 1.5, xe - 1.5, t, zShelf1 + 1.5 + frontH), Axis.X, Axis.Z, Axis.Y);
@@ -103,8 +105,8 @@ namespace RhinoWood.Core.Furniture
             foreach (var y in ly) foreach (var x in lx) Add(leg, "LEG-" + (++li), B(x, y, 0, x + 45, y + 45, legH), Axis.Z, Axis.X, Axis.Y);
 
             // ---- class B
-            var bot = Family(ctx, "F-NS-BOT", "Bottom", PartType.Panel, spB, new Dims(iw, latD, t), Axis.X, 'B', true); Add(bot, "BOT-1", B(x0 + t, yb0, legH, xe - t, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
-            var shelf = Family(ctx, "F-NS-SHELF", "Niche shelf", PartType.Shelf, spB, new Dims(iw, latD - 14, t), Axis.X, 'B', true); Add(shelf, "SHELF-1", B(x0 + t, yb0, zShelf0, xe - t, yb1 - 14, zShelf1), Axis.X, Axis.Y, Axis.Z);
+            var bot = Family(ctx, "F-NS-BOT", "Bottom", PartType.Panel, spB, new Dims(iw + 2 * dd, latD, t), Axis.X, 'B', true); Add(bot, "BOT-1", B(x0 + t - dd, yb0, legH, xe - t + dd, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
+            var shelf = Family(ctx, "F-NS-SHELF", "Niche shelf", PartType.Shelf, spB, new Dims(iw + 2 * dd, latD - 14, t), Axis.X, 'B', true); Add(shelf, "SHELF-1", B(x0 + t - dd, yb0, zShelf0, xe - t + dd, yb1 - 14, zShelf1), Axis.X, Axis.Y, Axis.Z);
 
             // drawer box
             double bw = iw - 2 * slide, sl = Math.Max(150, Math.Floor((latD - t - 15) / 50) * 50), bh = dH - 46.5, zb = zShelf1 + 15;
@@ -151,7 +153,7 @@ namespace RhinoWood.Core.Furniture
                 MatePoint = h.MatePoint, MateNormal = h.MateNormal, MateAxisV = h.MateAxisV, Quantity = 1
             }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             CaseKit.AddFrontFeatures(model, g.Get<string>("frontStyle"));
             model.SheetParts.AddRange(L.Sheets.Select(s => new SheetPart { Id = s.Id, Name = s.Name, Material = s.Material, Bounds = s.Bounds, Thickness = s.Thickness, AreaM2 = s.AreaM2 }));
             return model;

@@ -39,12 +39,13 @@ namespace RhinoWood.Core.Furniture
             new TierDef { Id = Furniture.Tiers.Premium, Meta = "stejar integral", Choices = { ["materialB"] = "OAK", ["jointBody"] = "dowel" } },
         };
 
-        public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new List<ChoiceDef>
         {
             new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "material.interior", Key = "materialB", Label = "Interior (class B) species", Group = "Materials", Kind = "species", Default = "ASH", Options = { "OAK", "ASH", "SPRUCE", "PINE" } },
-            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit" } },
+            new ChoiceDef { StyleKind = StyleKind.Structure, StyleKey = "joint.body", Key = "jointBody", Label = "Body joints", Group = "Joinery", Kind = "joint", Default = "dowel", Options = { "dowel", "biscuit", "loose-tenon", "dado", "pocket-screw" } },
             new ChoiceDef { StyleKind = StyleKind.Aspect, StyleKey = "front.style", Key = "frontStyle", Label = "Door opening", Group = "Doors", Kind = "frontstyle", Default = "handle", Options = { "scoop", "handle", "push", "jrabbet" },
                 Description = "Handle (vertical, 128 mm), push-to-open, or a routed finger groove on the free edge." },
+            CaseKit.EdgeJointChoice(),
         };
 
         public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
@@ -80,25 +81,26 @@ namespace RhinoWood.Core.Furniture
             double W = r.Get<double>("width"), D = r.Get<double>("depth"), H = r.Get<double>("height"), legH = r.Get<double>("legHeight"), t = r.Get<double>("panelThickness");
             int nd = Math.Max(1, (int)Math.Round(r.Get<double>("doors"))), nsh = (int)Math.Round(r.Get<double>("shelves"));
             var L = new Layout();
+            double dd = CaseKit.DadoDepth(joint, t);
             double bx0 = 0, bx1 = W, yb0 = t, yb1 = D - 5, zTop = H - t, iw = W - 2 * t, latD = yb1 - yb0;
 
             var cap = CaseKit.Family(ctx, "F-WR-CAP", "Cap", PartType.Panel, spA, new Dims(W, D, t), Axis.X, 'A', true); CaseKit.Add(cap, "CAP-1", CaseKit.B(0, 0, zTop, W, D, H), Axis.X, Axis.Y, Axis.Z);
-            var side = CaseKit.Family(ctx, "F-WR-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH, latD, t), Axis.Z, 'A', true);
-            CaseKit.Add(side, "SIDE-1", CaseKit.B(0, yb0, legH, t, yb1, zTop), Axis.Z, Axis.Y, Axis.X); CaseKit.Add(side, "SIDE-2", CaseKit.B(W - t, yb0, legH, W, yb1, zTop), Axis.Z, Axis.Y, Axis.X);
-            var bot = CaseKit.Family(ctx, "F-WR-BOT", "Bottom", PartType.Panel, spB, new Dims(iw, latD, t), Axis.X, 'B', true); CaseKit.Add(bot, "BOT-1", CaseKit.B(t, yb0, legH, W - t, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
+            var side = CaseKit.Family(ctx, "F-WR-SIDE", "Side", PartType.Panel, spA, new Dims(zTop - legH + dd, latD, t), Axis.Z, 'A', true);
+            CaseKit.Add(side, "SIDE-1", CaseKit.B(0, yb0, legH, t, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X); CaseKit.Add(side, "SIDE-2", CaseKit.B(W - t, yb0, legH, W, yb1, zTop + dd), Axis.Z, Axis.Y, Axis.X);
+            var bot = CaseKit.Family(ctx, "F-WR-BOT", "Bottom", PartType.Panel, spB, new Dims(iw + 2 * dd, latD, t), Axis.X, 'B', true); CaseKit.Add(bot, "BOT-1", CaseKit.B(t - dd, yb0, legH, W - t + dd, yb1, legH + t), Axis.X, Axis.Y, Axis.Z);
             L.Families.AddRange(new[] { cap, side, bot });
             void J(string type, string a, bool atStart, string b, Dictionary<string, double> p = null) => L.Requests.Add(new JointEngine.Request { JointTypeId = type, PartAId = a, PartBId = b, AAtStart = atStart, Params = p ?? new Dictionary<string, double>() });
             J(joint, "BOT-1", true, "SIDE-1"); J(joint, "BOT-1", false, "SIDE-2"); J(joint, "SIDE-1", false, "CAP-1"); J(joint, "SIDE-2", false, "CAP-1");
 
             // clothes rail (1520-1770 mm from the floor) and fixed shelves above it
             double railZ = Math.Min(1700, zTop - 130);
-            var shelf = CaseKit.Family(ctx, "F-WR-SHELF", "Shelf", PartType.Shelf, spB, new Dims(iw, latD - 14, t), Axis.X, 'B', true);
+            var shelf = CaseKit.Family(ctx, "F-WR-SHELF", "Shelf", PartType.Shelf, spB, new Dims(iw + 2 * dd, latD - 14, t), Axis.X, 'B', true);
             for (int i = 0; i < nsh; i++)
             {
                 double zs = railZ + 110 + (zTop - (railZ + 110) - t) * (i + 1) / (nsh + 1) - (nsh == 0 ? 0 : 0);
                 zs = Math.Min(zs, zTop - 120);
                 string id = "SHELF-" + (i + 1);
-                CaseKit.Add(shelf, id, CaseKit.B(t, yb0, zs, W - t, yb1 - 14, zs + t), Axis.X, Axis.Y, Axis.Z);
+                CaseKit.Add(shelf, id, CaseKit.B(t - dd, yb0, zs, W - t + dd, yb1 - 14, zs + t), Axis.X, Axis.Y, Axis.Z);
                 J(joint, id, true, "SIDE-1"); J(joint, id, false, "SIDE-2");
             }
             if (nsh > 0) L.Families.Add(shelf);
@@ -156,7 +158,7 @@ namespace RhinoWood.Core.Furniture
             }).ToList();
             CaseKit.AntiTip(installs, model, ctx.Library, L.AntiTipHost, L.AntiTipPoint);
             new HardwareInstaller(ctx.Library).Install(model, installs);
-            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"));
+            BiscuitPlanner.Apply(model, g.Get<double>("biscuit.pitch"), g.Get<string>("edgeJoint"));
             // finger groove on the free edge of every door (scoop 120 mm / full-length J rabbet)
             string st = g.Get<string>("frontStyle");
             if (st == "scoop" || st == "jrabbet")

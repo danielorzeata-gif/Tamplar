@@ -62,6 +62,11 @@ namespace RhinoWood.Core.Domain
         /// <summary>Provenance of the price: [REF] real listings, [ESTIMARE] derived estimate (to be confirmed with a supplier), [UNVERIFIED] placeholder.</summary>
         public string PriceLabel { get; set; } = "[UNVERIFIED]";
         public string PriceNote { get; set; }
+        /// <summary>1-3 (●○○ estimate only, ●●○ estimate + one RO reference, ●●● real RO listings).</summary>
+        public int PriceConfidence { get; set; }
+        /// <summary>Probable producer price range in Romania, lei/m3 (0 = unknown).</summary>
+        public double PriceMin { get; set; }
+        public double PriceMax { get; set; }
         public string SupplierId { get; set; }
         /// <summary>Material specific reserve (null = use global).</summary>
         public double? ReservePercent { get; set; }
