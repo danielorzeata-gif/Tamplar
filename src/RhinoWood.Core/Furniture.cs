@@ -28,6 +28,19 @@ namespace RhinoWood.Core.Furniture
         public bool AutoWhenZero { get; set; }
     }
 
+    /// <summary>A selectable option (e.g. which joint type to use for a connection). Options are ids understood by the registries.</summary>
+    public sealed class ChoiceDef
+    {
+        public string Key { get; set; }
+        public string Label { get; set; }
+        public string Group { get; set; }
+        public string Default { get; set; }
+        /// <summary>Allowed ids; kind tells the UI where to look the details up: "joint" or "hardware".</summary>
+        public string Kind { get; set; }
+        public List<string> Options { get; set; } = new List<string>();
+        public string Description { get; set; }
+    }
+
     public sealed class ProjectContext
     {
         public WoodLibrary Library { get; set; }
@@ -41,8 +54,9 @@ namespace RhinoWood.Core.Furniture
         string Name { get; }
         string Category { get; }
         IReadOnlyList<ParameterDef> Parameters { get; }
+        IReadOnlyList<ChoiceDef> Choices { get; }
         /// <summary>Registers all inputs and computed nodes (dependency graph). No geometry is built here eagerly.</summary>
-        DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> values, string speciesId);
+        DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> values, IDictionary<string, string> choices, string speciesId);
         /// <summary>Pulls the graph and produces the full furniture model (parts, joinery, hardware, validation).</summary>
         FurnitureModel Assemble(DependencyGraph graph, ProjectContext ctx);
         /// <summary>Node ids that correspond to numeric parameters that can be manually overridden.</summary>
@@ -100,16 +114,31 @@ namespace RhinoWood.Core.Furniture
             new ParameterDef { Key = "clipSpacing", Label = "Top fastener spacing", Default = 350, Min = 150, Max = 600, Group = "Hardware", Advanced = true },
         };
 
+        public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
+        {
+            new ChoiceDef { Key = "jointApronLong", Label = "Long apron to leg", Group = "Joinery", Kind = "joint", Default = "mortise-tenon",
+                Options = { "mortise-tenon", "loose-tenon", "dowel", "bridle", "japanese-kusabi", "biscuit", "pocket-screw" },
+                Description = "Joint between the long aprons and the legs." },
+            new ChoiceDef { Key = "jointApronShort", Label = "Short apron to leg", Group = "Joinery", Kind = "joint", Default = "mortise-tenon",
+                Options = { "mortise-tenon", "loose-tenon", "dowel", "bridle", "japanese-kusabi", "biscuit", "pocket-screw" },
+                Description = "Joint between the short aprons and the legs. Two through joints in the same corner leg conflict." },
+            new ChoiceDef { Key = "topFixing", Label = "Tabletop fixing (long aprons)", Group = "Hardware", Kind = "hardware", Default = "TOP-ZCLIP",
+                Options = { "TOP-ZCLIP", "TOP-FIGURE8", "TOP-BUTTON" },
+                Description = "How the solid-wood top is attached while still allowed to move across the grain." },
+        };
+
         public string NodeFor(string key) => key == "apronHeight" ? "apron.height" : key == "apronThickness" ? "apron.thickness" : key;
 
         public IReadOnlyList<string> OverridableNodes { get; } = new[] { "leg.section", "apron.height", "overhang", "leg.height" };
 
-        public DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> v, string speciesId)
+        public DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> v, IDictionary<string, string> ch, string speciesId)
         {
             var g = new DependencyGraph();
             double Val(string k) => v.TryGetValue(k, out var d) ? d : Parameters.First(p => p.Key == k).Default;
 
+            string Ch(string k) => ch != null && ch.TryGetValue(k, out var s) ? s : Choices.First(c => c.Key == k).Default;
             g.AddInput("species", speciesId);
+            g.AddInput("joint.long", Ch("jointApronLong")); g.AddInput("joint.short", Ch("jointApronShort")); g.AddInput("top.fixing", Ch("topFixing"));
             g.AddInput("length", Val("length")); g.AddInput("width", Val("width")); g.AddInput("height", Val("height"));
             g.AddInput("topThickness", Val("topThickness")); g.AddInput("legSectionUser", Val("legSectionUser"));
             g.AddInput("apron.height", Val("apronHeight")); g.AddInput("apron.thickness", Val("apronThickness"));
@@ -128,9 +157,10 @@ namespace RhinoWood.Core.Furniture
             g.AddComputed("leg.height", new[] { "height", "topThickness" }, r => r.Get<double>("height") - r.Get<double>("topThickness"));
             g.AddComputed("span.x", new[] { "length", "overhang" }, r => r.Get<double>("length") - 2 * r.Get<double>("overhang"));
             g.AddComputed("span.y", new[] { "width", "overhang" }, r => r.Get<double>("width") - 2 * r.Get<double>("overhang"));
-            g.AddComputed("mt", new[] { "apron.thickness", "apron.height", "leg.section" }, r =>
-                new Boxed<MortiseTenonParams>(MortiseTenonJoint.Compute(r.Get<double>("apron.thickness"), r.Get<double>("apron.height"), r.Get<double>("leg.section")),
-                    r.Get<double>("apron.thickness") + "/" + r.Get<double>("apron.height") + "/" + r.Get<double>("leg.section")));
+            g.AddComputed("tl.long", new[] { "joint.long", "apron.thickness", "apron.height", "leg.section" }, r =>
+                ctx.Joints.Get(r.Get<string>("joint.long")).IntegralTenonLength(r.Get<double>("apron.thickness"), r.Get<double>("apron.height"), r.Get<double>("leg.section")));
+            g.AddComputed("tl.short", new[] { "joint.short", "apron.thickness", "apron.height", "leg.section" }, r =>
+                ctx.Joints.Get(r.Get<string>("joint.short")).IntegralTenonLength(r.Get<double>("apron.thickness"), r.Get<double>("apron.height"), r.Get<double>("leg.section")));
 
             g.AddComputed("comp.legs", new[] { "species", "leg.section", "leg.height", "overhang", "span.x", "span.y" }, r =>
             {
@@ -154,19 +184,19 @@ namespace RhinoWood.Core.Furniture
                 return new Boxed<List<PartFamily>>(new List<PartFamily> { fam }, Sig.Of(new[] { fam }));
             });
 
-            g.AddComputed("comp.aprons", new[] { "species", "leg.section", "leg.height", "overhang", "span.x", "span.y", "mt", "apron.height", "apron.thickness", "reveal" }, r =>
+            g.AddComputed("comp.aprons", new[] { "species", "leg.section", "leg.height", "overhang", "span.x", "span.y", "tl.long", "tl.short", "apron.height", "apron.thickness", "reveal" }, r =>
             {
                 double s = r.Get<double>("leg.section"), h = r.Get<double>("leg.height"), o = r.Get<double>("overhang");
                 double sx = r.Get<double>("span.x"), sy = r.Get<double>("span.y");
                 double ah = r.Get<double>("apron.height"), at = r.Get<double>("apron.thickness"), rev = r.Get<double>("reveal");
-                var mt = r.Get<Boxed<MortiseTenonParams>>("mt").Value;
+                double tlL = r.Get<double>("tl.long"), tlS = r.Get<double>("tl.short");
                 var sp = r.Get<string>("species");
-                double lenL = sx - 2 * s + 2 * mt.TenonLength, lenS = sy - 2 * s + 2 * mt.TenonLength;
+                double lenL = sx - 2 * s + 2 * tlL, lenS = sy - 2 * s + 2 * tlS;
                 var finL = new Dims(lenL, ah, at); var finS = new Dims(lenS, ah, at);
                 var famL = new PartFamily { Id = "F-APRON-L", Name = "Long apron", Type = PartType.Apron, Assembly = "Frame", SpeciesId = sp, Finished = finL, GrainAxis = Axis.X, RequiresGrainContinuity = true, RoughPieces = { new RoughPieceSpec { Rough = rules.Rough(finL), Role = "Apron blank" } } };
                 var famS = new PartFamily { Id = "F-APRON-S", Name = "Short apron", Type = PartType.Apron, Assembly = "Frame", SpeciesId = sp, Finished = finS, GrainAxis = Axis.Y, RequiresGrainContinuity = true, RoughPieces = { new RoughPieceSpec { Rough = rules.Rough(finS), Role = "Apron blank" } } };
                 double top = h, zMin = h - ah;
-                double xs = o + s - mt.TenonLength, ys = o + s - mt.TenonLength;
+                double xs = o + s - tlL, ys = o + s - tlS;
                 famL.Instances.Add(new PartInstance { Id = "APR-L-1", FamilyId = famL.Id, Index = 0, Bounds = new Box3(new Vec3(xs, o + rev, zMin), new Vec3(xs + lenL, o + rev + at, top)), LengthAxis = Axis.X, WidthAxis = Axis.Z, ThicknessAxis = Axis.Y });
                 famL.Instances.Add(new PartInstance { Id = "APR-L-2", FamilyId = famL.Id, Index = 1, Bounds = new Box3(new Vec3(xs, o + sy - rev - at, zMin), new Vec3(xs + lenL, o + sy - rev, top)), LengthAxis = Axis.X, WidthAxis = Axis.Z, ThicknessAxis = Axis.Y });
                 famS.Instances.Add(new PartInstance { Id = "APR-S-1", FamilyId = famS.Id, Index = 0, Bounds = new Box3(new Vec3(o + rev, ys, zMin), new Vec3(o + rev + at, ys + lenS, top)), LengthAxis = Axis.Y, WidthAxis = Axis.Z, ThicknessAxis = Axis.X });
@@ -196,40 +226,48 @@ namespace RhinoWood.Core.Furniture
                 return new Boxed<List<PartFamily>>(new List<PartFamily> { fam }, Sig.Of(new[] { fam }));
             });
 
-            g.AddComputed("joints.requests", new[] { "comp.legs", "comp.aprons" }, r =>
+            g.AddComputed("joints.requests", new[] { "comp.legs", "comp.aprons", "joint.long", "joint.short" }, r =>
             {
                 var reqs = new List<JointEngine.Request>();
-                void M(string a, bool start, string b) => reqs.Add(new JointEngine.Request { JointTypeId = "mortise-tenon", PartAId = a, PartBId = b, AAtStart = start });
-                M("APR-L-1", true, "LEG-1"); M("APR-L-1", false, "LEG-2");
-                M("APR-L-2", true, "LEG-3"); M("APR-L-2", false, "LEG-4");
-                M("APR-S-1", true, "LEG-1"); M("APR-S-1", false, "LEG-3");
-                M("APR-S-2", true, "LEG-2"); M("APR-S-2", false, "LEG-4");
-                return new Boxed<List<JointEngine.Request>>(reqs, r.Get<Boxed<List<PartFamily>>>("comp.legs").Fingerprint + r.Get<Boxed<List<PartFamily>>>("comp.aprons").Fingerprint);
+                string jl = r.Get<string>("joint.long"), js = r.Get<string>("joint.short");
+                void M(string j, string a, bool start, string b) => reqs.Add(new JointEngine.Request { JointTypeId = j, PartAId = a, PartBId = b, AAtStart = start });
+                M(jl, "APR-L-1", true, "LEG-1"); M(jl, "APR-L-1", false, "LEG-2");
+                M(jl, "APR-L-2", true, "LEG-3"); M(jl, "APR-L-2", false, "LEG-4");
+                M(js, "APR-S-1", true, "LEG-1"); M(js, "APR-S-1", false, "LEG-3");
+                M(js, "APR-S-2", true, "LEG-2"); M(js, "APR-S-2", false, "LEG-4");
+                return new Boxed<List<JointEngine.Request>>(reqs, jl + js + r.Get<Boxed<List<PartFamily>>>("comp.legs").Fingerprint + r.Get<Boxed<List<PartFamily>>>("comp.aprons").Fingerprint);
             });
 
-            g.AddComputed("hardware.installs", new[] { "comp.aprons", "comp.top", "clipSpacing", "leg.section", "span.x", "mt" }, r =>
+            g.AddComputed("hardware.installs", new[] { "comp.aprons", "comp.top", "clipSpacing", "top.fixing", "leg.section", "span.x", "overhang" }, r =>
             {
                 var aprons = r.Get<Boxed<List<PartFamily>>>("comp.aprons").Value;
                 var list = new List<HardwareInstall>();
                 double spacing = r.Get<double>("clipSpacing");
+                string fix = r.Get<string>("top.fixing");
                 var topPart = r.Get<Boxed<List<PartFamily>>>("comp.top").Value[0].Instances[0];
                 double zTop = topPart.Bounds.Min.Z;
-                foreach (var ap in aprons[0].Instances)   // long aprons: Z-clips (allow top to move across grain)
+                double legInner = r.Get<double>("overhang") + r.Get<double>("leg.section");
+                double x0 = legInner + 80, x1 = legInner + r.Get<double>("span.x") - 2 * r.Get<double>("leg.section") - 80;
+                int n = Math.Max(2, (int)Math.Ceiling((x1 - x0) / spacing) + 1);
+                foreach (var ap in aprons[0].Instances)   // long aprons: movement-friendly fasteners (the top moves across the grain, i.e. along Y)
                 {
-                    double x0 = ap.Bounds.Min.X + r.Get<Boxed<MortiseTenonParams>>("mt").Value.TenonLength + 80;
-                    double x1 = ap.Bounds.Max.X - r.Get<Boxed<MortiseTenonParams>>("mt").Value.TenonLength - 80;
-                    int n = Math.Max(2, (int)Math.Ceiling((x1 - x0) / spacing) + 1);
                     bool front = ap.Id.EndsWith("-1");
                     double faceY = front ? ap.Bounds.Max.Y : ap.Bounds.Min.Y;
                     for (int i = 0; i < n; i++)
                     {
                         double x = x0 + (x1 - x0) * i / (n - 1);
-                        list.Add(new HardwareInstall
+                        var hi = new HardwareInstall { HardwareId = fix, HostPartId = ap.Id, MatePartId = "TOP-1", AxisU = new Vec3(1, 0, 0) };
+                        if (fix == "TOP-FIGURE8")
                         {
-                            HardwareId = "TOP-ZCLIP", HostPartId = ap.Id, MatePartId = "TOP-1",
-                            Point = new Vec3(x, faceY, zTop), Normal = new Vec3(0, front ? -1 : 1, 0), AxisU = new Vec3(1, 0, 0), AxisV = new Vec3(0, 0, -1),
-                            MatePoint = new Vec3(x, faceY, zTop), MateNormal = new Vec3(0, 0, 1), MateAxisV = new Vec3(0, front ? 1 : -1, 0)
-                        });
+                            double yIn = faceY + (front ? -6 : 6);
+                            hi.Point = new Vec3(x, yIn, zTop); hi.Normal = new Vec3(0, 0, -1); hi.AxisV = new Vec3(0, 1, 0);
+                        }
+                        else
+                        {
+                            hi.Point = new Vec3(x, faceY, zTop); hi.Normal = new Vec3(0, front ? -1 : 1, 0); hi.AxisV = new Vec3(0, 0, -1);
+                        }
+                        hi.MatePoint = new Vec3(x, faceY, zTop); hi.MateNormal = new Vec3(0, 0, 1); hi.MateAxisV = new Vec3(0, front ? 1 : -1, 0);
+                        list.Add(hi);
                     }
                 }
                 foreach (var ap in aprons[1].Instances)   // short aprons: one fixed-centre slotted screw
@@ -242,7 +280,7 @@ namespace RhinoWood.Core.Furniture
                         MatePoint = new Vec3(xc, yc, zTop), MateNormal = new Vec3(0, 0, 1), MateAxisV = new Vec3(1, 0, 0)
                     });
                 }
-                return new Boxed<List<HardwareInstall>>(list, string.Join("|", list.Select(h => h.HardwareId + h.Point)));
+                return new Boxed<List<HardwareInstall>>(list, fix + string.Join("|", list.Select(h => h.HardwareId + h.Point)));
             });
             return g;
         }

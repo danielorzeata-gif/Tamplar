@@ -506,6 +506,97 @@ namespace RhinoWood.Tests
         }
     }
 
+    public class JointChoiceTests
+    {
+        private static WoodProject T() => WoodProject.CreateTable("t");
+
+        [Theory]
+        [InlineData("mortise-tenon", 40)] [InlineData("bridle", 40)] [InlineData("japanese-kusabi", 100)]
+        [InlineData("dowel", 0)] [InlineData("loose-tenon", 0)] [InlineData("biscuit", 0)] [InlineData("pocket-screw", 0)]
+        public void ChosenJoint_DrivesRailLength_AndFeatures(string joint, double integral)
+        {
+            var p = T(); p.SetChoice("jointApronLong", joint);
+            var r = p.Recalculate();
+            var apron = r.Model.FindPart("APR-L-1");
+            Assert.Equal(1720 - 160 + 2 * integral, apron.Finished.Length, 6);          // shoulder-to-shoulder + integral tenons
+            Assert.Equal(8, r.Model.Joints.Count);
+            Assert.Contains(r.Model.Joints, j => j.JointTypeId == joint);
+            Assert.All(r.Model.Joints.Where(j => j.JointTypeId == joint), j => Assert.NotEmpty(j.FeatureIds));
+            Assert.False(r.HasErrors, string.Join("\n", r.Issues.Where(i => i.Severity == Severity.Error)));
+            Assert.Equal(integral > 0, apron.Features.Any(f => f.Kind == FeatureKind.Tenon));
+        }
+
+        [Fact]
+        public void ChangingJoint_RecomputesOnlyDependentNodes()
+        {
+            var p = T(); p.Recalculate();
+            p.SetChoice("jointApronLong", "dowel");
+            var r = p.Recalculate();
+            Assert.Contains("tl.long", r.RecomputedNodes); Assert.Contains("comp.aprons", r.RecomputedNodes);
+            Assert.DoesNotContain("tl.short", r.RecomputedNodes); Assert.DoesNotContain("comp.legs", r.RecomputedNodes); Assert.DoesNotContain("comp.top", r.RecomputedNodes);
+        }
+
+        [Fact]
+        public void ThroughJointsOnBothRails_ConflictInCornerLeg()
+        {
+            var p = T(); p.SetChoice("jointApronLong", "japanese-kusabi"); p.SetChoice("jointApronShort", "japanese-kusabi");
+            Assert.Contains(p.Recalculate().Issues, i => i.Code == "THROUGH_CONFLICT");
+        }
+
+        [Fact]
+        public void InvalidChoice_IsRejected()
+        {
+            Assert.Throws<ArgumentException>(() => T().SetChoice("jointApronLong", "dovetail"));
+            Assert.Throws<ArgumentException>(() => T().SetChoice("nope", "x"));
+        }
+
+        [Theory] [InlineData("TOP-ZCLIP")] [InlineData("TOP-FIGURE8")] [InlineData("TOP-BUTTON")]
+        public void TopFixing_GeneratesMachiningInTopAndAprons(string fix)
+        {
+            var p = T(); p.SetChoice("topFixing", fix);
+            var r = p.Recalculate();
+            Assert.Contains(r.Model.HardwareInstalls, h => h.HardwareId == fix);
+            Assert.Contains(r.Model.FindPart("TOP-1").Features, f => f.SourceId != null && r.Model.HardwareInstalls.Any(h => h.Id == f.SourceId && h.HardwareId == fix));
+            Assert.Contains(r.Bom.Lines, l => l.Id == fix);
+        }
+
+        [Fact]
+        public void Figure8_OnWideTop_WarnsAboutLimitedSwing()
+        {
+            var p = T(); p.SetChoice("topFixing", "TOP-FIGURE8");
+            Assert.Contains(p.Recalculate().Issues, i => i.Code == "MOVEMENT_FASTENER");
+        }
+
+        [Fact]
+        public void Choices_SurviveSaveAndReopen()
+        {
+            var p = T(); p.SetChoice("jointApronLong", "loose-tenon"); p.SetChoice("topFixing", "TOP-BUTTON");
+            var (p2, ok) = ProjectSerializer.Open(ProjectSerializer.Serialize(p));
+            Assert.True(ok);
+            Assert.Equal("loose-tenon", p2.Choices["jointApronLong"]); Assert.Equal("TOP-BUTTON", p2.Choices["topFixing"]);
+        }
+
+        [Fact]
+        public void EveryJointHasResearchInfo()
+        {
+            foreach (var j in JointRegistry.CreateDefault().All.Where(j => !(j is CustomJoint)))
+            {
+                Assert.InRange(j.Info.Strength, 1, 5); Assert.False(string.IsNullOrWhiteSpace(j.Info.Summary), j.Id); Assert.NotEmpty(j.Info.Pros);
+            }
+        }
+
+        [Fact]
+        public void Preview_BuildsPolygons_AndEngineeringAddsJoinery()
+        {
+            var m = T().Recalculate().Model;
+            var normal = RhinoWood.Core.Display.PreviewEngine.Build(m, DisplayMode.Normal, false);
+            var eng = RhinoWood.Core.Display.PreviewEngine.Build(m, DisplayMode.Engineering, true);
+            Assert.Equal(9 * 3, normal.Count);
+            Assert.True(eng.Count > normal.Count);
+            Assert.Contains(eng, p => p.IsFeature);
+        }
+    }
+
     public class ExtensibilityTests
     {
         private sealed class BenchDefinition : IFurnitureDefinition
@@ -513,8 +604,9 @@ namespace RhinoWood.Tests
             public string TypeId => "bench.simple"; public string Name => "Simple bench"; public string Category => "Benches";
             public IReadOnlyList<ParameterDef> Parameters { get; } = new[] { new ParameterDef { Key = "length", Default = 1200, Min = 400, Max = 3000, Label = "Length" } };
             public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
+            public IReadOnlyList<ChoiceDef> Choices { get; } = new ChoiceDef[0];
             public string NodeFor(string k) => k;
-            public DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> v, string sp)
+            public DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> v, IDictionary<string, string> ch, string sp)
             {
                 var g = new DependencyGraph(); g.AddInput("length", v["length"]);
                 g.AddComputed("seat.length", new[] { "length" }, r => r.Get<double>("length"));

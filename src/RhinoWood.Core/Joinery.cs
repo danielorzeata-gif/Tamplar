@@ -41,8 +41,53 @@ namespace RhinoWood.Core.Joinery
         public string Description { get; set; }
     }
 
+    /// <summary>Research-based characteristics shown to the user when choosing a joint (1-5 scales).</summary>
+    public sealed class JointInfo
+    {
+        public int Strength { get; set; } = 3;
+        public int Difficulty { get; set; } = 3;
+        public bool VisibleFromOutside { get; set; }
+        /// <summary>True when the rail carries an integral tenon (rail finished length includes it).</summary>
+        public bool IntegralTenon { get; set; }
+        public string Summary { get; set; } = "";
+        public List<string> Pros { get; set; } = new List<string>();
+        public List<string> Cons { get; set; } = new List<string>();
+        public string Source { get; set; } = "";
+    }
+
+    public static class JointKnowledge
+    {
+        private static JointInfo I(int strength, int difficulty, bool visible, bool integral, string summary, string pros, string cons, string src) => new JointInfo
+        {
+            Strength = strength, Difficulty = difficulty, VisibleFromOutside = visible, IntegralTenon = integral, Summary = summary,
+            Pros = pros.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).ToList(), Cons = cons.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).ToList(), Source = src
+        };
+
+        private static readonly Dictionary<string, JointInfo> Table = new Dictionary<string, JointInfo>
+        {
+            ["mortise-tenon"] = I(5, 3, false, true, "Traditional frame joint: tenon 1/3 of rail thickness, 1/2-3/4 of the leg width long, with shoulders.", "Strongest in most tests|Large long-grain glue area|Self-aligning, resists racking", "Needs mortiser/router and accurate layout|Longer rail stock (tenons)", "Wood Magazine shear tests; Popular Woodworking tenon rules; Wikipedia"),
+            ["loose-tenon"] = I(4, 2, false, false, "Mortises in both parts with a separate hardwood tenon (Domino-style).", "Almost as strong as integral tenon|Fast with router jig / Domino|Rail keeps shoulder-to-shoulder length", "Two mortises to cut|Needs separate tenon stock", "Woodcraft loose-tenon options; Fine Woodworking forum"),
+            ["dowel"] = I(3, 2, false, false, "Two or more dowels across the rail end (diameter ~1/3 rail thickness).", "Hidden, cheap, simple tools|Good enough for light/medium tables", "Alignment critical (doweling jig)|Less glue area, weaker than tenons|Use 2+ dowels per joint", "Sawmill Creek / Fine Woodworking discussions"),
+            ["biscuit"] = I(2, 1, false, false, "Football-shaped biscuits in slots - mainly for alignment.", "Very fast|Alignment aid", "Weakest option for load-bearing frames|Little racking resistance", "General joinery guides (Byrd, Shaper)"),
+            ["pocket-screw"] = I(2, 1, false, false, "Angled screw from inside face of the rail into the leg.", "Fastest, no clamps|Hidden on the inside", "Screw holes visible inside|Not traditional; moderate strength|Wood-movement sensitive", "Fine Woodworking forum comparisons"),
+            ["bridle"] = I(4, 3, true, true, "Open mortise-and-tenon: slot through the end of the leg, tongue on the rail.", "Strong, large glue area|Easy to cut on the table saw", "End grain visible on top of the leg|Only where rail meets the leg top", "Joinery guides"),
+            ["japanese-kusabi"] = I(5, 4, true, true, "Through tenon with wedges (kusabi): tenon passes through the leg and is locked by wedges.", "Very strong, mechanical lock|Decorative, no glue strictly required", "Highly visible: needs clean work|Two through mortises in a corner leg conflict - stagger heights", "Japanese joinery references (kusabi / wedged through tenon)"),
+            ["dado"] = I(3, 2, true, false, "Groove in one part housing the end of the other (shelves).", "Strong in shear|Good for shelves", "Not for frame corners", "Joinery guides"),
+            ["rabbet"] = I(2, 1, true, false, "Step cut along an edge.", "Simple", "Weak alone; needs glue/fasteners", "Joinery guides"),
+            ["half-lap"] = I(3, 2, true, false, "Each member loses half its thickness where they overlap.", "Large glue area; simple", "Weakens both members", "Joinery guides"),
+            ["finger"] = I(3, 2, true, false, "Interlocking rectangular fingers.", "Large glue area", "Visible end grain", "Joinery guides"),
+            ["box-joint"] = I(3, 2, true, false, "Finger joint with finger width = thickness (boxes, drawers).", "Easy with a jig; good for drawers/boxes", "Visible end grain", "Joinery guides"),
+            ["dovetail"] = I(5, 5, true, false, "Tails and pins locked by a sloped (1:6 soft, 1:8 hard) profile - drawers, carcases.", "Mechanical lock against pulling apart|Classic drawer joint", "Demanding to cut|Visible", "Shaper / Byrd joinery guides"),
+            ["scarf"] = I(2, 3, true, false, "End-to-end splice with sloped bevels (1:8).", "Lengthens stock", "Weak compared to continuous grain", "Joinery guides"),
+        };
+        public static JointInfo Get(string id) => Table.TryGetValue(id, out var i) ? i : new JointInfo { Summary = "User-defined joint." };
+    }
+
     public interface IJointDefinition
     {
+        JointInfo Info { get; }
+        /// <summary>Integral tenon length added to the rail's finished length (0 for loose/dowel/etc.).</summary>
+        double IntegralTenonLength(double railThickness, double railWidth, double receivingSize);
         string Id { get; }
         string Name { get; }
         string Documentation { get; }
@@ -106,6 +151,8 @@ namespace RhinoWood.Core.Joinery
         public abstract IReadOnlyList<JointParam> Parameters { get; }
         public virtual double MinPartThickness => 12;
         public abstract JointResult Generate(JointContext ctx);
+        public virtual JointInfo Info => JointKnowledge.Get(Id);
+        public virtual double IntegralTenonLength(double railThickness, double railWidth, double receivingSize) => 0;
 
         protected static JointParam P(string n, double def, double min, double max, string unit, string desc) =>
             new JointParam { Name = n, Default = def, Min = min, Max = max, Unit = unit, Description = desc };
@@ -143,6 +190,9 @@ namespace RhinoWood.Core.Joinery
                 MortiseDepth = tl + Get("depthClearance", 3)
             };
         }
+
+        public override double IntegralTenonLength(double railThickness, double railWidth, double receivingSize) =>
+            Compute(railThickness, railWidth, receivingSize).TenonLength;
 
         protected virtual bool Through => false;
         protected virtual bool OpenSlot => false;
@@ -224,11 +274,12 @@ namespace RhinoWood.Core.Joinery
             P("shoulder", 10, 0, 40, "mm", "Shoulder"),
         };
         protected override bool Through => true;
+        public override double IntegralTenonLength(double railThickness, double railWidth, double receivingSize) => Math.Round(receivingSize * 1.25);
 
         public override JointResult Generate(JointContext c)
         {
             double bSize = c.B.Bounds.Size.Get(c.A.LengthAxis);
-            c.P["tenonLengthOverride"] = bSize * (1 + c.Get("protrusionRatio", 0.25));
+            c.P["tenonLengthOverride"] = Math.Round(bSize * (1 + c.Get("protrusionRatio", 0.25)));
             var r = base.Generate(c);
             var ids = new FeatureIds(c.JointId + ".w");
             var tenon = r.Features.First(f => f.Kind == FeatureKind.Tenon);
@@ -284,15 +335,15 @@ namespace RhinoWood.Core.Joinery
     {
         public override string Id => "dowel";
         public override string Name => "Dowel";
-        public override string Documentation => "Dowels along the end face: diameter = 1/3 rail thickness (rounded to 6/8/10), depth 25 mm per part, spacing 80 mm.";
+        public override string Documentation => "Dowels along the end face: diameter 8 mm, depth 25 mm per part, spacing 45 mm (at least 2 dowels on rails 70 mm wide or more).";
         public override IReadOnlyList<JointParam> Parameters { get; } = new[]
         {
-            P("diameter", 8, 6, 12, "mm", "Dowel diameter"), P("depth", 25, 15, 40, "mm", "Hole depth per part"), P("spacing", 80, 40, 200, "mm", "Dowel spacing"),
+            P("diameter", 8, 6, 12, "mm", "Dowel diameter"), P("depth", 25, 15, 40, "mm", "Hole depth per part"), P("spacing", 45, 30, 200, "mm", "Dowel spacing"),
         };
         public override JointResult Generate(JointContext c)
         {
             var r = new JointResult(); var ids = new FeatureIds(c.JointId);
-            double dia = c.Get("diameter", 8), depth = c.Get("depth", 25), sp = c.Get("spacing", 80);
+            double dia = c.Get("diameter", 8), depth = c.Get("depth", 25), sp = c.Get("spacing", 45);
             double w = c.A.Finished.Width;
             int n = Math.Max(1, (int)Math.Floor((w - 20) / sp) + 1);
             var into = JointGeometry.IntoDirection(c);
@@ -476,6 +527,39 @@ namespace RhinoWood.Core.Joinery
         }
     }
 
+    public sealed class PocketScrewJoint : JointBase
+    {
+        public override string Id => "pocket-screw";
+        public override string Name => "Pocket Screw";
+        public override string Documentation => "Two angled (15 deg) pocket holes on the inner face of the rail, 30 mm from its end, screwed into the receiving member (pilot holes drilled in it).";
+        public override IReadOnlyList<JointParam> Parameters { get; } = new[] { P("setback", 30, 20, 60, "mm", "Distance of the pocket from the rail end") };
+        public override JointResult Generate(JointContext c)
+        {
+            var r = new JointResult(); var ids = new FeatureIds(c.JointId);
+            double w = c.A.Finished.Width, t = c.A.Finished.Thickness, len = c.A.Finished.Length;
+            var ta = c.A.ThicknessAxis;
+            double sign = c.B.Bounds.Center.Get(ta) >= c.A.Bounds.Center.Get(ta) ? 1 : -1;   // inner face = towards the receiving member's centre
+            double zFace = sign > 0 ? t : 0, endSign = c.AAtStart ? -1 : 1, set = c.Get("setback", 30);
+            double ang = 15 * Math.PI / 180;
+            if (t < 15) r.Issues.Add(new Issue { Severity = Severity.Warning, Code = "JOINT_THIN", SubjectId = c.JointId, Message = "Pocket screws need rails at least ~15 mm thick." });
+            var into = JointGeometry.IntoDirection(c);
+            foreach (double f in new[] { 0.25, 0.75 })
+            {
+                double x = c.AAtStart ? set : len - set;
+                r.Features.Add(new Feature
+                {
+                    Id = ids.Next(c.A.Id), PartId = c.A.Id, Kind = FeatureKind.Counterbore, Position = new Vec3(x, w * f, zFace),
+                    Direction = new Vec3(endSign * Math.Cos(ang), 0, -sign * Math.Sin(ang)).Normalized(), Diameter = 9, Depth = 38,
+                    Purpose = "Pocket hole (15 deg)", ToolId = "DRILL-10", SourceId = c.JointId, Angle = 15, Tolerance = 0.2
+                });
+                var p = c.A.LocalToWorld(new Vec3(c.AAtStart ? 0 : len, w * f, t / 2 + sign * t * 0.2));
+                r.Features.Add(JointGeometry.Hole(c.B, p, into, FeatureKind.ScrewHole, 3, 25, "Pocket screw pilot", "DRILL-3", c.JointId, ids.Next(c.B.Id)));
+            }
+            r.Description = Name + ": 2 pocket holes, 15 deg";
+            return r;
+        }
+    }
+
     /// <summary>User defined joint: templates of end-zone features expressed as fractions, no code required.</summary>
     public sealed class CustomJointTemplate
     {
@@ -527,7 +611,7 @@ namespace RhinoWood.Core.Joinery
             {
                 new MortiseTenonJoint(), new LooseTenonJoint(), new DowelJoint(), new BiscuitJoint(), new DovetailJoint(),
                 new FingerJoint(), new BoxJoint(), new DadoJoint(), new RabbetJoint(), new HalfLapJoint(), new BridleJoint(),
-                new ScarfJoint(), new WedgedThroughTenonJoint()
+                new ScarfJoint(), new WedgedThroughTenonJoint(), new PocketScrewJoint()
             }) r.Register(d);
             return r;
         }
@@ -580,6 +664,11 @@ namespace RhinoWood.Core.Joinery
                     {
                         if (morts[i].SourceId == morts[j].SourceId) continue;
                         if (!morts[i].Box.Intersects(morts[j].Box)) continue;
+                        if (morts[i].IsThrough || morts[j].IsThrough)
+                        {
+                            model.Issues.Add(new Issue { Severity = Severity.Warning, Code = "THROUGH_CONFLICT", SubjectId = part.Id, Message = "Two mortises cross inside " + part.Id + " and at least one is a through mortise: stagger the rail heights or use a blind joint on one of the rails." });
+                            continue;
+                        }
                         foreach (var src in new[] { morts[i].SourceId, morts[j].SourceId })
                         {
                             var ji = model.Joints.First(x => x.Id == src);

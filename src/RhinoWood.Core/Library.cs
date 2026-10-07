@@ -174,6 +174,32 @@ namespace RhinoWood.Core.Libraries
                     new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ScrewHole, U = 0, V = 20, Diameter = 3, Depth = 12, Purpose = "Z-clip pilot hole" },
                 }
             };
+            lib.Hardware["TOP-FIGURE8"] = new HardwareItem
+            {
+                Id = "TOP-FIGURE8", Category = "Tabletop fastener", Manufacturer = "Generic", Model = "Figure-8 fastener",
+                Dimensions = new Vec3(30, 16, 5), UnitPrice = 0.6, TravelAllowance = 3,
+                FastenerIds = { "SCR-4x16" }, FastenersPerUnit = { { "SCR-4x16", 2 } },
+                RequiredToolIds = { "FORSTNER-35", "DRILL-3" },
+                InstallationNotes = "Recess in the top edge of the apron (about 6 mm from the inner face); one screw into the apron, one into the underside of the top. Limited swing: not recommended for tops wider than ~450 mm.",
+                Pattern =
+                {
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.Pocket, U = 0, V = 0, SizeU = 32, SizeV = 14, Depth = 8, Purpose = "Figure-8 recess" },
+                    new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ScrewHole, U = 0, V = 22, Diameter = 3, Depth = 12, Purpose = "Figure-8 pilot hole" },
+                }
+            };
+            lib.Hardware["TOP-BUTTON"] = new HardwareItem
+            {
+                Id = "TOP-BUTTON", Category = "Tabletop fastener", Manufacturer = "Shop-made", Model = "Wooden button",
+                Dimensions = new Vec3(40, 25, 10), UnitPrice = 0.3, TravelAllowance = 10,
+                FastenerIds = { "SCR-4x35" }, FastenersPerUnit = { { "SCR-4x35", 1 }, { "WSH-4", 1 } },
+                RequiredToolIds = { "ROUT-SLOT-3", "DRILL-5" },
+                InstallationNotes = "Groove 6 mm wide in the inner face of the apron; a shop-made hardwood button (grain along its length) slides in the groove and is screwed to the underside of the top through an oversized hole.",
+                Pattern =
+                {
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.Slot, U = 0, V = 12, SizeU = 44, SizeV = 6, Depth = 10, Purpose = "Button groove" },
+                    new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ScrewHole, U = 0, V = 20, Diameter = 4, Depth = 15, Purpose = "Button screw pilot" },
+                }
+            };
             lib.Hardware["SCR-4x16"] = new HardwareItem { Id = "SCR-4x16", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x16", Dimensions = new Vec3(16, 4, 4), UnitPrice = 0.03 };
             lib.Hardware["SCR-4x35"] = new HardwareItem { Id = "SCR-4x35", Category = "Screws", Manufacturer = "Generic", Model = "Wood screw 4x35", Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.05 };
             lib.Hardware["WSH-4"] = new HardwareItem { Id = "WSH-4", Category = "Washers", Manufacturer = "Generic", Model = "Washer 4", Dimensions = new Vec3(1, 12, 12), UnitPrice = 0.02 };

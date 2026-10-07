@@ -47,6 +47,8 @@ namespace RhinoWood.Core.Projects
         public string SpeciesId { get; private set; }
         public IFurnitureDefinition Furniture { get; private set; }
         public Dictionary<string, double> Parameters { get; private set; }
+        /// <summary>User choices (joint types, hardware) keyed by ChoiceDef.Key.</summary>
+        public Dictionary<string, string> Choices { get; private set; } = new Dictionary<string, string>();
         public ProjectSettings Settings { get; set; } = new ProjectSettings();
         public WoodLibrary Library { get; }
         public JointRegistry Joints { get; }
@@ -65,6 +67,7 @@ namespace RhinoWood.Core.Projects
             Id = "PRJ-" + Guid.NewGuid().ToString("N").Substring(0, 8);
             Name = name; Furniture = furniture; SpeciesId = speciesId; Library = lib; Joints = joints; FurnitureTypes = types;
             Parameters = furniture.Parameters.ToDictionary(p => p.Key, p => p.Default);
+            Choices = furniture.Choices.ToDictionary(c => c.Key, c => c.Default);
             Rebuild();
         }
 
@@ -83,13 +86,13 @@ namespace RhinoWood.Core.Projects
         public void Rebuild()
         {
             var saved = Graph?.Overrides.ToList() ?? new List<KeyValuePair<string, NumericOverride>>();
-            Graph = Furniture.CreateGraph(Context, Parameters, SpeciesId);
+            Graph = Furniture.CreateGraph(Context, Parameters, Choices, SpeciesId);
             foreach (var kv in saved) if (Graph.Contains(kv.Key)) Graph.SetOverride(kv.Key, kv.Value);
             _model = null; _graphKey = null; _optKey = null; GeometryCache.Clear();
         }
 
         public void SetSpecies(string speciesId) { Library.GetSpecies(speciesId); SpeciesId = speciesId; Rebuild(); }
-        public void SetFurniture(IFurnitureDefinition def) { Furniture = def; Parameters = def.Parameters.ToDictionary(p => p.Key, p => p.Default); Graph = null; Rebuild(); }
+        public void SetFurniture(IFurnitureDefinition def) { Furniture = def; Parameters = def.Parameters.ToDictionary(p => p.Key, p => p.Default); Choices = def.Choices.ToDictionary(c => c.Key, c => c.Default); Graph = null; Rebuild(); }
 
         public void SetParameter(string key, double value)
         {
@@ -98,6 +101,17 @@ namespace RhinoWood.Core.Projects
             Parameters[key] = value;
             Graph.Set(Furniture.NodeFor(key), value);
         }
+
+        /// <summary>Selects an option (e.g. joint type) for a connection; dependent parts, tenons, holes and hardware follow.</summary>
+        public void SetChoice(string key, string option)
+        {
+            var def = Furniture.Choices.FirstOrDefault(c => c.Key == key) ?? throw new ArgumentException("Unknown choice " + key);
+            if (!def.Options.Contains(option)) throw new ArgumentException(option + " is not allowed for " + key + " (allowed: " + string.Join(", ", def.Options) + ")");
+            Choices[key] = option;
+            Graph.Set(ChoiceNode(key), option);
+        }
+
+        private static string ChoiceNode(string key) => key == "jointApronLong" ? "joint.long" : key == "jointApronShort" ? "joint.short" : key == "topFixing" ? "top.fixing" : key;
 
         // ---------------------------------------------------------------- manual overrides (never destroy the parametric rule)
         public void SetOverride(string nodeId, OverrideMode mode, double value)
@@ -224,6 +238,7 @@ namespace RhinoWood.Core.Projects
         public string FurnitureTypeId { get; set; }
         public string SpeciesId { get; set; }
         public Dictionary<string, double> Parameters { get; set; } = new Dictionary<string, double>();
+        public Dictionary<string, string> Choices { get; set; } = new Dictionary<string, string>();
         public List<OverrideDto> Overrides { get; set; } = new List<OverrideDto>();
         public List<string> CustomComponents { get; set; } = new List<string>();
         public ProjectSettings Settings { get; set; }
@@ -261,7 +276,7 @@ namespace RhinoWood.Core.Projects
             var f = new ProjectFile
             {
                 ProjectId = p.Id, Name = p.Name, FurnitureTypeId = p.Furniture.TypeId, SpeciesId = p.SpeciesId,
-                Parameters = new Dictionary<string, double>(p.Parameters), Settings = p.Settings, SavedUtc = DateTime.UtcNow,
+                Parameters = new Dictionary<string, double>(p.Parameters), Choices = new Dictionary<string, string>(p.Choices), Settings = p.Settings, SavedUtc = DateTime.UtcNow,
                 CustomComponents = p.CustomComponents.ToList(),
                 Overrides = p.Overrides.Select(kv => new OverrideDto { NodeId = kv.Key, Mode = kv.Value.Mode, Value = kv.Value.Value }).ToList()
             };
@@ -286,6 +301,7 @@ namespace RhinoWood.Core.Projects
             p.ForceId(f.ProjectId);
             p.Rebuild();
             foreach (var kv in f.Parameters) p.SetParameter(kv.Key, kv.Value);
+            if (f.Choices != null) foreach (var kv in f.Choices) p.SetChoice(kv.Key, kv.Value);
             foreach (var o in f.Overrides) p.Graph.SetOverride(o.NodeId, new NumericOverride { Mode = o.Mode, Value = o.Value });
             p.CustomComponents.AddRange(f.CustomComponents);
             return p;
