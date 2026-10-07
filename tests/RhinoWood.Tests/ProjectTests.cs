@@ -150,7 +150,8 @@ namespace RhinoWood.Tests
             int normal = p.GenerateGeometry(DisplayMode.Normal).Count;
             int eng = p.GenerateGeometry(DisplayMode.Engineering).Count;
             int man = p.GenerateGeometry(DisplayMode.Manufacturing).Count;
-            Assert.Equal(9, perf); Assert.Equal(9, normal);
+            int strips = p.Recalculate().Model.FamilyOf("TOP-1").RoughPieces.Sum(x => x.CountPerPart);
+            Assert.Equal(9, perf); Assert.Equal(8 + strips, normal);       // Normal shows the top as separate strips
             Assert.True(eng > normal); Assert.True(man > eng);
             Assert.DoesNotContain(p.GenerateGeometry(DisplayMode.Normal), g => g.Category == PrimCategory.Feature || g.Category == PrimCategory.Grain);
             Assert.Contains(p.GenerateGeometry(DisplayMode.Engineering), g => g.Category == PrimCategory.Grain);

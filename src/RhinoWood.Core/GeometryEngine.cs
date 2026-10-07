@@ -91,9 +91,18 @@ namespace RhinoWood.Core.Display
                 string fp = PartFingerprint(part);
                 var fam = model.FamilyOf(part.Id);
                 bool grain = showGrain || mode >= DisplayMode.Engineering;
-                var key = part.Id + "|" + fp + "|" + mode + "|" + (grain ? "g" : "-");
+                var key = part.Id + "|" + fp + "|" + mode + "|" + (grain ? "g" : "-") + "|s" + (mode >= DisplayMode.Normal ? PartSolids.StripCount(fam) : 1);
                 all.AddRange(_cache.GetOrAdd(key, () => Build(part, fam, mode, grain, fp)));
             }
+            if (mode >= DisplayMode.Engineering)
+                foreach (var b in model.Biscuits)
+                {
+                    var key = "BSC|" + b.Id + "|" + b.Box;
+                    all.AddRange(_cache.GetOrAdd(key, () => new List<GeometryPrimitive>
+                    {
+                        new GeometryPrimitive { Key = b.Id, PartId = b.PartId, Kind = PrimKind.Box, Category = PrimCategory.Hardware, Box = b.Box, Label = "Lamelă " + b.Size + " (biscuit)", Version = Hashing.Short(b.Box.ToString()) }
+                    }));
+                }
             if (mode >= DisplayMode.Engineering)
                 foreach (var h in model.HardwareInstalls)
                 {
@@ -108,10 +117,14 @@ namespace RhinoWood.Core.Display
 
         private static List<GeometryPrimitive> Build(PartInstance part, PartFamily fam, DisplayMode mode, bool grain, string version)
         {
-            var list = new List<GeometryPrimitive>
-            {
-                new GeometryPrimitive { Key = part.Id, PartId = part.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = part.Bounds, Label = fam?.Name ?? part.Id, Version = version, Cuts = mode >= DisplayMode.Normal ? PartSolids.CutsFor(part) : null }
-            };
+            var list = new List<GeometryPrimitive>();
+            var cuts = mode >= DisplayMode.Normal ? PartSolids.CutsFor(part) : null;
+            var strips = mode >= DisplayMode.Normal ? PartSolids.StripBoxes(part, fam) : new List<Box3> { part.Bounds };
+            if (strips.Count == 1)
+                list.Add(new GeometryPrimitive { Key = part.Id, PartId = part.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = part.Bounds, Label = fam?.Name ?? part.Id, Version = version, Cuts = cuts });
+            else
+                for (int s = 0; s < strips.Count; s++)       // edge-glued panel: every strip is its own solid so the boards are visible
+                    list.Add(new GeometryPrimitive { Key = part.Id + "#S" + (s + 1), PartId = part.Id, Kind = PrimKind.Box, Category = PrimCategory.Part, Box = strips[s], Label = (fam?.Name ?? part.Id) + " · lamela " + (s + 1) + "/" + strips.Count, Version = version + "s" + s, Cuts = cuts == null ? null : PartSolids.CutsIn(cuts, strips[s]) });
             if (mode >= DisplayMode.Engineering)
             {
                 int i = 0;
@@ -131,9 +144,12 @@ namespace RhinoWood.Core.Display
             }
             if (grain)
             {
-                var c = part.Bounds.Center; var ax = fam?.GrainAxis ?? part.LengthAxis;
-                double half = part.Bounds.Size.Get(ax) / 2;
-                list.Add(new GeometryPrimitive { Key = part.Id + "#grain", PartId = part.Id, Kind = PrimKind.Line, Category = PrimCategory.Grain, P0 = c - Vec3.Unit(ax, half * 0.8), P1 = c + Vec3.Unit(ax, half * 0.8), Label = "grain " + ax, Version = version });
+                var ax = fam?.GrainAxis ?? part.LengthAxis;
+                for (int s = 0; s < strips.Count; s++)
+                {
+                    var c = strips[s].Center; double half = strips[s].Size.Get(ax) / 2;
+                    list.Add(new GeometryPrimitive { Key = part.Id + "#grain" + (strips.Count > 1 ? "" + (s + 1) : ""), PartId = part.Id, Kind = PrimKind.Line, Category = PrimCategory.Grain, P0 = c - Vec3.Unit(ax, half * 0.8), P1 = c + Vec3.Unit(ax, half * 0.8), Label = "grain " + ax, Version = version + "s" + s });
+                }
             }
             return list;
         }

@@ -105,5 +105,28 @@ namespace RhinoWood.Core.Display
             // rough is stored per family in the same orientation as Finished (length, width, thickness)
             return new Dims(Math.Max(r.Length, fin.Length), Math.Max(r.Width, fin.Width), Math.Max(r.Thickness, fin.Thickness));
         }
+    
+        /// <summary>Number of edge-glued strips of a part (1 for ordinary parts).</summary>
+        public static int StripCount(PartFamily fam) => fam != null && fam.Type == PartType.Top ? Math.Max(1, fam.RoughPieces.Sum(r => r.CountPerPart)) : 1;
+
+        /// <summary>World boxes of the strips of a glued panel (equal widths along the part's width axis); a single box for ordinary parts.</summary>
+        public static List<Box3> StripBoxes(PartInstance part, PartFamily fam)
+        {
+            int n = StripCount(fam);
+            if (n <= 1) return new List<Box3> { part.Bounds };
+            var ax = part.WidthAxis; double w = part.Bounds.Size.Get(ax) / n; var list = new List<Box3>();
+            for (int i = 0; i < n; i++)
+                list.Add(new Box3(part.Bounds.Min.With(ax, part.Bounds.Min.Get(ax) + i * w), part.Bounds.Max.With(ax, part.Bounds.Min.Get(ax) + (i + 1) * w)));
+            return list;
+        }
+
+        /// <summary>Cut volumes that touch the given world region (cylinders by their bounding box).</summary>
+        public static List<CutVolume> CutsIn(IEnumerable<CutVolume> cuts, Box3 region) => cuts.Where(c => c.Kind == PrimKind.Box ? c.Box.Intersects(region) : CylBox(c).Intersects(region)).ToList();
+
+        private static Box3 CylBox(CutVolume c)
+        {
+            double r = c.Radius;
+            return new Box3(new Vec3(Math.Min(c.P0.X, c.P1.X) - r, Math.Min(c.P0.Y, c.P1.Y) - r, Math.Min(c.P0.Z, c.P1.Z) - r), new Vec3(Math.Max(c.P0.X, c.P1.X) + r, Math.Max(c.P0.Y, c.P1.Y) + r, Math.Max(c.P0.Z, c.P1.Z) + r));
+        }
     }
 }

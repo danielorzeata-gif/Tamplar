@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using RhinoWood.Core.Display;
 using RhinoWood.Core.Domain;
 using RhinoWood.Core.Geometry;
 using RhinoWood.Core.HardwareSystem;
@@ -136,6 +137,7 @@ namespace RhinoWood.Core.Furniture
             new ParameterDef { Key = "apronThickness", Label = "Apron thickness", Default = 25, Min = 18, Max = 50, Group = "Aprons", Advanced = true },
             new ParameterDef { Key = "overhang", Label = "Top overhang", Default = 40, Min = 0, Max = 200, Group = "Top", Advanced = true },
             new ParameterDef { Key = "reveal", Label = "Apron setback from leg face", Default = 5, Min = 0, Max = 20, Group = "Aprons", Advanced = true },
+            new ParameterDef { Key = "biscuitPitch", Label = "Biscuit pitch (top glue joints)", Default = 200, Min = 120, Max = 300, Group = "Top", Advanced = true, Description = "Spacing between the biscuits that align the strips of the top; count follows the top length." },
             new ParameterDef { Key = "clipSpacing", Label = "Top fastener spacing", Default = 350, Min = 150, Max = 600, Group = "Hardware", Advanced = true },
         };
 
@@ -159,7 +161,7 @@ namespace RhinoWood.Core.Furniture
                 Description = "How the solid-wood top is attached while still allowed to move across the grain." },
         };
 
-        public string NodeFor(string key) => key == "apronHeight" ? "apron.height" : key == "apronThickness" ? "apron.thickness" : key;
+        public string NodeFor(string key) => key == "apronHeight" ? "apron.height" : key == "apronThickness" ? "apron.thickness" : key == "biscuitPitch" ? "biscuit.pitch" : key;
 
         public IReadOnlyList<string> OverridableNodes { get; } = new[] { "leg.section", "apron.height", "overhang", "leg.height" };
 
@@ -174,7 +176,7 @@ namespace RhinoWood.Core.Furniture
             g.AddInput("length", Val("length")); g.AddInput("width", Val("width")); g.AddInput("height", Val("height"));
             g.AddInput("topThickness", Val("topThickness")); g.AddInput("legSectionUser", Val("legSectionUser"));
             g.AddInput("apron.height", Val("apronHeight")); g.AddInput("apron.thickness", Val("apronThickness"));
-            g.AddInput("overhang", Val("overhang")); g.AddInput("reveal", Val("reveal")); g.AddInput("clipSpacing", Val("clipSpacing"));
+            g.AddInput("overhang", Val("overhang")); g.AddInput("reveal", Val("reveal")); g.AddInput("clipSpacing", Val("clipSpacing")); g.AddInput("biscuit.pitch", Val("biscuitPitch"));
 
             var stock = ctx.Library.PanelStripStock(speciesId, ctx.Rules.Rough(new Dims(1, 1, Val("topThickness"))).Thickness);
             g.AddInput("stock.top.width", stock == null ? 0.0 : Math.Max(stock.Width, stock.Thickness));
@@ -258,6 +260,37 @@ namespace RhinoWood.Core.Furniture
                 return new Boxed<List<PartFamily>>(new List<PartFamily> { fam }, Sig.Of(new[] { fam }));
             });
 
+            // Biscuits between the strips of the top (physical rules): #20 (56x23x4) from 20 mm thickness, #10 (53x19x4) below; centred in the thickness
+            // (two rows from 45 mm); first/last biscuit centre 60 mm from the ends; evenly spread at no more than the pitch -> count follows the length.
+            g.AddComputed("top.biscuits", new[] { "comp.top", "biscuit.pitch" }, r =>
+            {
+                var fam = r.Get<Boxed<List<PartFamily>>>("comp.top").Value[0];
+                var top = fam.Instances[0]; int strips = PartSolids.StripCount(fam);
+                var list = new List<BiscuitInstance>();
+                double pitch = r.Get<double>("biscuit.pitch");
+                double T = top.Bounds.Size.Z, L = top.Bounds.Size.X;
+                bool big = T >= 20; double bl = big ? 56 : 53, bw = big ? 23 : 19; string size = big ? "#20" : "#10";
+                double m = 60, span = Math.Max(0, L - 2 * m);
+                int nb = Math.Max(2, (int)Math.Floor(span / pitch + 1e-9) + 1);
+                int rows = T >= 45 ? 2 : 1;
+                double sw = top.Bounds.Size.Y / strips; int k = 0;
+                for (int e = 1; e < strips; e++)
+                {
+                    double y = top.Bounds.Min.Y + e * sw;
+                    for (int i = 0; i < nb; i++)
+                    {
+                        double x = top.Bounds.Min.X + m + span * i / (nb - 1);
+                        for (int rw = 0; rw < rows; rw++)
+                        {
+                            double z = top.Bounds.Min.Z + (rows == 1 ? T / 2 : T * (rw + 1) / 3.0);
+                            list.Add(new BiscuitInstance { Id = "BSC-" + (++k).ToString("000", CultureInfo.InvariantCulture), PartId = top.Id, Edge = e, Size = size,
+                                Box = new Box3(new Vec3(x - bl / 2, y - bw / 2, z - 2), new Vec3(x + bl / 2, y + bw / 2, z + 2)) });
+                        }
+                    }
+                }
+                return new Boxed<List<BiscuitInstance>>(list, size + "|" + string.Join("|", list.Select(b => b.Box.ToString())));
+            });
+
             g.AddComputed("joints.requests", new[] { "comp.legs", "comp.aprons", "joint.long", "joint.short" }, r =>
             {
                 var reqs = new List<JointEngine.Request>();
@@ -334,6 +367,20 @@ namespace RhinoWood.Core.Furniture
                     AxisU = h.AxisU, AxisV = h.AxisV, MatePoint = h.MatePoint, MateNormal = h.MateNormal, MateAxisV = h.MateAxisV, Quantity = 1
                 }).ToList();
             new HardwareInstaller(ctx.Library).Install(model, installs);
+
+            // biscuit slots: cut in both neighbouring strips (the slot box straddles the glue line); the biscuit solid is kept for display and the BOM
+            var top = model.FindPart("TOP-1");
+            if (top != null)
+            {
+                int fn = 0;
+                foreach (var b in g.Get<Boxed<List<BiscuitInstance>>>("top.biscuits").Value)
+                {
+                    var slot = new Box3(b.Box.Min - new Vec3(1, 0.5, 0), b.Box.Max + new Vec3(1, 0.5, 0)).Inflate(0);
+                    slot = new Box3(slot.Min.With(Axis.Z, b.Box.Min.Z - 0.05), slot.Max.With(Axis.Z, b.Box.Max.Z + 0.05));
+                    top.Features.Add(JointGeometry.Rect(top, top.WorldBoxToLocal(slot), FeatureKind.BiscuitSlot, slot.Size.Y / 2, "Biscuit slot " + b.Size + " (strip edge " + b.Edge + ")", "ROUT-SLOT-3", b.Id, "BSL" + (++fn).ToString("000", CultureInfo.InvariantCulture)));
+                    model.Biscuits.Add(new BiscuitInstance { Id = b.Id, PartId = b.PartId, Edge = b.Edge, Size = b.Size, Box = b.Box });
+                }
+            }
             return model;
         }
 

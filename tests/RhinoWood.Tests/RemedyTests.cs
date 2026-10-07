@@ -73,3 +73,47 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class TopStripsAndBiscuitTests
+    {
+        private static int Strips(RhinoWood.Core.Projects.ProjectResult r) => r.Model.FamilyOf("TOP-1").RoughPieces.Sum(x => x.CountPerPart);
+
+        [Fact]
+        public void TopIsDrawnAsSeparateStrips_WithBiscuitsBetweenThem()
+        {
+            var p = WoodProject.CreateTable("t"); var r = p.Recalculate();
+            int n = Strips(r); Assert.True(n > 1);
+            var prims = p.GenerateGeometry(DisplayMode.Engineering);
+            Assert.Equal(n, prims.Count(x => x.Category == PrimCategory.Part && x.PartId == "TOP-1"));
+            Assert.Equal(n * 0 + r.Model.Biscuits.Count, prims.Count(x => x.Category == PrimCategory.Hardware && x.Key.StartsWith("BSC")));
+            Assert.Equal(r.Model.Biscuits.Count * 1, r.Model.AllParts.Single(x => x.Id == "TOP-1").Features.Count(f => f.Kind == FeatureKind.BiscuitSlot));
+            Assert.Equal(2, r.Model.Biscuits.Select(b => b.Edge).Min() + 1);          // edges are 1..n-1
+            Assert.Equal(n - 1, r.Model.Biscuits.Select(b => b.Edge).Distinct().Count());
+        }
+
+        [Fact]
+        public void BiscuitCountAndPositions_FollowLengthWidthAndPitch()
+        {
+            var p = WoodProject.CreateTable("t"); var r0 = p.Recalculate(); int n0 = r0.Model.Biscuits.Count;
+            p.SetParameter("length", 2400); var r1 = p.Recalculate();
+            Assert.True(r1.Model.Biscuits.Count > n0);                                  // longer top -> more biscuits per edge
+            p.SetParameter("biscuitPitch", 120); Assert.True(p.Recalculate().Model.Biscuits.Count > r1.Model.Biscuits.Count);
+            p = WoodProject.CreateTable("t"); p.SetParameter("width", 600);
+            var r2 = p.Recalculate(); Assert.True(r2.Model.Biscuits.Select(b => b.Edge).Distinct().Count() == Strips(r2) - 1);
+            // every biscuit lies inside the top, 60 mm from the ends at the nearest, centred in the thickness
+            var top = r2.Model.FindPart("TOP-1");
+            Assert.All(r2.Model.Biscuits, b => { Assert.True(b.Box.Min.X >= top.Bounds.Min.X + 30 && b.Box.Max.X <= top.Bounds.Max.X - 30); Assert.Equal(top.Bounds.Center.Z, b.Box.Center.Z, 6); });
+        }
+
+        [Fact]
+        public void Biscuits_AreInTheBom_AndSlotsAreCutInTheStrips()
+        {
+            var p = WoodProject.CreateTable("t"); var r = p.Recalculate();
+            Assert.Contains(r.Cost == null ? null : r.Bom.Lines, l => l.Id.StartsWith("BISCUIT") && l.Quantity == r.Model.Biscuits.Count);
+            var strip = p.GenerateGeometry(DisplayMode.Normal).Where(x => x.PartId == "TOP-1" && x.Category == PrimCategory.Part).ToList();
+            Assert.All(strip, s => Assert.NotEmpty(s.Cuts));
+        }
+    }
+}

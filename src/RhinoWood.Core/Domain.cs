@@ -205,11 +205,23 @@ namespace RhinoWood.Core.Domain
         public List<PartFamily> Families { get; set; } = new List<PartFamily>();
         public List<JointInstance> Joints { get; set; } = new List<JointInstance>();
         public List<HardwareInstall> HardwareInstalls { get; set; } = new List<HardwareInstall>();
+        /// <summary>Biscuits (lamelle) that join the edge-glued strips of panels; count and position follow the panel size and the biscuit pitch.</summary>
+        public List<BiscuitInstance> Biscuits { get; set; } = new List<BiscuitInstance>();
         public List<Issue> Issues { get; set; } = new List<Issue>();
         public IEnumerable<PartInstance> AllParts => Families.SelectMany(f => f.Instances);
         public PartInstance FindPart(string id) => AllParts.FirstOrDefault(p => p.Id == id);
         public PartFamily FamilyOf(string partId) => Families.FirstOrDefault(f => f.Instances.Any(i => i.Id == partId));
         public Box3 Bounds => AllParts.Select(p => p.Bounds).Aggregate((a, b) => a.Union(b));
+    }
+
+    /// <summary>A flat biscuit (#10/#20) in an edge joint between two strips of a glued panel. Box = the biscuit body in world coordinates.</summary>
+    public sealed class BiscuitInstance
+    {
+        public string Id { get; set; }
+        public string PartId { get; set; }
+        public int Edge { get; set; }
+        public string Size { get; set; }
+        public Box3 Box { get; set; }
     }
 
     public sealed class JointInstance

@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- **Blatul se vede din scânduri**: în modul Normal și peste, blatul încleiat e desenat ca scânduri separate (fiecare solid propriu, cu fibra pe scândură).
+- **Lamele (biscuiți) între scânduri**: #20 (56×23×4) de la 20 mm grosime, #10 sub; centrate în grosime (2 rânduri de la 45 mm); primele la 60 mm de capete, distribuite uniform la cel mult „Pas lamele” (200 mm implicit, parametru nou). Numărul și poziția se recalculează la orice schimbare de lungime/lățime/grosime/pas. Canalele sunt decupate boolean în ambele scânduri, lamelele apar ca solide ovale 3D (Inginerie+), intră în BOM/cost și în notele de montaj.
+- Exportul de piese: fiecare scândură de blat e o piesă separată; lamelele au layerul `Debitare::04 Lamele`.
 - Avertismentul „mortaze care se intersectează” are acum **soluții aplicabile**: fiecare variantă e încercată pe proiect, ordonată după strategia de optimizare (cost / achiziție / deșeu / nr. bare) și apoi după rezistență; prima e marcată ★ Recomandat, cu buton „Aplică soluția”.
 - Piesele sunt **decupate boolean în 3D** (mortaze, găuri, obrajii și umerii cepurilor) în modurile Normal și peste.
 - `WoodCutParts` / buton „Exportă piese de debitare (3D)”: layere `Debitare::01 Piesă brută`, `02 După rindeluire`, `03 Debitare` (piesa cu găuri + deșeul în roșu), așezate plat lângă model.

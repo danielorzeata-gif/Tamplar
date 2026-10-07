@@ -38,6 +38,7 @@ namespace RhinoWood.Core.Rules
         // shop economics
         public double LaborRatePerHour { get; set; } = 25;
         public double GluePricePerM2 { get; set; } = 1.2;
+        public double BiscuitPrice { get; set; } = 0.25;
         public double FinishPricePerM2 { get; set; } = 4.5;
         public double GlueLinesPerJointM2 { get; set; } = 1.0;
     }

@@ -52,6 +52,9 @@ namespace RhinoWood.Plugin
             if (Cache.TryGetValue(ck, out var g)) return g;
             switch (p.Kind)
             {
+                case PrimKind.Box when p.Category == PrimCategory.Hardware && p.Label != null && p.Label.StartsWith("Lamel"):
+                    g = CutSolids.BiscuitBrep(p.Box, s);
+                    break;
                 case PrimKind.Box when p.Category == PrimCategory.Part && p.Cuts != null && p.Cuts.Count > 0:
                     g = CutSolids.CutPart(p, s);
                     break;

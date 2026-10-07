@@ -49,7 +49,7 @@ namespace RhinoWood.Core.Reports
         private static readonly Dictionary<string, string> Params = new Dictionary<string, string>
         {
             ["length"] = "Lungime", ["width"] = "Lățime", ["height"] = "Înălțime", ["topThickness"] = "Grosime blat", ["legSectionUser"] = "Secțiune picior (0 = regulă)",
-            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat"
+            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat", ["biscuitPitch"] = "Pas lamele (biscuiți) în blat"
         };
         private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
         {
@@ -57,7 +57,7 @@ namespace RhinoWood.Core.Reports
         };
         public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
         public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;
-        public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g;
+        public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g == "Top" ? "Blat" : g == "Legs" ? "Picioare" : g == "Aprons" ? "Zargi" : g;
         public static string DisplayMode(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Performanță" : m == Domain.DisplayMode.Normal ? "Normal" : m == Domain.DisplayMode.Engineering ? "Inginerie" : "Fabricație";
         public static string DisplayModeInfo(Domain.DisplayMode m) => m == Domain.DisplayMode.Performance ? "Piese simple; fără îmbinări, feronerie, fibră sau detalii de prelucrare. Pentru proiecte mari."
             : m == Domain.DisplayMode.Normal ? "Geometria normală a mobilierului."
