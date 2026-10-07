@@ -1,0 +1,30 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='460' font-family='Segoe UI,Arial' font-size='11'>
+<text x='10' y='18' font-weight='bold'>EXPLODED VIEW</text>
+<polygon points='121,264.9 128.2,259.86 128.2,129.36 121,134.4' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='106.6,134.4 121,134.4 128.2,129.36 113.8,129.36' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='106.6,264.9 121,264.9 121,134.4 106.6,134.4' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='459.4,264.9 466.6,259.86 466.6,129.36 459.4,134.4' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='445,134.4 459.4,134.4 466.6,129.36 452.2,129.36' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='445,264.9 459.4,264.9 459.4,134.4 445,134.4' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='424.3,124.41 426.55,122.84 426.55,108.44 424.3,110.01' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='129.1,110.01 424.3,110.01 426.55,108.44 131.35,108.44' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='129.1,124.41 424.3,124.41 424.3,110.01 129.1,110.01' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='59.8,171.66 126.4,125.04 126.4,110.64 59.8,157.26' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='55.3,157.26 59.8,157.26 126.4,110.64 121.9,110.64' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='55.3,171.66 59.8,171.66 59.8,157.26 55.3,157.26' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='363.1,171.66 429.7,125.04 429.7,110.64 363.1,157.26' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='358.6,157.26 363.1,157.26 429.7,110.64 425.2,110.64' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='358.6,171.66 363.1,171.66 363.1,157.26 358.6,157.26' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='364,129.9 445,73.2 445,66.9 364,123.6' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='40,123.6 364,123.6 445,66.9 121,66.9' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='40,129.9 364,129.9 364,123.6 40,123.6' fill='#e4cfae' stroke='#222' stroke-width='0.6'/>
+<polygon points='353.65,173.87 355.9,172.29 355.9,157.89 353.65,159.47' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='58.45,159.47 353.65,159.47 355.9,157.89 60.7,157.89' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='58.45,173.87 353.65,173.87 353.65,159.47 58.45,159.47' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='32.8,326.64 40,321.6 40,191.1 32.8,196.14' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='18.4,196.14 32.8,196.14 40,191.1 25.6,191.1' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='18.4,326.64 32.8,326.64 32.8,196.14 18.4,196.14' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='371.2,326.64 378.4,321.6 378.4,191.1 371.2,196.14' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='356.8,196.14 371.2,196.14 378.4,191.1 364,191.1' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='356.8,326.64 371.2,326.64 371.2,196.14 356.8,196.14' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+</svg>

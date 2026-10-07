@@ -1,0 +1,5 @@
+Family,Name,Quantity,Finished,Rough piece(s),Species,Assembly,Grain,Unit cost
+F-TOP,Table top (edge-glued),1,1800 x 900 x 35,7 x 1830 x 140 x 40,OAK,Top,X,127.45
+F-LEG,Table leg,4,725 x 80 x 80,1 x 755 x 90 x 90,OAK,Frame,Z,10.87
+F-APRON-L,Long apron,2,1640 x 80 x 25,1 x 1670 x 90 x 30,OAK,Frame,X,8.01
+F-APRON-S,Short apron,2,740 x 80 x 25,1 x 770 x 90 x 30,OAK,Frame,Y,3.69

@@ -1,0 +1,69 @@
+{
+  "SchemaVersion": 1,
+  "PluginVersion": "1.0.0",
+  "ProjectId": "PRJ-6d930c5a",
+  "Name": "Oak dining table",
+  "FurnitureTypeId": "table.dining",
+  "SpeciesId": "OAK",
+  "Parameters": {
+    "length": 1800,
+    "width": 900,
+    "height": 760,
+    "topThickness": 35,
+    "legSectionUser": 0,
+    "apronHeight": 80,
+    "apronThickness": 25,
+    "overhang": 40,
+    "reveal": 5,
+    "clipSpacing": 350
+  },
+  "Overrides": [],
+  "CustomComponents": [],
+  "Settings": {
+    "Rules": {
+      "SectionBands": [
+        {
+          "MaxDim": 50,
+          "Allowance": 5
+        },
+        {
+          "MaxDim": 100,
+          "Allowance": 10
+        },
+        {
+          "MaxDim": 1000000000,
+          "Allowance": 15
+        }
+      ],
+      "LengthAllowance": 30,
+      "SawKerf": 3,
+      "EndTrim": 0,
+      "MinReusableRemnant": 300,
+      "GluedPanelTrim": 10,
+      "PanelStripWidthAllowance": 10,
+      "SeasonalMoisturePercent": 4,
+      "LaborRatePerHour": 25,
+      "GluePricePerM2": 1.2,
+      "FinishPricePerM2": 4.5,
+      "GlueLinesPerJointM2": 1
+    },
+    "Strategy": "MinPurchase",
+    "GlobalReservePercent": 10,
+    "ReserveOverrides": {},
+    "Currency": "EUR",
+    "Display": "Normal",
+    "ShowGrain": false
+  },
+  "Snapshot": {
+    "Fingerprint": "54eed03decda7c8f",
+    "BoardCount": 6,
+    "PurchasedM3": 0.13879999999999998,
+    "TotalCost": 525.81,
+    "Purchase": [
+      "4 x OAK 40x140 x 4000",
+      "1 x OAK 40x140 x 3000",
+      "1 x OAK 90x90 x 4000"
+    ]
+  },
+  "SavedUtc": "2026-10-07T15:54:39.5150523Z"
+}

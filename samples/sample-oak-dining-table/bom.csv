@@ -1,0 +1,15 @@
+Category,Id,Description,Quantity,Unit,Unit cost,Total,Notes
+Part,F-TOP,Table top (edge-glued) (OAK) 1800 x 900 x 35,1,pcs,127.45,127.45,Cost = share of optimized purchase
+Part,F-LEG,Table leg (OAK) 725 x 80 x 80,4,pcs,10.87,43.48,Cost = share of optimized purchase
+Part,F-APRON-L,Long apron (OAK) 1640 x 80 x 25,2,pcs,8.01,16.02,Cost = share of optimized purchase
+Part,F-APRON-S,Short apron (OAK) 740 x 80 x 25,2,pcs,3.69,7.38,Cost = share of optimized purchase
+Material,PUR001,OAK 40x140 x 4000 mm,4,pcs,31.36,125.44,
+Material,PUR002,OAK 40x140 x 3000 mm,1,pcs,23.52,23.52,
+Material,PUR003,OAK 90x90 x 4000 mm,1,pcs,45.36,45.36,
+Hardware,TOP-ZCLIP,Tabletop fastener: Z-clip 30x20,10,pcs,0.45,4.50,
+Fastener,SCR-4x16,Wood screw 4x16,10,pcs,0.03,0.30,
+Hardware,TOP-SLOTSCREW,Tabletop fastener: Slotted-hole screw 4x35 + washer,2,pcs,0.07,0.14,
+Fastener,SCR-4x35,Wood screw 4x35,2,pcs,0.05,0.10,
+Fastener,WSH-4,Washer 4,2,pcs,0.02,0.04,
+Adhesive,GLUE-PVAC,PVA D3 wood glue (glue line area),0.425,m2,1.20,0.51,
+Finish,FINISH-OIL,"Hardwax oil (2 coats, surface area)",5.424,m2,9.00,48.82,

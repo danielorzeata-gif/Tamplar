@@ -1,0 +1,16 @@
+Part ID,Part family,Quantity,Rough L x W x T,Finished L x W x T,Material,Grain direction,Stock source (board),Purchase line,Cut ID,Cut start (mm),Cutting operation
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B001 OAK 40x140 x 4000,PUR001,C001,0,Crosscut from board B001
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B001 OAK 40x140 x 4000,PUR001,C002,1833,Crosscut from board B001
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B002 OAK 40x140 x 4000,PUR001,C003,0,Crosscut from board B002
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B002 OAK 40x140 x 4000,PUR001,C004,1833,Crosscut from board B002
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B003 OAK 40x140 x 4000,PUR001,C005,0,Crosscut from board B003
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B003 OAK 40x140 x 4000,PUR001,C006,1833,Crosscut from board B003
+APR-L-1,Long apron,1,1670 x 90 x 30,1640 x 80 x 25,OAK,X (along length),B004 OAK 40x140 x 4000,PUR001,C007,0,Crosscut from board B004
+APR-L-2,Long apron,1,1670 x 90 x 30,1640 x 80 x 25,OAK,X (along length),B004 OAK 40x140 x 4000,PUR001,C008,1673,Crosscut from board B004
+TOP-1,Table top (edge-glued),1,1830 x 140 x 40,1800 x 900 x 35,OAK,X (along length),B005 OAK 40x140 x 3000,PUR002,C009,0,Crosscut from board B005
+APR-S-1,Short apron,1,770 x 90 x 30,740 x 80 x 25,OAK,Y (along length),B005 OAK 40x140 x 3000,PUR002,C010,1833,Crosscut from board B005
+APR-S-2,Short apron,1,770 x 90 x 30,740 x 80 x 25,OAK,Y (along length),B006 OAK 90x90 x 4000,PUR003,C011,0,Crosscut from board B006
+LEG-1,Table leg,1,755 x 90 x 90,725 x 80 x 80,OAK,Z (along length),B006 OAK 90x90 x 4000,PUR003,C012,773,Crosscut from board B006
+LEG-2,Table leg,1,755 x 90 x 90,725 x 80 x 80,OAK,Z (along length),B006 OAK 90x90 x 4000,PUR003,C013,1531,Crosscut from board B006
+LEG-3,Table leg,1,755 x 90 x 90,725 x 80 x 80,OAK,Z (along length),B006 OAK 90x90 x 4000,PUR003,C014,2289,Crosscut from board B006
+LEG-4,Table leg,1,755 x 90 x 90,725 x 80 x 80,OAK,Z (along length),B006 OAK 90x90 x 4000,PUR003,C015,3047,Crosscut from board B006

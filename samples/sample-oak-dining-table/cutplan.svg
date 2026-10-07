@@ -1,0 +1,56 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1150' height='304' font-family='Segoe UI,Arial' font-size='11'>
+<text x='4' y='26' font-weight='bold'>B001</text><text x='4' y='40' fill='#555'>OAK 40x140 x 4000</text>
+<rect x='230' y='10' width='900' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='10' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='233' y='29' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='642.43' y='10' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='645.43' y='29' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='1054.85' y='10' width='75.15' height='30' fill='#e8f3df' stroke='#333' stroke-dasharray='4 2'/>
+<text x='1057.85' y='29' fill='#333' font-size='10'>REMNANT 334</text>
+<text x='4' y='70' font-weight='bold'>B002</text><text x='4' y='84' fill='#555'>OAK 40x140 x 4000</text>
+<rect x='230' y='54' width='900' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='54' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='233' y='73' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='642.43' y='54' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='645.43' y='73' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='1054.85' y='54' width='75.15' height='30' fill='#e8f3df' stroke='#333' stroke-dasharray='4 2'/>
+<text x='1057.85' y='73' fill='#333' font-size='10'>REMNANT 334</text>
+<text x='4' y='114' font-weight='bold'>B003</text><text x='4' y='128' fill='#555'>OAK 40x140 x 4000</text>
+<rect x='230' y='98' width='900' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='98' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='233' y='117' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='642.43' y='98' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='645.43' y='117' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='1054.85' y='98' width='75.15' height='30' fill='#e8f3df' stroke='#333' stroke-dasharray='4 2'/>
+<text x='1057.85' y='117' fill='#333' font-size='10'>REMNANT 334</text>
+<text x='4' y='158' font-weight='bold'>B004</text><text x='4' y='172' fill='#555'>OAK 40x140 x 4000</text>
+<rect x='230' y='142' width='900' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='142' width='375.75' height='30' fill='#6f8fb5' stroke='#333'><title>APR-L-1 1670 mm</title></rect>
+<text x='233' y='161' fill='#fff' font-size='10'>APR-L-1 1670</text>
+<rect x='606.43' y='142' width='375.75' height='30' fill='#6f8fb5' stroke='#333'><title>APR-L-2 1670 mm</title></rect>
+<text x='609.43' y='161' fill='#fff' font-size='10'>APR-L-2 1670</text>
+<rect x='982.85' y='142' width='147.15' height='30' fill='#e8f3df' stroke='#333' stroke-dasharray='4 2'/>
+<text x='985.85' y='161' fill='#333' font-size='10'>REMNANT 654</text>
+<text x='4' y='202' font-weight='bold'>B005</text><text x='4' y='216' fill='#555'>OAK 40x140 x 3000</text>
+<rect x='230' y='186' width='675' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='186' width='411.75' height='30' fill='#c0845a' stroke='#333'><title>TOP-1 1830 mm</title></rect>
+<text x='233' y='205' fill='#fff' font-size='10'>TOP-1 1830</text>
+<rect x='642.43' y='186' width='173.25' height='30' fill='#b58fb0' stroke='#333'><title>APR-S-1 770 mm</title></rect>
+<text x='645.43' y='205' fill='#fff' font-size='10'>APR-S-1 770</text>
+<rect x='816.35' y='186' width='88.65' height='30' fill='#e8f3df' stroke='#333' stroke-dasharray='4 2'/>
+<text x='819.35' y='205' fill='#333' font-size='10'>REMNANT 394</text>
+<text x='4' y='246' font-weight='bold'>B006</text><text x='4' y='260' fill='#555'>OAK 90x90 x 4000</text>
+<rect x='230' y='230' width='900' height='30' fill='#f3ece2' stroke='#333'/>
+<rect x='230' y='230' width='173.25' height='30' fill='#b58fb0' stroke='#333'><title>APR-S-2 770 mm</title></rect>
+<text x='233' y='249' fill='#fff' font-size='10'>APR-S-2 770</text>
+<rect x='403.93' y='230' width='169.88' height='30' fill='#7a9e7e' stroke='#333'><title>LEG-1 755 mm</title></rect>
+<text x='406.93' y='249' fill='#fff' font-size='10'>LEG-1 755</text>
+<rect x='574.48' y='230' width='169.88' height='30' fill='#7a9e7e' stroke='#333'><title>LEG-2 755 mm</title></rect>
+<text x='577.48' y='249' fill='#fff' font-size='10'>LEG-2 755</text>
+<rect x='745.03' y='230' width='169.88' height='30' fill='#7a9e7e' stroke='#333'><title>LEG-3 755 mm</title></rect>
+<text x='748.03' y='249' fill='#fff' font-size='10'>LEG-3 755</text>
+<rect x='915.58' y='230' width='169.88' height='30' fill='#7a9e7e' stroke='#333'><title>LEG-4 755 mm</title></rect>
+<text x='918.58' y='249' fill='#fff' font-size='10'>LEG-4 755</text>
+<rect x='1086.13' y='230' width='43.88' height='30' fill='#ddd' stroke='#333' stroke-dasharray='4 2'/>
+<text x='1089.13' y='249' fill='#333' font-size='10'>SCRAP 195</text>
+</svg>

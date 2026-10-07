@@ -1,0 +1,61 @@
+PROJECT MATERIAL OPTIMIZATION (strategy: MinPurchase)
+
+Required (theoretical finished):  0.0848 m3
+Rough with allowances:            0.1094 m3
+Optimized manufacturing:          0.1097 m3
+Purchase (commercial, incl. reserve): 0.1388 m3
+   4 x OAK 40x140 x 4000   = 125.44 EUR
+   1 x OAK 40x140 x 3000   = 23.52 EUR
+   1 x OAK 90x90 x 4000   = 45.36 EUR
+Reserve: OAK 10%
+Expected reusable remnants:       0.0115 m3
+Expected process waste:           0.0410 m3
+Scrap:                            0.0016 m3
+Estimated material cost:          194.32 EUR
+
+WHY THIS PURCHASE?
+1. THEORETICAL requirement: 0.0848 m3 finished volume, 20.26 linear m of finished parts.
+2. After manufacturing allowances (planing/jointing/trim): 0.1094 m3 of rough pieces (15 pieces).
+3. OPTIMIZED manufacturing requirement (all parts packed globally, kerf 3 mm, strategy MinPurchase): 0.1097 m3 on 6 board(s).
+   9 piece(s) are cut from material left over by an earlier cut on the same board (global remnant reuse).
+4. COMMERCIAL purchase (stock sizes, incl. reserve boards): 4 x OAK 40x140 x 4000, 1 x OAK 40x140 x 3000, 1 x OAK 90x90 x 4000 = 0.1388 m3. Utilisation of purchased wood by rough pieces: 78.8%.
+5. Usable remnants 0.0115 m3, scrap 0.0016 m3, process waste (kerf, trims, section excess, planing) 0.0410 m3.
+Reserve 10% of Oak: target 0.0109 m3, covered by 0.0109 m3 of reusable remnants (no extra boards needed - reserve applied once, after optimization).
+
+CUTTING PLAN
+B001  OAK 40x140 x 4000 mm
+       1830 -> TOP-1  [C001, Top strip, start 0]
+       1830 -> TOP-1  [C002, Top strip, start 1833]
+        334 -> REMNANT (reusable)
+B002  OAK 40x140 x 4000 mm
+       1830 -> TOP-1  [C003, Top strip, start 0]
+       1830 -> TOP-1  [C004, Top strip, start 1833]
+        334 -> REMNANT (reusable)
+B003  OAK 40x140 x 4000 mm
+       1830 -> TOP-1  [C005, Top strip, start 0]
+       1830 -> TOP-1  [C006, Top strip, start 1833]
+        334 -> REMNANT (reusable)
+B004  OAK 40x140 x 4000 mm
+       1670 -> APR-L-1  [C007, Apron blank, start 0]
+       1670 -> APR-L-2  [C008, Apron blank, start 1673]
+        654 -> REMNANT (reusable)
+B005  OAK 40x140 x 3000 mm
+       1830 -> TOP-1  [C009, Top strip, start 0]
+        770 -> APR-S-1  [C010, Apron blank, start 1833]
+        394 -> REMNANT (reusable)
+B006  OAK 90x90 x 4000 mm
+        770 -> APR-S-2  [C011, Apron blank, start 0]
+        755 -> LEG-1  [C012, Leg blank, start 773]
+        755 -> LEG-2  [C013, Leg blank, start 1531]
+        755 -> LEG-3  [C014, Leg blank, start 2289]
+        755 -> LEG-4  [C015, Leg blank, start 3047]
+        195 -> SCRAP
+
+OPTIMIZER CANDIDATES (all evaluated; best by strategy is selected)
+ * LongestFirst/utilization          6 boards, 0.1388 m3, cost 194.32
+   LongestFirst/smallest-fit         6 boards, 0.1413 m3, cost 197.82
+   LongestFirst/largest-stock        6 boards, 0.1444 m3, cost 202.16
+   LongestFirst/fixed-5000           7 boards, 0.1600 m3, cost 224.00
+   ConstrainedFirst/utilization      6 boards, 0.1388 m3, cost 194.32
+   ConstrainedFirst/largest-stock    6 boards, 0.1469 m3, cost 205.66
+   ConstrainedFirst/fixed-4000       6 boards, 0.1388 m3, cost 194.32

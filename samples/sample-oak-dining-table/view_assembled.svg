@@ -1,0 +1,30 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='460' font-family='Segoe UI,Arial' font-size='11'>
+<text x='10' y='18' font-weight='bold'>ASSEMBLED VIEW</text>
+<polygon points='131.8,250.86 139,245.82 139,115.32 131.8,120.36' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='117.4,120.36 131.8,120.36 139,115.32 124.6,115.32' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='117.4,250.86 131.8,250.86 131.8,120.36 117.4,120.36' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='427,250.86 434.2,245.82 434.2,115.32 427,120.36' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='412.6,120.36 427,120.36 434.2,115.32 419.8,115.32' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='412.6,250.86 427,250.86 427,120.36 412.6,120.36' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='424.3,131.61 426.55,130.04 426.55,115.64 424.3,117.21' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='129.1,117.21 424.3,117.21 426.55,115.64 131.35,115.64' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='129.1,131.61 424.3,131.61 424.3,117.21 129.1,117.21' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='59.8,178.86 126.4,132.24 126.4,117.84 59.8,164.46' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='55.3,164.46 59.8,164.46 126.4,117.84 121.9,117.84' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='55.3,178.86 59.8,178.86 59.8,164.46 55.3,164.46' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='363.1,178.86 429.7,132.24 429.7,117.84 363.1,164.46' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='358.6,164.46 363.1,164.46 429.7,117.84 425.2,117.84' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='358.6,178.86 363.1,178.86 363.1,164.46 358.6,164.46' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='364,169.5 445,112.8 445,106.5 364,163.2' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='40,163.2 364,163.2 445,106.5 121,106.5' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='40,169.5 364,169.5 364,163.2 40,163.2' fill='#e4cfae' stroke='#222' stroke-width='0.6'/>
+<polygon points='65.2,297.48 72.4,292.44 72.4,161.94 65.2,166.98' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='50.8,166.98 65.2,166.98 72.4,161.94 58,161.94' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='50.8,297.48 65.2,297.48 65.2,166.98 50.8,166.98' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='360.4,297.48 367.6,292.44 367.6,161.94 360.4,166.98' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='346,166.98 360.4,166.98 367.6,161.94 353.2,161.94' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='346,297.48 360.4,297.48 360.4,166.98 346,166.98' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+<polygon points='353.65,181.07 355.9,179.49 355.9,165.09 353.65,166.67' fill='#a46f48' stroke='#222' stroke-width='0.6'/>
+<polygon points='58.45,166.67 353.65,166.67 355.9,165.09 60.7,165.09' fill='#f0dcc0' stroke='#222' stroke-width='0.6'/>
+<polygon points='58.45,181.07 353.65,181.07 353.65,166.67 58.45,166.67' fill='#c0845a' stroke='#222' stroke-width='0.6'/>
+</svg>

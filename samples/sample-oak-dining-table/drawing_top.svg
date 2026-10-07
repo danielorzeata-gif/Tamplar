@@ -1,0 +1,14 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='840' height='460' font-family='Segoe UI,Arial' font-size='11'>
+<text x='60' y='20' font-weight='bold'>TOP VIEW - Solid-wood dining table</text>
+<rect x='75.56' y='55.56' width='31.11' height='31.11' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>LEG-1</title></rect>
+<rect x='713.33' y='55.56' width='31.11' height='31.11' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>LEG-2</title></rect>
+<rect x='75.56' y='343.33' width='31.11' height='31.11' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>LEG-3</title></rect>
+<rect x='713.33' y='343.33' width='31.11' height='31.11' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>LEG-4</title></rect>
+<rect x='91.11' y='57.5' width='637.78' height='9.72' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>APR-L-1</title></rect>
+<rect x='91.11' y='362.78' width='637.78' height='9.72' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>APR-L-2</title></rect>
+<rect x='77.5' y='71.11' width='9.72' height='287.78' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>APR-S-1</title></rect>
+<rect x='732.78' y='71.11' width='9.72' height='287.78' fill='#c0845a' fill-opacity='0.75' stroke='#222'><title>APR-S-2</title></rect>
+<rect x='60' y='40' width='700' height='350' fill='#e4cfae' fill-opacity='0.75' stroke='#222'><title>TOP-1</title></rect>
+<line x1='60' y1='415' x2='760' y2='415' stroke='#036'/><text x='390' y='429' fill='#036'>1800 mm</text>
+<line x1='780' y1='40' x2='780' y2='390' stroke='#036'/><text x='786' y='215' fill='#036'>900</text>
+</svg>

@@ -1,0 +1,5 @@
+Purchase line,Material,Species,Profile (W x T),Commercial length (mm),Quantity,of which reserve,Supplier,Unit price,Total,Expected usable remnant (m3),Expected waste (m3),Boards
+PUR001,OAK 40x140,OAK,40 x 140,4000,4,0,SUP-TIMBER,31.36,125.44,0.0093,0.0001,B001 B002 B003 B004
+PUR002,OAK 40x140,OAK,40 x 140,3000,1,0,SUP-TIMBER,23.52,23.52,0.0022,0.0000,B005
+PUR003,OAK 90x90,OAK,90 x 90,4000,1,0,SUP-TIMBER,45.36,45.36,0.0000,0.0017,B006
+TOTAL,,,,,6,,,,194.32
