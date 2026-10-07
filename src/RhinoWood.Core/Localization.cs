@@ -46,6 +46,7 @@ namespace RhinoWood.Core.Reports
             [FeatureKind.WedgeSlot] = "Tăietură pentru pană", [FeatureKind.Counterbore] = "Gaură în buzunar", [FeatureKind.Finger] = "Dinte", [FeatureKind.Dovetail] = "Coadă de rândunică"
         };
 
+        public static string FrontStyle(string id) => id == "scoop" ? "Scobitură (deget)" : id == "handle" ? "Mâner 128 mm" : id == "push" ? "Push-to-open" : id == "jrabbet" ? "Falț J (prindere pe muchie)" : id;
         public static string SpeciesName(string id, string fallback = null) => Species.TryGetValue(id ?? "", out var v) ? v : fallback ?? id;
         public static string Family(PartFamily f)
         {

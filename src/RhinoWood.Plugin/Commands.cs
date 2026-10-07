@@ -26,6 +26,7 @@ namespace RhinoWood.Plugin
         /// <summary>Recalculate everything, then update Rhino geometry for the current display mode.</summary>
         public static void Refresh(RhinoDoc doc, bool announce = true)
         {
+            if (P.Room != null && P.RoomGenerated) { P.Recalculate(); SyncRoom(doc); return; }
             if (!P.Generated) { P.Recalculate(); return; }      // draft: only the viewport preview exists
             var r = P.Recalculate();
             var prims = P.Project.GenerateGeometry();
@@ -47,6 +48,32 @@ namespace RhinoWood.Plugin
             if (!RequireProject()) return;
             P.Generated = true;
             Refresh(doc, true);
+            RhinoApp.RunScript("-_Zoom _Extents", false);
+        }
+
+        /// <summary>New bedroom set (bed + 2 nightstands + dresser) with one set of choices; draft preview until Generează.</summary>
+        public static void NewBedroom(string tier)
+        {
+            var ws = new RhinoWood.Core.Workspaces.Workspace("Dormitor", P.Library);
+            var room = RhinoWood.Core.Projects.BedroomSet.Create(ws, tier);
+            P.PreviewOn = true;
+            P.SetRoom(ws, room, generated: false);
+        }
+
+        /// <summary>Writes every piece of the active room into the document (idempotent).</summary>
+        public static void SyncRoom(RhinoDoc doc)
+        {
+            if (P.Room == null || doc == null) return;
+            foreach (var piece in P.Room.Pieces)
+                RhinoSync.Sync(doc, piece.Project, piece.Project.GenerateGeometry(), piece.Project.CustomComponents);
+            P.SaveToDocument(doc);
+        }
+
+        public static void GenerateRoom(RhinoDoc doc)
+        {
+            if (P.Room == null) return;
+            P.RoomGenerated = true; P.Generated = true;
+            P.Recalculate(); SyncRoom(doc);
             RhinoApp.RunScript("-_Zoom _Extents", false);
         }
 
@@ -393,6 +420,19 @@ namespace RhinoWood.Plugin
             if (go.Get() != GetResult.Option) return Result.Cancel;
             WoodActions.NewProject(types[idx.IndexOf(go.Option().Index)].id);
             RhinoApp.WriteLine("Rhino Wood: ciornă creată; ajustează în fereastra WoodStart, apoi Generează.");
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f13")]
+    public class WoodBedroomCommand : Command
+    {
+        public override string EnglishName => "WoodBedroom";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            WoodActions.NewBedroom("STANDARD");
+            RhinoApp.WriteLine("Rhino Wood: dormitor creat (pat, 2 noptiere, comodă). Deschide WoodStart → tab Cameră.");
+            RhinoWood.Plugin.UI.StartWindow.Open();
             return Result.Success;
         }
     }

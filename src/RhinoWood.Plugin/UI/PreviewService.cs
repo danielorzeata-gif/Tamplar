@@ -15,10 +15,10 @@ namespace RhinoWood.Plugin.UI
             var plugin = WoodPlugin.Instance; var doc = RhinoDoc.ActiveDoc;
             if (plugin == null || doc == null) { Conduit.Enabled = false; return; }
             var p = plugin.Project;
-            bool show = p != null && plugin.PreviewOn && !plugin.Generated;
+            bool show = p != null && plugin.PreviewOn && !(plugin.Room != null ? plugin.RoomGenerated : plugin.Generated);
             if (!show) { if (Conduit.Enabled) { Conduit.Enabled = false; doc.Views.Redraw(); } _zoomed = false; return; }
             Conduit.Scale = RhinoMath.UnitScale(UnitSystem.Millimeters, doc.ModelUnitSystem);
-            Conduit.Prims = p.GenerateGeometry(p.Settings.Display);
+            Conduit.Prims = plugin.Room != null ? plugin.Room.Pieces.SelectMany(x => x.Project.GenerateGeometry(x.Project.Settings.Display)).ToList() : p.GenerateGeometry(p.Settings.Display);
             Conduit.Enabled = true;
             if (!_zoomed && Conduit.Bounds.IsValid && doc.Views.ActiveView != null) { doc.Views.ActiveView.ActiveViewport.ZoomBoundingBox(Conduit.Bounds); _zoomed = true; }
             doc.Views.Redraw();

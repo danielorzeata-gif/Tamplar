@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Comodă** (`casework.dresser`): coloane × sertare parametrice (implicit 2×4), fronturi gradate (197/174/151/128), separatoare, 6 picioare (colțuri + sub separator), glisiere soft-close, spate și funduri HDF, kit anti-basculare adăugat automat când se depășesc pragurile EN 14749 (R10).
+- **Pat** (`casework.bed`): picioare tăblie/capăt, traverse, lonjeroane demontabile cu bulon M8 ascuns (piuliță cilindrică + dop Ø20, găuri generate), tăblie cu panou plutitor în canale, rigle, șipci pe cant (număr după lungimea saltelei), grindă și picior central; structura ascunsă (clasa C) din pin la STANDARD/ECONOMA, stejar la PREMIUM.
+- **Deschiderea sertarelor** (set Aspect al camerei): scobitură, mâner 128, push-to-open, falț J; aceeași în toată camera.
+- **Cameră de dormitor** (`WoodBedroom`, tab Cameră): pat + 2 noptiere + comodă; o variantă, o deschidere de sertare și o esență pentru toate piesele; piesele sunt așezate în cameră (rotații în multipli de 90°); debitare comună cu rezerva aplicată o dată; declarația de specii pe clase (A/B/C) în ofertă; camera se salvează în documentul Rhino.
+- Fișa tehnică: lista de materiale se strânge automat la piesele cu multe familii.
 - **Piesă nouă: Noptieră** (`casework.nightstand`, din fișa dormitor): 4 picioare, 2 laterale, fund, poliță de nișă, capac, sertar cu față suprapusă și cutie, spate și fund de sertar din HDF (preț pe m²). Panourile late se încleiază din scânduri cu lamele; îmbinările de corp sunt dibluri (sau lamele), picioarele pe dibluri Ø10; glisieră soft-close și patine reglabile în BOM.
 - **Clase de vizibilitate A/B/C**: piesele vizibile închis (față, laterale, capac, picioare) rămân din esența proiectului; interiorul (fund, poliță, cutia sertarului) urmează varianta: PREMIUM stejar, STANDARD frasin, ECONOMA molid (alegere „Esență interior”, modificabilă).
 - `WoodNew` / tab Proiect → „Piesă nouă”: alegi tipul (masă / noptieră).

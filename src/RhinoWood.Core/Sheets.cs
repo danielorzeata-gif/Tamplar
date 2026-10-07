@@ -108,14 +108,14 @@ namespace RhinoWood.Core.Reports
             double mx = 195, my = 78;
             sb.Append($"<text x='{mx}' y='{my}' font-size='2.6' font-weight='600' fill='{Atelier.Muted}'>MATERIALE</text>");
             sb.Append($"<line x1='{mx}' y1='{my + 1.5}' x2='277' y2='{my + 1.5}' stroke='{Atelier.LineStrong}' stroke-width='0.2'/>");
-            double ry = my + 6;
+            double ry = my + 6; int nf = m.Families.Count; bool compact = nf > 11; double step = compact ? Math.Min(5.2, 88.0 / nf) : 8.5;
             foreach (var f in m.Families)
             {
                 sb.Append($"<circle cx='{mx + 1.8}' cy='{N(ry - 1, "0.0")}' r='1.7' fill='none' stroke='{Atelier.Accent}' stroke-width='0.25'/><text x='{mx + 1.8}' y='{N(ry - 0.1, "0.0")}' font-size='2.1' text-anchor='middle' fill='{Atelier.Accent}' font-family=\"{Atelier.Mono}\">{famNo[f.Id]}</text>");
                 sb.Append($"<text x='{mx + 5}' y='{N(ry, "0.0")}' font-size='2.8' fill='{Atelier.Ink}'>{E(Ro.Family(f))}</text>");
                 sb.Append($"<text x='277' y='{N(ry, "0.0")}' font-size='2.8' text-anchor='end' fill='{Atelier.Ink}' font-family=\"{Atelier.Mono}\">{f.Quantity} buc · {N(f.Finished.Length)}×{N(f.Finished.Width)}×{N(f.Finished.Thickness)}</text>");
-                sb.Append($"<text x='{mx + 5}' y='{N(ry + 3.2, "0.0")}' font-size='2.3' fill='{Atelier.Muted}'>{E(SpeciesName(p, f.SpeciesId))}{(f.RoughPieces.Sum(q => q.CountPerPart) > 1 ? " · " + f.RoughPieces.Sum(q => q.CountPerPart) + " lamele încleiate" : "")}</text>");
-                ry += 8.5;
+                if (!compact) sb.Append($"<text x='{mx + 5}' y='{N(ry + 3.2, "0.0")}' font-size='2.3' fill='{Atelier.Muted}'>{E(SpeciesName(p, f.SpeciesId))}{(f.RoughPieces.Sum(q => q.CountPerPart) > 1 ? " · " + f.RoughPieces.Sum(q => q.CountPerPart) + " lamele încleiate" : "")}</text>");
+                ry += step;
             }
 
             // construction notes

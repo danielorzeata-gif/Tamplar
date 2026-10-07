@@ -35,6 +35,7 @@ namespace RhinoWood.Plugin.UI
             var tabs = new TabControl();
             tabs.Pages.Add(new TabPage { Text = "Configurare", Content = new WoodPanel() });
             Add(tabs, "Proiect", new ProjectTab());
+            Add(tabs, "Cameră", new RoomTab());
             Add(tabs, "Afișare", new DisplayTab());
             Add(tabs, "Optimizare", new OptimizeTab());
             Add(tabs, "Suprascrieri", new OverrideTab());

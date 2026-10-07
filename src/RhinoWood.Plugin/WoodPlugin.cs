@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
 using Rhino;
@@ -29,6 +30,10 @@ namespace RhinoWood.Plugin
         public ProjectResult LastResult { get; private set; }
         public WoodLibrary Library { get; private set; }
         public event EventHandler ProjectChanged;
+        /// <summary>The active room (a set of pieces with shared Aspect/Structure sets); null when a single piece is open.</summary>
+        public RhinoWood.Core.Workspaces.Workspace Workspace { get; private set; }
+        public RhinoWood.Core.Workspaces.Room Room { get; private set; }
+        public bool RoomGenerated { get; set; }
         /// <summary>True once geometry for the active project has been generated into the document (until then only the viewport preview exists).</summary>
         public bool Generated { get; set; }
         public bool PreviewOn { get; set; } = true;
@@ -74,7 +79,22 @@ namespace RhinoWood.Plugin
 
         public void SetProject(WoodProject p, bool generated = false)
         {
+            if (Room != null && (p == null || !Room.Pieces.Any(x => x.Project == p))) { Workspace = null; Room = null; RoomGenerated = false; }
             Project = p; Generated = generated; LastResult = p?.Recalculate();
+            Raise();
+        }
+
+        public void SetRoom(RhinoWood.Core.Workspaces.Workspace ws, RhinoWood.Core.Workspaces.Room room, bool generated = false)
+        {
+            Workspace = ws; Room = room; RoomGenerated = generated;
+            Project = room.Pieces[0].Project; Generated = generated; LastResult = Project.Recalculate();
+            Raise();
+        }
+
+        /// <summary>Makes a piece of the room the active one (edited in the Configurare tab).</summary>
+        public void ActivatePiece(RhinoWood.Core.Workspaces.PieceEntry e)
+        {
+            Project = e.Project; Generated = RoomGenerated; LastResult = Project.Recalculate();
             Raise();
         }
 
@@ -92,6 +112,7 @@ namespace RhinoWood.Plugin
         public void SaveToDocument(RhinoDoc doc)
         {
             if (doc == null) return;
+            if (Workspace != null) doc.Strings.SetString(DocSection, "workspace", RhinoWood.Core.Workspaces.WorkspaceSerializer.Serialize(Workspace)); else doc.Strings.Delete(DocSection, "workspace");
             if (Project == null) { doc.Strings.Delete(DocSection, DocEntry); return; }
             doc.Strings.SetString(DocSection, DocEntry, ProjectSerializer.Serialize(Project, LastResult));
         }
@@ -101,6 +122,18 @@ namespace RhinoWood.Plugin
         private void OnEndOpenDocument(object sender, DocumentOpenEventArgs e)
         {
             if (e.Merge) return;
+            var wsJson = e.Document.Strings.GetValue(DocSection, "workspace");
+            if (!string.IsNullOrEmpty(wsJson))
+            {
+                try
+                {
+                    var ws = RhinoWood.Core.Workspaces.WorkspaceSerializer.Deserialize(wsJson, Library);
+                    SetRoom(ws, ws.Rooms[0], generated: true);
+                    RhinoApp.WriteLine("Rhino Wood: camera '" + ws.Rooms[0].Name + "' redeschisă (" + ws.Rooms[0].Pieces.Count + " piese).");
+                    return;
+                }
+                catch (Exception ex) { RhinoApp.WriteLine("Rhino Wood: camera nu a putut fi redeschisă: " + ex.Message); }
+            }
             var json = e.Document.Strings.GetValue(DocSection, DocEntry);
             if (string.IsNullOrEmpty(json)) { Project = null; LastResult = null; Raise(); return; }
             try

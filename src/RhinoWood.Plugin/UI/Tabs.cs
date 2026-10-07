@@ -115,6 +115,84 @@ namespace RhinoWood.Plugin.UI
         }
     }
 
+    // ------------------------------------------------------------------------------------------------ Cameră (set de piese)
+    internal sealed class RoomTab : TabBase
+    {
+        private string _report = "";
+        public RoomTab() { Rebuild(); }
+
+        protected override void Build()
+        {
+            Title("Cameră");
+            var room = P?.Room;
+            if (room == null)
+            {
+                Muted("O cameră grupează mai multe piese care împart aceleași alegeri (esență, deschiderea sertarelor, variantă) și o singură debitare.");
+                var tiers = new AtSegmented("ECONOMA", "STANDARD", "PREMIUM") { SelectedIndex = 1 };
+                Add(Labeled("Variantă", tiers));
+                Add(Button("Dormitor nou: pat + 2 noptiere + comodă", () => WoodActions.NewBedroom(tiers.Selected), BtnVariant.Primary));
+                return;
+            }
+            Text(room.Name + " · " + room.Pieces.Count + " piese");
+
+            Heading("Alegeri comune (se aplică tuturor pieselor din cameră)");
+            var def = room.Pieces[0].Project.Furniture;
+            var tierIds = RhinoWood.Core.Furniture.Tiers.All;
+            var tierSel = new AtSegmented(tierIds) { SelectedIndex = Math.Max(0, Array.IndexOf(tierIds, room.Tier ?? "STANDARD")) };
+            tierSel.SelectedChanged += (s, e) => { room.ApplyTier(tierSel.Selected); AfterRoomEdit(); };
+            Add(Labeled("Variantă", tierSel));
+            var fs = new DropDown { Font = Tk.Label };
+            foreach (var o in RhinoWood.Core.Furniture.CaseKit.FrontStyles) fs.Items.Add(new ListItem { Text = Ro.FrontStyle(o), Key = o });
+            string cur; room.Aspect.Values.TryGetValue("front.style", out cur); fs.SelectedKey = cur ?? "scoop";
+            fs.SelectedKeyChanged += (s, e) => { if (fs.SelectedKey != null) { room.SetStyle(RhinoWood.Core.Furniture.StyleKind.Aspect, "front.style", fs.SelectedKey); AfterRoomEdit(); } };
+            Add(Labeled("Deschidere sertare", fs));
+            var sp = new DropDown { Font = Tk.Label };
+            foreach (var id in new[] { "OAK", "ASH", "BEECH", "WALNUT", "MAPLE" }) if (P.Library.Species.ContainsKey(id)) sp.Items.Add(new ListItem { Text = Ro.SpeciesName(id), Key = id });
+            room.Aspect.Values.TryGetValue("species", out var curSp); sp.SelectedKey = curSp ?? room.Pieces[0].Project.SpeciesId;
+            sp.SelectedKeyChanged += (s, e) => { if (sp.SelectedKey != null) { room.SetStyle(RhinoWood.Core.Furniture.StyleKind.Aspect, "species", sp.SelectedKey); AfterRoomEdit(); } };
+            Add(Labeled("Esență vizibilă (clasa A)", sp));
+
+            Heading("Piese");
+            foreach (var piece in room.Pieces)
+            {
+                var pr = piece; bool active = P.Project == pr.Project;
+                Add(new Label { Text = (active ? "● " : "○ ") + pr.Name + " · " + Ro.FurnitureName(pr.Project.Furniture.TypeId, pr.Project.Furniture.Name) + (pr.Unlinked.Count > 0 ? " · " + pr.Unlinked.Count + " alegeri proprii" : ""), Font = active ? Tk.LabelStrong : Tk.Label, TextColor = Tk.Ink });
+                if (!active) Row(Button("Editează în Configurare", () => P.ActivatePiece(pr), BtnVariant.Quiet));
+            }
+
+            Heading("Debitare globală");
+            Muted("Toate piesele se debitează împreună: aceleași bare se împart între piese, iar rezerva se aplică o singură dată.");
+            Row(Button("Calculează debitarea camerei", () => { var res = P.Workspace.Recalculate(room); _report = Summarize(res); Rebuild(); }),
+                Button(P.RoomGenerated ? "Actualizează camera în Rhino" : "Generează camera în Rhino", () => { if (RhinoDoc.ActiveDoc != null) WoodActions.GenerateRoom(RhinoDoc.ActiveDoc); Rebuild(); }, BtnVariant.Primary));
+            if (_report.Length > 0) Mono(_report);
+        }
+
+        private void AfterRoomEdit()
+        {
+            P.Recalculate();
+            if (P.RoomGenerated && RhinoDoc.ActiveDoc != null) WoodActions.SyncRoom(RhinoDoc.ActiveDoc);
+            _report = "";
+        }
+
+        private static string Summarize(RhinoWood.Core.Workspaces.RoomResult res)
+        {
+            var sb = new System.Text.StringBuilder();
+            var cur = res.Results.Count > 0 ? res.Results[0].Cost.Currency : "";
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "Cost material (plan comun)   {0:0.00} {1}", res.CombinedCost, cur));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "Dacă ar fi debitate separat  {0:0.00} {1}   (economie {2:0.00})", res.SeparateCostTotal, cur, res.Saving));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "Bare: {0} comun / {1} separat", res.CombinedBoards, res.SeparateBoardsTotal));
+            sb.AppendLine();
+            sb.AppendLine("De comandat:");
+            foreach (var l in res.Combined.Purchase) sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  {0,2} × {1} × {2:0} mm", l.Quantity + l.ReserveQuantity, l.Item.Label, l.Length));
+            sb.AppendLine();
+            sb.AppendLine("Declarație de specii (ofertă):");
+            sb.AppendLine(res.Declaration);
+            int err = res.Pieces.Sum(p => p.Errors), warn = res.Pieces.Sum(p => p.Warnings);
+            sb.AppendLine(); sb.AppendLine(err + " erori · " + warn + " avertismente în piese (vezi tabul Verificări pe fiecare piesă).");
+            return sb.ToString();
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------ Afișare (WoodDisplay)
     internal sealed class DisplayTab : TabBase
     {
