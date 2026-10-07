@@ -89,13 +89,15 @@ namespace RhinoWood.Core.Rules
         public static double RequiredStaticChairCapacityN(double alaLevelN, double cyclicFactor = CyclicFactorRectangular) => alaLevelN / cyclicFactor;
 
         // ---- R5
-        public sealed class TenonCheck { public bool LengthOk, ThicknessOk; public string Message; }
+        public sealed class TenonCheck { public bool LengthOk, ThicknessOk, InDomain; public string Message; }
         public static TenonCheck CheckTenonGeometry(double lengthMm, double widthMm, double thicknessMm, double railThicknessMm)
         {
             var c = new TenonCheck
             {
                 LengthOk = lengthMm >= widthMm - 1e-9 && lengthMm <= 2 * widthMm + 1e-9,
-                ThicknessOk = thicknessMm >= railThicknessMm / 3.0 - 0.75 && thicknessMm <= railThicknessMm / 2.0 + 0.75
+                ThicknessOk = thicknessMm >= railThicknessMm / 3.0 - 0.75 && thicknessMm <= railThicknessMm / 2.0 + 0.75,
+                // domain of Hu & Chen 2021 (E3): tenon width 15-25, length 20-40 mm
+                InDomain = widthMm >= 15 && widthMm <= 25 && lengthMm >= 20 && lengthMm <= 40
             };
             c.Message = (c.LengthOk ? "" : "tenon length outside w..2w; ") + (c.ThicknessOk ? "" : "tenon thickness outside 1/3..1/2 of the rail; ");
             return c;

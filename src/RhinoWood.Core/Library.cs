@@ -50,6 +50,7 @@ namespace RhinoWood.Core.Libraries
         public List<string> FastenerIds { get; set; } = new List<string>();
         public Dictionary<string, int> FastenersPerUnit { get; set; } = new Dictionary<string, int>();
         public string InstallationNotes { get; set; }
+        public string InstallationNotesRo { get; set; }
     }
 
     public sealed class ConsumableItem
@@ -179,6 +180,7 @@ namespace RhinoWood.Core.Libraries
                 Dimensions = new Vec3(30, 20, 8), UnitPrice = 0.45, TravelAllowance = 8,
                 FastenerIds = { "SCR-4x16" }, FastenersPerUnit = { { "SCR-4x16", 1 } },
                 RequiredToolIds = { "ROUT-SLOT-3", "DRILL-3" },
+                InstallationNotesRo = "Frezează un canal de 3 mm pe fața interioară a zargii, la 12 mm sub marginea de sus; clipsul se agață în canal și se înșurubează pe fața inferioară a blatului.",
                 InstallationNotes = "Cut a 3 mm slot in the inner face of the apron, 12 mm below the apron top; clip hooks into the slot and is screwed to the underside of the top.",
                 Pattern =
                 {
@@ -192,6 +194,7 @@ namespace RhinoWood.Core.Libraries
                 Dimensions = new Vec3(30, 16, 5), UnitPrice = 0.6, TravelAllowance = 3,
                 FastenerIds = { "SCR-4x16" }, FastenersPerUnit = { { "SCR-4x16", 2 } },
                 RequiredToolIds = { "FORSTNER-35", "DRILL-3" },
+                InstallationNotesRo = "Adâncitură în muchia de sus a zargii (la ~6 mm de fața interioară); un șurub în zargă și unul în fața inferioară a blatului. Balans mic: nu pentru blaturi mai late de ~450 mm.",
                 InstallationNotes = "Recess in the top edge of the apron (about 6 mm from the inner face); one screw into the apron, one into the underside of the top. Limited swing: not recommended for tops wider than ~450 mm.",
                 Pattern =
                 {
@@ -205,6 +208,7 @@ namespace RhinoWood.Core.Libraries
                 Dimensions = new Vec3(40, 25, 10), UnitPrice = 0.3, TravelAllowance = 10,
                 FastenerIds = { "SCR-4x35" }, FastenersPerUnit = { { "SCR-4x35", 1 }, { "WSH-4", 1 } },
                 RequiredToolIds = { "ROUT-SLOT-3", "DRILL-5" },
+                InstallationNotesRo = "Canal de 6 mm pe fața interioară a zargii; butonul din lemn tare (fibra pe lungime) alunecă în canal și se înșurubează pe blat printr-o gaură mai mare.",
                 InstallationNotes = "Groove 6 mm wide in the inner face of the apron; a shop-made hardwood button (grain along its length) slides in the groove and is screwed to the underside of the top through an oversized hole.",
                 Pattern =
                 {
@@ -221,6 +225,7 @@ namespace RhinoWood.Core.Libraries
                 Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.07, TravelAllowance = 10,
                 FastenerIds = { "SCR-4x35", "WSH-4" }, FastenersPerUnit = { { "SCR-4x35", 1 }, { "WSH-4", 1 } },
                 RequiredToolIds = { "DRILL-5", "ROUT-8" },
+                InstallationNotesRo = "Gaură alungită în zargă (axa lungă pe direcția de mișcare) lasă blatul să se miște; șurubul intră în fața inferioară a blatului.",
                 InstallationNotes = "Elongated hole in the apron (long axis along the movement direction) lets the top move; screw into the top underside.",
                 Pattern =
                 {

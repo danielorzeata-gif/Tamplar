@@ -5,52 +5,51 @@ Status: **specification + Core model done (Workspace/Room/StyleSet, rule catalog
 ## Decisions taken with the user
 | # | Decision |
 |---|---|
-| 1 | **Two style sets per room**: *Aspect* (what is visible: species, front style, handle, edge profile, foot shape, visible gaps) and *Structure* (how it is built: joints, fixings, hidden hardware). Structure varies more between pieces than aspect. |
-| 2 | **Room level**: Workspace → Room → Piece → Part. Each room has its own two sets; rooms are independent (a house does not force one set everywhere). |
-| 3 | **Editing a field of a piece** defaults to **"only here"** (detaches that field from the set). The notification offers **"apply to the whole set"**. |
-| 4 | **No visual finish/colour for now.** The set only carries the species ("oak furniture") and a finish *label/quantity*. |
-| 5 | Window type **B – Studio window** (3 columns); dockable panels (A) remain as fallback. |
+| 1 | **Two style sets per room**: *Aspect* (visible: species, front style, handle, edge profile, foot shape, visible gaps) and *Structure* (how it is built: joints, fixings, hidden hardware). |
+| 2 | **Room level**: Workspace → Room → Piece → Part. Each room has its own two sets; rooms are independent. |
+| 3 | **Editing a field of a piece** defaults to **"only here"**; the notification offers **"apply to the whole set"**. |
+| 4 | **No visual finish/colour for now** (species + finish label/quantity only). |
+| 5 | **Design system: "Atelier" (the user's PDF, v1, 2026-10-07)** — one docked panel of 320 px (control height 24, row 22, 4 px grid), modes **DESIGN / VÂNZARE**, tiers **ECONOMA → STANDARD → PREMIUM**, stock truth = **DEPOZIT_LEMN**, waste always red, Romanian with diacritics, no emoji. This **replaces** the earlier "Studio window" and 3-column ideas. |
+| 6 | **Documents**: the **technical sheet** is the live preview inside the working interface; **joint dimensions**, **cutting plan** and **assembly notes** are separate sheets, exported together in one **PDF**. |
 
-## Layout (3 columns + status bar)
+## How the 3 columns map onto Atelier
+Atelier forbids windows ("everything happens in one 320 px panel, modal dialogs only for delete confirmations"). The three areas the user described therefore become:
 ```
-┌─ Structure ───────────────┬─ Preview ──────────────────────────┬─ Properties (selected item) ───────────┐
-│ Workspace "Casa"          │ [3D] [Technical sheet] [Cut] [Docs]│ Piece: Masa · standard 1800×900×760    │
-│  ▾ Room Dormitor          │ 3D: selected part highlighted,     │ ┌Dimensions│Joints│Details│Material│HW┐ │
-│    Set Aspect  (oak, …)   │     callouts on details            │ │ Length  [1800] 🔒 standard   ↺      │ │
-│    Set Structure (M&T…)   │ Sheet: top / front / side with     │ │ Width   [ 900] ✎ piece       ↺      │ │
-│    ▸ Bed ▸ Nightstand ×2  │        dimensions + materials list │ │ Species [Oak]  🔗 set Aspect  🔓     │ │
-│    ▸ Wardrobe ▸ Dresser   │        (like the user's sheets)    │ │ Apron joint [Mortise-tenon ▼] 🔗    │ │
-│  ▸ Room Kitchen           │                                    │ │   ★★★★★ …  [compare]               │ │
-│ [+ Piece] presets [4][6][8]│                                    │ └───────────────────────────────────────┘ │
-├───────────────────────────┴────────────────────────────────────┴─────────────────────────────────────────┤
-│ Rules: ✔ OK · ⚠ warnings · ✖ blocked · "needs testing" flags   Purchase (room, global): 10 boards · 341 € │
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Rhino viewport (centre) ───────────────┐  ┌ Atelier panel 320 px (dock) ─┐  ┌ "Fișă tehnică" panel ─┐
+│ live 3D preview (display conduit),     │  │ Atelier        [DESIGN|VÂNZARE]│  │ top / front / side     │
+│ selected part highlighted, waste red   │  │ ▾ ELEMENT   Cameră › Masă › …  │  │ dimensions + materials │
+│ ← "Previzualizare" shows the piece     │  │ ▾ CAMERĂ    set Aspect/Structură│  │ list, scale 1:20       │
+│    BEFORE "Generează" creates it       │  │ ▾ DIMENSIUNI  ParamField −/+   │  │ refreshes on every     │
+└────────────────────────────────────────┘  │ ▾ VARIANTĂ  ECONOMA STANDARD PREMIUM│  │ change (WebView)       │
+                                            │ ▾ ÎMBINĂRI  per connection ▼  │  └────────────────────────┘
+                                            │ ▾ DEBITARE  CutList (DESIGN)   │
+                                            │ ▾ COST / OFERTĂ  PriceSummary  │
+                                            │ [Previzualizare]  [Generează]  │
+                                            └────────────────────────────────┘
 ```
+* left column (structure) → section **CAMERĂ** (rooms, pieces, set summary) in the same panel;
+* right column (properties) → sections **DIMENSIUNI / ÎMBINĂRI** of the selected piece;
+* centre (preview) → Rhino viewport (3D) + the **Fișă tehnică** panel (2D sheet).
 
-### Field provenance (every field shows where its value comes from)
-`🔒 standard` (rule/preset) · `🔗 set` (follows the room set) · `✎ piece override` (detached, ↺ re-link) · changing a set shows the **impact** ("9 pieces affected, +0.02 m³").
-Core API: `Room.Fields(piece)` → `FieldInfo{Value, SetValue, Source}`, `Room.SetStyle(kind,key,value)`, `Room.ChangeField(piece,key,value,OnlyHere|WholeSet)`, `Room.Relink`, `StyleImpact{PieceIds, Conflicts}`.
+**Tiers = Structure-set presets.** ECONOMA / STANDARD / PREMIUM choose, per role, the joint family (see the `imbinari-colt` skill: ECONOMA fast & simple, STANDARD repeatable "product", PREMIUM visible craft joints). The user can still override individual joints (field provenance stays: set / piece override).
 
-### What a set contains / does not contain
-Contains (visible, must match): species, front style, stile width and panel groove, handle model + placement rule, edge profile, foot shape, visible gaps.
-Does **not** contain: overall dimensions, hidden joint types per piece (bed bolts vs. dovetailed drawers), number of drawers, interior hardware.
-Sets keep **proportions and rules**, not fixed sizes: a front below the minimum panel size becomes flat; handle model is shared, its position is computed from the front height; adjacent drawer fronts are cut in sequence from one board (grain continuity).
+**DESIGN vs VÂNZARE.** DESIGN shows joints, cutting list, waste and production cost. VÂNZARE shows only dimensions, variant and the customer price; it never shows internal costs, stock codes or waste (enforced in `SheetBuilder` and tested).
 
-### Rule feedback (three levels, always visible)
-| Level | Behaviour | Source |
+## PDF export (implemented: `SheetBuilder`, `SheetDocument`, `PdfExporter`)
+| Sheet | Content | Mode |
 |---|---|---|
-| **Blocked** | physically impossible value is not accepted, with the reason | geometry |
-| **Warning** | allowed, needs confirmation, suggests a fix ("use Z-clip") | rules R1–R19 with `Confidence` |
-| **Info / Needs testing** | outside the validated domain of a published equation → *"test per EN 1728/1730"*, never an extrapolated capacity | `RuleCatalog`, R3/R19 |
-Unsuitable options stay in the list, greyed, with the reason (e.g. "dowels: rail too thin for 2 dowels").
-**Never coded** (shown as unavailable): Janka hardness (R17 → Brinell), Hu & Chen bending Fb (R18), numeric capacity of glue-free joints (R19).
-Compliance flags (R14/R15): formaldehyde ≤ 0.062 mg/m³ for boards, GPSR dossier (10 y), EUDR DDS numbers (5 y) as checklist items in the Docs tab.
+| 1 Fișă tehnică | 3 orthographic views with overall dimensions, numbered parts, materials list, oblique overview, joints & hardware, scale | DESIGN + VÂNZARE (live preview) |
+| 2 Cote de îmbinare | per joint type: tenon end/side view, mortise face, parameters, operations + tools, checks R5 / R3 ("needs testing" when outside the validated domain) | DESIGN |
+| 3 Plan de debitare | boards with cuts, reusable remnants, **waste in red**; cut list (piece, section, L, qty, stock/board, waste) | DESIGN |
+| 4 Comandă și cost | purchase list incl. reserve, production cost, "why this order" | DESIGN |
+| 5 Note de montaj | assembly order, hardware table + install notes, warnings | DESIGN |
+| Ofertă | name, species, variant, dimensions, price (cost × (1 + margin)) | VÂNZARE |
+PDF is rendered from HTML/SVG with an installed Chromium browser (Edge ships with Windows); if none is found the HTML is saved for manual printing.
 
-### Room-level purchase
-All pieces of a room are optimized **together** (one purchase list, remnants shared). The status bar shows the saving versus buying each piece separately (`RoomResult.Saving`).
+## Field provenance, rules, room purchase (unchanged)
+See previous sections: `FieldInfo.Source` (standard / set / piece override), three feedback levels (blocked / warning / info-needs testing) driven by `RuleCatalog` R1–R19, one global purchase per room (`RoomResult.Saving`).
 
 ## Next implementation steps
-1. Studio window (3 columns) on top of `Workspace`/`Room` + technical sheet renderer (top/front/side with dimensions + materials list).
-2. Detail library (edge profiles, foot shapes, front styles, handles) as data with rules and manufacturing operations.
-3. Casework pieces (nightstand, dresser, wardrobe, bed) so a bedroom can actually be built; DoorDefinition/WindowDefinition.
-4. Data-driven roles/rules from `knowledge/Wood/PLUGIN_DATA/joint_roles_and_rules.json`.
+1. Replace the modal `NewProjectDialog` with the Atelier panel flow (Previzualizare → Generează) + Fișă panel (done) + tokens (colors/typography/spacing) in Eto.
+2. **DEPOZIT_LEMN** import (`depozit_lemn.xlsx`: Cod, Grupa, Grosime, Latime, Diametru, Lungime, Pret, Lei/m, Specie, Observatii) → stock badges (● în stoc / ▲ stoc mic / ○ lipsă) and stock-first optimization.
+3. Tier presets for the Structure set; detail library; casework pieces; door/window.

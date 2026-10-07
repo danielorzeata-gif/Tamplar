@@ -10,6 +10,7 @@
 - `RuleCatalog` R1-R19 with confidence levels (safe / provisional / conditional / typology-only / forbidden) + tested helpers (EN 14749/12521 stability, finger traps, panel movement, chair capacities, tenon equation E1 with domain check); stability validation rule.
 - Species data replaced by verified DIN 68364/68100 values (`DataLabel` [V-DATA]/[UNVERIFIED]); Janka removed (R17); default moisture swing 5 points.
 - `knowledge/Wood/13_DESIGN_AND_ENGINEERING/RULES_EN_PEER_REVIEW_2026.md` added; `docs/UI_SPEC.md`.
+- PDF sheets in the Atelier style (Romanian, diacritics): technical sheet (live preview), joint dimensions, cutting plan + cut list, order & cost, assembly notes; SALE mode (offer only, no internal costs/waste/stock codes); `WoodPdf`, `WoodSheet` commands and a "Fișă tehnică" panel.
 - `knowledge/Wood`: imported knowledge base + iteration 9 research on doors, windows, furniture matrix, hardware; `docs/ROADMAP_V2.md`.
 
 ## 1.0.0

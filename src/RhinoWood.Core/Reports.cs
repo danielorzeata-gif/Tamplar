@@ -299,6 +299,10 @@ namespace RhinoWood.Core.Reports
             W("view_exploded.svg", ReportBuilder.ObliqueSvg(r, true));
             W("project_summary.html", ReportBuilder.SummaryHtml(p, r));
             W("project.rhinowood.json", ProjectSerializer.Serialize(p, r));
+            var pdf = PdfExporter.ExportSheets(p, r, Path.Combine(dir, "planse.pdf"), SheetMode.Design);
+            written.Add(pdf.ok ? Path.Combine(dir, "planse.pdf") : Path.Combine(dir, "planse.html"));
+            var sale = PdfExporter.ExportSheets(p, r, Path.Combine(dir, "oferta.pdf"), SheetMode.Sale);
+            written.Add(sale.ok ? Path.Combine(dir, "oferta.pdf") : Path.Combine(dir, "oferta.html"));
             return written;
         }
     }

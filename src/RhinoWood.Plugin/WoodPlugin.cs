@@ -40,6 +40,7 @@ namespace RhinoWood.Plugin
             {
                 LoadLibrary();
                 Rhino.UI.Panels.RegisterPanel(this, typeof(RhinoWood.Plugin.UI.WoodPanel), "Rhino Wood", RhinoWood.Plugin.UI.WoodPanel.CreateIcon());
+                Rhino.UI.Panels.RegisterPanel(this, typeof(RhinoWood.Plugin.UI.SheetPanel), "Rhino Wood · Fișă tehnică", RhinoWood.Plugin.UI.WoodPanel.CreateIcon());
                 RhinoDoc.EndOpenDocument += OnEndOpenDocument;
                 RhinoDoc.BeginSaveDocument += OnBeginSaveDocument;
                 RhinoDoc.CloseDocument += (s, e) => { if (RhinoDoc.ActiveDoc == null) { Project = null; LastResult = null; Raise(); } };

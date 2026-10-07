@@ -204,7 +204,9 @@ namespace RhinoWood.Plugin.UI
         {
             var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
             l.AddRow(new Label { Text = "Exports BOM, cut list, procurement list, manufacturing operations, traceability, joinery and hardware details, assembly sequence, drawings (SVG), exploded view and an HTML project summary." });
-            l.AddRow(Btn("Export documentation...", () => Run("WoodReport")));
+            l.AddRow(Btn("Fișă tehnică (previzualizare)", () => Run("WoodSheet")));
+            l.AddRow(Btn("Exportă planșe PDF", () => Run("WoodPdf")));
+            l.AddRow(Btn("Exportă toate documentele...", () => Run("WoodReport")));
             l.Add(null);
             return l;
         }

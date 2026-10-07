@@ -1,1 +1,1 @@
-INFO [MOVEMENT_INFO] TOP-1: expected seasonal movement across grain 14.4 mm total (±7.2 mm) for a 4% moisture swing - leave expansion gaps / use slotted fasteners. (TOP-1)
+INFO [MOVEMENT_INFO] TOP-1: expected seasonal movement across grain 16.2 mm total (±8.1 mm) for a 5% moisture swing - leave expansion gaps / use slotted fasteners. (TOP-1)

@@ -1,7 +1,7 @@
 {
   "SchemaVersion": 1,
   "PluginVersion": "1.0.0",
-  "ProjectId": "PRJ-bb657d41",
+  "ProjectId": "PRJ-0642c33c",
   "Name": "Oak dining table",
   "FurnitureTypeId": "table.dining",
   "SpeciesId": "OAK",
@@ -16,6 +16,11 @@
     "overhang": 40,
     "reveal": 5,
     "clipSpacing": 350
+  },
+  "Choices": {
+    "jointApronLong": "mortise-tenon",
+    "jointApronShort": "mortise-tenon",
+    "topFixing": "TOP-ZCLIP"
   },
   "Overrides": [],
   "CustomComponents": [],
@@ -41,7 +46,7 @@
       "MinReusableRemnant": 300,
       "GluedPanelTrim": 10,
       "PanelStripWidthAllowance": 10,
-      "SeasonalMoisturePercent": 4,
+      "SeasonalMoisturePercent": 5,
       "LaborRatePerHour": 25,
       "GluePricePerM2": 1.2,
       "FinishPricePerM2": 4.5,
@@ -50,7 +55,8 @@
     "Strategy": "MinPurchase",
     "GlobalReservePercent": 10,
     "ReserveOverrides": {},
-    "Currency": "EUR",
+    "Currency": "lei",
+    "SalesMarginPercent": 35,
     "Display": "Normal",
     "ShowGrain": false
   },
@@ -65,5 +71,5 @@
       "1 x OAK 90x90 x 4000"
     ]
   },
-  "SavedUtc": "2026-10-07T16:00:01.6562023Z"
+  "SavedUtc": "2026-10-07T19:10:15.1686792Z"
 }

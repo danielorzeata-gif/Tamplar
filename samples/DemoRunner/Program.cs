@@ -23,6 +23,11 @@ Console.WriteLine("15. Documentation -> " + outDir);
 var files = ReportWriter.WriteAll(outDir, project, r);
 foreach (var f in files) Console.WriteLine("   " + Path.GetFileName(f));
 
+foreach (var (mode, name) in new[] { (SheetMode.Design, "planse_design.pdf"), (SheetMode.Sale, "oferta_vanzare.pdf") })
+{
+    var (pdfOk, msg) = PdfExporter.ExportSheets(project, r, Path.Combine(outDir, name), mode, "STANDARD");
+    Console.WriteLine("   " + name + ": " + (pdfOk ? "OK" : "NU - " + msg));
+}
 Console.WriteLine("16-19. Save, 'close', reopen, verify");
 var json = File.ReadAllText(Path.Combine(outDir, "project.rhinowood.json"));
 var (reopened, ok) = ProjectSerializer.Open(json);

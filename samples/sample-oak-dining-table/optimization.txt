@@ -4,14 +4,14 @@ Required (theoretical finished):  0.0848 m3
 Rough with allowances:            0.1094 m3
 Optimized manufacturing:          0.1097 m3
 Purchase (commercial, incl. reserve): 0.1388 m3
-   4 x OAK 40x140 x 4000   = 125.44 EUR
-   1 x OAK 40x140 x 3000   = 23.52 EUR
-   1 x OAK 90x90 x 4000   = 45.36 EUR
+   4 x OAK 40x140 x 4000   = 125.44 lei
+   1 x OAK 40x140 x 3000   = 23.52 lei
+   1 x OAK 90x90 x 4000   = 45.36 lei
 Reserve: OAK 10%
 Expected reusable remnants:       0.0115 m3
 Expected process waste:           0.0410 m3
 Scrap:                            0.0016 m3
-Estimated material cost:          194.32 EUR
+Estimated material cost:          194.32 lei
 
 WHY THIS PURCHASE?
 1. THEORETICAL requirement: 0.0848 m3 finished volume, 20.26 linear m of finished parts.
@@ -53,7 +53,7 @@ B006  OAK 90x90 x 4000 mm
 
 OPTIMIZER CANDIDATES (all evaluated; best by strategy is selected)
  * LongestFirst/utilization          6 boards, 0.1388 m3, cost 194.32
-   LongestFirst/smallest-fit         6 boards, 0.1413 m3, cost 197.82
+   LongestFirst/smallest-fit         6 boards, 0.1518 m3, cost 212.52
    LongestFirst/largest-stock        6 boards, 0.1444 m3, cost 202.16
    LongestFirst/fixed-5000           7 boards, 0.1600 m3, cost 224.00
    ConstrainedFirst/utilization      6 boards, 0.1388 m3, cost 194.32

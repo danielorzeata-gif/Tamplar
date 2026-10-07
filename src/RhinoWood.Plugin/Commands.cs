@@ -69,7 +69,7 @@ namespace RhinoWood.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
             var lib = WoodActions.P.Library;
-            var project = WoodProject.CreateTable("Dining table", "OAK", lib);
+            var project = WoodProject.CreateTable("Masă sufragerie", "OAK", lib);
             var dlg = new RhinoWood.Plugin.UI.NewProjectDialog(doc, project);
             var p = dlg.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow);
             if (p == null) return Result.Cancel;
@@ -259,6 +259,36 @@ namespace RhinoWood.Plugin
     {
         public override string EnglishName => "WoodPanel";
         protected override Result RunCommand(RhinoDoc doc, RunMode mode) { Rhino.UI.Panels.OpenPanel(typeof(RhinoWood.Plugin.UI.WoodPanel).GUID); return Result.Success; }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f0d")]
+    public class WoodSheetCommand : Command
+    {
+        public override string EnglishName => "WoodSheet";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode) { Rhino.UI.Panels.OpenPanel(typeof(RhinoWood.Plugin.UI.SheetPanel).GUID); return Result.Success; }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f0e")]
+    public class WoodPdfCommand : Command
+    {
+        public override string EnglishName => "WoodPdf";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            if (!WoodActions.RequireProject()) return Result.Failure;
+            var go = new GetOption(); go.SetCommandPrompt("Tip document PDF");
+            int design = go.AddOption("Design"), sale = go.AddOption("Vanzare");
+            go.AcceptNothing(true);
+            var sm = RhinoWood.Core.Reports.SheetMode.Design;
+            if (go.Get() == GetResult.Option && go.Option().Index == sale) sm = RhinoWood.Core.Reports.SheetMode.Sale;
+            var p = WoodActions.P.Project; var r = WoodActions.P.Recalculate();
+            var dlg = new Eto.Forms.SaveFileDialog { Title = "Salvează planșele PDF", FileName = p.Name + (sm == RhinoWood.Core.Reports.SheetMode.Sale ? " - oferta.pdf" : " - planse.pdf") };
+            dlg.Filters.Add(new Eto.Forms.FileFilter("PDF", ".pdf"));
+            if (dlg.ShowDialog(Rhino.UI.RhinoEtoApp.MainWindow) != Eto.Forms.DialogResult.Ok) return Result.Cancel;
+            var (ok, msg) = RhinoWood.Core.Reports.PdfExporter.ExportSheets(p, r, dlg.FileName, sm, null);
+            RhinoApp.WriteLine(ok ? "Rhino Wood: PDF salvat: " + msg : "Rhino Wood: " + msg);
+            if (ok) { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dlg.FileName) { UseShellExecute = true }); } catch { } }
+            return ok ? Result.Success : Result.Failure;
+        }
     }
 
     [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f0c")]

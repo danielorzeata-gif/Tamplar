@@ -49,7 +49,9 @@ namespace RhinoWood.Core.Rules
         public double GlobalReservePercent { get; set; } = 10;
         /// <summary>Project-specific overrides, species id -> percent.</summary>
         public Dictionary<string, double> ReserveOverrides { get; set; } = new Dictionary<string, double>();
-        public string Currency { get; set; } = "EUR";
+        public string Currency { get; set; } = "lei";
+        /// <summary>Sale price = production cost x (1 + margin). Only used in SALE (VANZARE) documents, never shown with internal costs.</summary>
+        public double SalesMarginPercent { get; set; } = 35;
         public DisplayMode Display { get; set; } = DisplayMode.Normal;
         public bool ShowGrain { get; set; }
 
