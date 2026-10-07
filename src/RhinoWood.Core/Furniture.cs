@@ -14,6 +14,8 @@ namespace RhinoWood.Core.Furniture
 {
     public sealed class ParameterDef
     {
+        public StyleKind StyleKind { get; set; } = StyleKind.None;
+        public string StyleKey { get; set; }
         public string Key { get; set; }
         public string Label { get; set; }
         public string Unit { get; set; } = "mm";
@@ -29,8 +31,14 @@ namespace RhinoWood.Core.Furniture
     }
 
     /// <summary>A selectable option (e.g. which joint type to use for a connection). Options are ids understood by the registries.</summary>
+    /// <summary>Which kind of room style set controls a field: Aspect = what is visible (species, fronts, handles, edges), Structure = how it is built (joints, fixings).</summary>
+    public enum StyleKind { None, Aspect, Structure }
+
     public sealed class ChoiceDef
     {
+        public StyleKind StyleKind { get; set; } = StyleKind.None;
+        /// <summary>Key inside the style set; several fields may share one key (e.g. both apron joints = "joint.apron-leg").</summary>
+        public string StyleKey { get; set; }
         public string Key { get; set; }
         public string Label { get; set; }
         public string Group { get; set; }
@@ -116,13 +124,13 @@ namespace RhinoWood.Core.Furniture
 
         public IReadOnlyList<ChoiceDef> Choices { get; } = new[]
         {
-            new ChoiceDef { Key = "jointApronLong", Label = "Long apron to leg", Group = "Joinery", Kind = "joint", Default = "mortise-tenon",
+            new ChoiceDef { Key = "jointApronLong", Label = "Long apron to leg", Group = "Joinery", StyleKind = StyleKind.Structure, StyleKey = "joint.apron-leg", Kind = "joint", Default = "mortise-tenon",
                 Options = { "mortise-tenon", "loose-tenon", "dowel", "bridle", "japanese-kusabi", "biscuit", "pocket-screw" },
                 Description = "Joint between the long aprons and the legs." },
-            new ChoiceDef { Key = "jointApronShort", Label = "Short apron to leg", Group = "Joinery", Kind = "joint", Default = "mortise-tenon",
+            new ChoiceDef { Key = "jointApronShort", Label = "Short apron to leg", Group = "Joinery", StyleKind = StyleKind.Structure, StyleKey = "joint.apron-leg", Kind = "joint", Default = "mortise-tenon",
                 Options = { "mortise-tenon", "loose-tenon", "dowel", "bridle", "japanese-kusabi", "biscuit", "pocket-screw" },
                 Description = "Joint between the short aprons and the legs. Two through joints in the same corner leg conflict." },
-            new ChoiceDef { Key = "topFixing", Label = "Tabletop fixing (long aprons)", Group = "Hardware", Kind = "hardware", Default = "TOP-ZCLIP",
+            new ChoiceDef { Key = "topFixing", Label = "Tabletop fixing (long aprons)", Group = "Hardware", StyleKind = StyleKind.Structure, StyleKey = "top.fixing", Kind = "hardware", Default = "TOP-ZCLIP",
                 Options = { "TOP-ZCLIP", "TOP-FIGURE8", "TOP-BUTTON" },
                 Description = "How the solid-wood top is attached while still allowed to move across the grain." },
         };
@@ -287,7 +295,7 @@ namespace RhinoWood.Core.Furniture
 
         public FurnitureModel Assemble(DependencyGraph g, ProjectContext ctx)
         {
-            var model = new FurnitureModel { TypeId = TypeId, Name = Name };
+            var model = new FurnitureModel { TypeId = TypeId, Name = Name, Category = Category };
             foreach (var key in new[] { "comp.top", "comp.legs", "comp.aprons" })
                 foreach (var fam in g.Get<Boxed<List<PartFamily>>>(key).Value)
                     model.Families.Add(CloneFamily(fam));

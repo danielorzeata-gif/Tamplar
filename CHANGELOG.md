@@ -5,6 +5,11 @@
   fixing (Z-clip, figure-8, wooden button); rail lengths, tenons, holes and hardware follow the choice; choices persist.
 - `JointInfo` (strength, difficulty, pros/cons, source) for every joint; THROUGH_CONFLICT validation.
 - `PreviewEngine` (2D oblique preview from the Core model); 83 tests.
+- Room workspace: `Workspace/Room/PieceEntry/StyleSet` (Aspect + Structure sets per room), field provenance (standard / set / piece override), "only here" vs "whole set" edits, re-link, conflicts reported instead of silently applied; one global optimization per room (never worse than separate plans) and workspace persistence.
+- Optimizer: reserve is now part of candidate comparison and is covered by the cheapest commercial option (fixes tighter plans being penalised).
+- `RuleCatalog` R1-R19 with confidence levels (safe / provisional / conditional / typology-only / forbidden) + tested helpers (EN 14749/12521 stability, finger traps, panel movement, chair capacities, tenon equation E1 with domain check); stability validation rule.
+- Species data replaced by verified DIN 68364/68100 values (`DataLabel` [V-DATA]/[UNVERIFIED]); Janka removed (R17); default moisture swing 5 points.
+- `knowledge/Wood/13_DESIGN_AND_ENGINEERING/RULES_EN_PEER_REVIEW_2026.md` added; `docs/UI_SPEC.md`.
 - `knowledge/Wood`: imported knowledge base + iteration 9 research on doors, windows, furniture matrix, hardware; `docs/ROADMAP_V2.md`.
 
 ## 1.0.0

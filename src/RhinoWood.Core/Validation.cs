@@ -32,7 +32,7 @@ namespace RhinoWood.Core.Validation
         {
             var v = new Validator();
             v.Register(new AllowanceRule()); v.Register(new CrossGrainRule()); v.Register(new MovementRule());
-            v.Register(new WasteRule()); v.Register(new SlendernessRule()); v.Register(new StockRule());
+            v.Register(new WasteRule()); v.Register(new SlendernessRule()); v.Register(new StockRule()); v.Register(new StabilityRule());
             return v;
         }
 
@@ -151,6 +151,36 @@ namespace RhinoWood.Core.Validation
             foreach (var pl in c.Optimization.Purchase)
                 if (c.Library.StockFor(pl.Item.SpeciesId).All(s => s.Id != pl.Item.Id))
                     yield return new Issue { Severity = Severity.Error, Code = "STOCK_MISSING", Message = "Stock item " + pl.Item.Id + " is not in the library." };
+        }
+    }
+
+    /// <summary>R10 (EN 14749) for storage furniture and R11 (EN 12521) for small tables.</summary>
+    internal sealed class StabilityRule : IValidationRule
+    {
+        public string Code => "STABILITY";
+        private static readonly HashSet<string> Storage = new HashSet<string> { "Cabinets", "Shelving", "Dressers", "Wardrobes", "Kitchens", "Storage" };
+
+        public IEnumerable<Issue> Check(ValidationContext c)
+        {
+            var m = c.Model;
+            if (m.Families.Count == 0 || string.IsNullOrEmpty(m.Category)) yield break;
+            double massKg = 0;
+            foreach (var f in m.Families)
+            {
+                double dens = c.Library.Species.TryGetValue(f.SpeciesId, out var sp) && sp.DensityKgM3 > 0 ? sp.DensityKgM3 : 600;
+                massKg += f.Instances.Count * f.Finished.VolumeM3 * dens;
+            }
+            var size = m.Bounds.Size;
+            double h = size.Z;
+            if (Storage.Contains(m.Category) && SafetyRules.RequiresStabilityCheck(h, massKg))
+                yield return new Issue { Severity = Severity.Warning, Code = "STABILITY_STORAGE", Message = string.Format(CultureInfo.InvariantCulture, "R10 (EN 14749): height {0:0} mm and mass {1:0} kg exceed the stability thresholds - add a wall-anchor kit + warning label and verify tip-over with drawers open and loaded (0.2 kg/dm3).", h, massKg) };
+            if (m.Category == "Tables")
+            {
+                var top = m.Families.FirstOrDefault(f => f.Type == PartType.Top);
+                double area = top == null ? 0 : top.Finished.Length * top.Finished.Width / 1e6;
+                if (top != null && SafetyRules.IsDelicateTable(area, h, massKg))
+                    yield return new Issue { Severity = Severity.Info, Code = "STABILITY_TABLE", Message = string.Format(CultureInfo.InvariantCulture, "R11 (EN 12521): small table (top {0:0.00} m2, H {1:0} mm, {2:0} kg) falls in the 'delicate table' stability-check range.", area, h, massKg) };
+            }
         }
     }
 }

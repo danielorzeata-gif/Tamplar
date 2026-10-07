@@ -158,7 +158,7 @@ namespace RhinoWood.Plugin.UI
             dd.SelectedKeyChanged += (s, e) => { if (dd.SelectedKey != p.SpeciesId) { p.SetSpecies(dd.SelectedKey); WoodActions.Refresh(RhinoDoc.ActiveDoc, false); } };
             l.AddRow(new Label { Text = "Species" }, dd);
             var sp = p.Library.GetSpecies(p.SpeciesId);
-            l.AddRow(new Label { Text = string.Format(CultureInfo.InvariantCulture, "Density {0} kg/m3, Janka {1} N, tangential movement {2:0.0000}/%MC, price {3:0}/m3", sp.DensityKgM3, sp.JankaHardnessN, sp.TangentialMovementPerPercent, sp.PricePerM3) });
+            l.AddRow(new Label { Text = string.Format(CultureInfo.InvariantCulture, "Density {0} kg/m3, Brinell perp {1}-{2} N/mm2, tangential movement {3:0.0000}/%MC, price {4:0}/m3 {5}", sp.DensityKgM3, sp.BrinellPerpMin, sp.BrinellPerpMax, sp.TangentialMovementPerPercent, sp.PricePerM3, sp.DataLabel) });
             l.AddRow(Btn("Add custom species...", () => Run("WoodAddSpecies")));
             l.Add(Grid(new[] { "Profile", "W x T", "Lengths" }, p.Library.StockFor(p.SpeciesId).Select(s => new[] { s.Id, s.Width + " x " + s.Thickness, string.Join(", ", s.Lengths) })));
             return l;

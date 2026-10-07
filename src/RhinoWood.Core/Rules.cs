@@ -21,7 +21,8 @@ namespace RhinoWood.Core.Rules
         public double MinReusableRemnant { get; set; } = 300;
         public double GluedPanelTrim { get; set; } = 10;
         public double PanelStripWidthAllowance { get; set; } = 10;
-        public double SeasonalMoisturePercent { get; set; } = 4;
+        /// <summary>Moisture swing for movement checks; 5 points = indoor heated apartment (RULES R9, [ESTIMARE]).</summary>
+        public double SeasonalMoisturePercent { get; set; } = 5;
 
         public double SectionAllowance(double finishedDim)
         {

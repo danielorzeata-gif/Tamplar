@@ -110,24 +110,36 @@ namespace RhinoWood.Core.Libraries
             lib.Suppliers["SUP-TIMBER"] = new Supplier { Id = "SUP-TIMBER", Name = "Default Timber Supplier" };
             lib.Suppliers["SUP-HW"] = new Supplier { Id = "SUP-HW", Name = "Default Hardware Supplier" };
 
-            void Sp(string id, string name, double dens, double janka, double tang, double rad, string stab, double price, double? reserve, params string[] joinery)
+            const string LWF = "DIN 68364 / DIN 68100 via LWF Bayern (RULES_EN_PEER_REVIEW_2026, Tab. 4-5)";
+            void Sp(string id, string name, double dens, double e, double mor, double sc, double bMin, double bMax, double dR, double dT, double? shear,
+                string stab, double price, double? reserve, string label, string src, params string[] joinery)
                 => lib.Species[id] = new WoodSpecies
                 {
-                    Id = id, Name = name, DensityKgM3 = dens, JankaHardnessN = janka, TangentialMovementPerPercent = tang,
-                    RadialMovementPerPercent = rad, DimensionalStability = stab, PricePerM3 = price, SupplierId = "SUP-TIMBER",
-                    ReservePercent = reserve, RecommendedJoinery = joinery.ToList(),
+                    Id = id, Name = name, DensityKgM3 = dens, YoungModulusMPa = e, ModulusOfRuptureMPa = mor, CompressionParallelMPa = sc,
+                    BrinellPerpMin = bMin, BrinellPerpMax = bMax, DiffShrinkRadialPct = dR, DiffShrinkTangentialPct = dT,
+                    TangentialMovementPerPercent = dT / 100.0, RadialMovementPerPercent = dR / 100.0, ShearStrengthMPa = shear,
+                    DimensionalStability = stab, PricePerM3 = price, SupplierId = "SUP-TIMBER", ReservePercent = reserve,
+                    DataLabel = label, DataSource = src, RecommendedJoinery = joinery.ToList(),
                     MachiningNotes = "Sharp tooling; climb-cut end grain carefully.", FinishingNotes = "Sand to P180 before oil/lacquer."
                 };
-            Sp("OAK", "Oak", 720, 5340, 0.0040, 0.0020, "Good", 1400, null, "mortise-tenon", "dowel", "dovetail");
-            Sp("BEECH", "Beech", 710, 5800, 0.0046, 0.0020, "Fair", 900, null, "mortise-tenon", "dowel");
-            Sp("ASH", "Ash", 690, 5870, 0.0041, 0.0020, "Fair", 1100, null, "mortise-tenon", "bridle");
-            Sp("WALNUT", "Walnut", 650, 4490, 0.0050, 0.0026, "Very good", 2600, 15, "mortise-tenon", "dovetail");
-            Sp("MAPLE", "Maple", 700, 6450, 0.0050, 0.0030, "Fair", 1300, null, "dowel", "mortise-tenon");
-            Sp("PINE", "Pine", 520, 2250, 0.0036, 0.0019, "Fair", 450, null, "dowel", "half-lap");
-            Sp("SPRUCE", "Spruce", 450, 1700, 0.0036, 0.0019, "Fair", 380, null, "half-lap", "dowel");
-            Sp("DOUGLAS", "Douglas Fir", 530, 2700, 0.0034, 0.0018, "Good", 520, null, "mortise-tenon", "bridle");
-            Sp("CHERRY", "Cherry", 580, 4220, 0.0042, 0.0021, "Good", 2200, null, "mortise-tenon", "dovetail");
-            Sp("MAHOGANY", "Mahogany", 550, 3600, 0.0030, 0.0020, "Very good", 3000, 15, "mortise-tenon", "dovetail");
+            // European species - [V-DATA] (prices are placeholders: edit in the user library)
+            Sp("OAK", "Oak", 710, 13000, 95, 52, 23, 42, 0.16, 0.36, null, "Good", 1400, null, "[V-DATA]", LWF, "mortise-tenon", "dowel", "dovetail");
+            Sp("BEECH", "Beech", 715, 14000, 120, 60, 28, 40, 0.20, 0.41, 10.3, "Fair", 900, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
+            Sp("ASH", "Ash", 700, 13000, 105, 50, 28, 40, 0.21, 0.38, null, "Fair", 1100, null, "[V-DATA]", LWF, "mortise-tenon", "bridle");
+            Sp("MAPLE", "Maple (sycamore)", 630, 10500, 95, 50, 26, 34, 0.15, 0.26, null, "Fair", 1300, null, "[V-DATA]", LWF + "; R/T = midpoints of ranges", "dowel", "mortise-tenon");
+            Sp("PINE", "Scots pine", 520, 11000, 85, 47, 19, 19, 0.19, 0.36, 6.2, "Fair", 450, null, "[V-DATA]", LWF, "dowel", "half-lap");
+            Sp("SPRUCE", "Spruce", 460, 11000, 80, 45, 12, 12, 0.19, 0.39, null, "Fair", 380, null, "[V-DATA]", LWF, "half-lap", "dowel");
+            Sp("WALNUT", "Walnut (European)", 680, 12500, 0, 0, 0, 0, 0.18, 0.29, null, "Very good", 2600, 15, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded", "mortise-tenon", "dovetail");
+            Sp("CHERRY", "Cherry", 615, 10000, 0, 0, 0, 0, 0.17, 0.28, null, "Good", 2200, null, "[V-DATA]", LWF + "; MOR/hardness extraction corrupt - not loaded; R/T midpoints", "mortise-tenon", "dovetail");
+            Sp("ROBINIA", "Black locust (robinia)", 740, 13600, 150, 73, 40, 57, 0.23, 0.35, null, "Good", 1000, null, "[V-DATA]", LWF, "mortise-tenon", "dowel");
+            Sp("BIRCH", "Birch", 650, 14000, 120, 50, 23, 23, 0.29, 0.41, null, "Fair", 650, null, "[V-DATA]", LWF + "; ranges: mid values", "dowel", "mortise-tenon");
+            Sp("LINDEN", "Linden", 530, 7400, 90, 44, 13, 20, 0.0, 0.0, null, "Good", 600, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
+            Sp("ELM", "Elm", 650, 11000, 81, 51, 27, 37, 0.0, 0.0, null, "Fair", 1200, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "mortise-tenon");
+            Sp("ALDER", "Black alder", 550, 7700, 85, 47, 16, 17, 0.0, 0.0, null, "Good", 600, null, "[V-DATA]", LWF + "; shrinkage not listed - 0 means unknown", "dowel");
+            Sp("POPLAR", "Black poplar", 450, 8800, 55, 30, 10, 10, 0.13, 0.31, null, "Fair", 450, null, "[V-DATA]", LWF, "dowel");
+            // not covered by the verified report: kept as placeholders
+            Sp("DOUGLAS", "Douglas fir", 530, 0, 0, 0, 0, 0, 0.18, 0.34, null, "Good", 520, null, "[UNVERIFIED]", "from memory - verify (Wood Handbook has US data)", "mortise-tenon", "bridle");
+            Sp("MAHOGANY", "Mahogany", 550, 0, 0, 0, 0, 0, 0.20, 0.30, null, "Very good", 3000, 15, "[UNVERIFIED]", "from memory - verify", "mortise-tenon", "dovetail");
 
             // commercial profiles: generated for every species so any species is purchasable
             var sections = new (double w, double t, double[] lens)[]

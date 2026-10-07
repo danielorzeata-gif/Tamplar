@@ -34,7 +34,23 @@ namespace RhinoWood.Core.Domain
         public string Id { get; set; }
         public string Name { get; set; }
         public double DensityKgM3 { get; set; }
+        /// <summary>DEPRECATED: never load Janka from memory/unverified extractions (RULES_EN_PEER_REVIEW_2026 R17). Use Brinell.</summary>
         public double JankaHardnessN { get; set; }
+        public double YoungModulusMPa { get; set; }
+        public double ModulusOfRuptureMPa { get; set; }
+        public double CompressionParallelMPa { get; set; }
+        /// <summary>Brinell hardness perpendicular to grain, N/mm2 (DIN 68364), min..max.</summary>
+        public double BrinellPerpMin { get; set; }
+        public double BrinellPerpMax { get; set; }
+        /// <summary>Radial differential shrinkage, %/% moisture (DIN 68100).</summary>
+        public double DiffShrinkRadialPct { get; set; }
+        /// <summary>Tangential differential shrinkage, %/% moisture (DIN 68100); TangentialMovementPerPercent = this / 100.</summary>
+        public double DiffShrinkTangentialPct { get; set; }
+        /// <summary>Shear strength along grain, MPa (needed by the tenon capacity equation E1; null = unknown).</summary>
+        public double? ShearStrengthMPa { get; set; }
+        /// <summary>Provenance: [V-DATA] source data, [PROXY] borrowed from a related species, [UNVERIFIED] from memory.</summary>
+        public string DataLabel { get; set; } = "[UNVERIFIED]";
+        public string DataSource { get; set; }
         /// <summary>Tangential movement, fraction of dimension per 1% moisture-content change.</summary>
         public double TangentialMovementPerPercent { get; set; }
         public double RadialMovementPerPercent { get; set; }
@@ -185,6 +201,7 @@ namespace RhinoWood.Core.Domain
     {
         public string TypeId { get; set; }
         public string Name { get; set; }
+        public string Category { get; set; }
         public List<PartFamily> Families { get; set; } = new List<PartFamily>();
         public List<JointInstance> Joints { get; set; } = new List<JointInstance>();
         public List<HardwareInstall> HardwareInstalls { get; set; } = new List<HardwareInstall>();

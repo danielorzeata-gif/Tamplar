@@ -144,7 +144,11 @@ namespace RhinoWood.Core.Optimization
             _lib.StockFor(species).SelectMany(i => i.Lengths.Select(l => (i, l)));
 
         // ------------------------------------------------------------ main entry
-        public OptimizationResult Optimize(IList<CutDemand> demands)
+        /// <summary>
+        /// Global optimization of all demands. <paramref name="seedGroups"/> (e.g. the pieces of a room) lets the optimizer also start from the best
+        /// plan of each group and then merge across groups, so the global plan is never worse than the groups planned separately.
+        /// </summary>
+        public OptimizationResult Optimize(IList<CutDemand> demands, IEnumerable<IList<CutDemand>> seedGroups = null)
         {
             var res = new OptimizationResult { Strategy = _settings.Strategy };
             var placeable = new List<CutDemand>();
@@ -164,12 +168,14 @@ namespace RhinoWood.Core.Optimization
             res.TheoreticalLinearM = demands.Sum(d => d.FinishedLength) / 1000.0;
             res.RoughRequiredM3 = demands.Sum(d => d.RoughVolumeM3);
 
-            var best = ChoosePlan(placeable, res);
+            var placeableIds = new HashSet<string>(placeable.Select(d => d.Id));
+            var groups = seedGroups?.Select(g => g.Where(d => placeableIds.Contains(d.Id)).ToList()).Where(g => g.Count > 0).ToList();
+            var best = ChoosePlan(placeable, res, groups);
             Finalize(res, best);
             return res;
         }
 
-        private List<Draft> ChoosePlan(List<CutDemand> demands, OptimizationResult res)
+        private List<(Policy pol, List<Draft> plan)> GeneratePlans(List<CutDemand> demands)
         {
             var policies = new List<Policy>();
             foreach (var order in new[] { OrderMode.LongestFirst, OrderMode.ConstrainedFirst })
@@ -180,7 +186,6 @@ namespace RhinoWood.Core.Optimization
                 foreach (var l in demands.SelectMany(d => Options(d.SpeciesId)).Select(o => o.len).Distinct().OrderBy(x => x))
                     policies.Add(new Policy { Order = order, Len = LenMode.Fixed, Fixed = l, Name = order + "/fixed-" + l.ToString("0", CultureInfo.InvariantCulture) });
             }
-
             var plans = new List<(Policy pol, List<Draft> plan)>();
             foreach (var p in policies)
             {
@@ -189,7 +194,27 @@ namespace RhinoWood.Core.Optimization
                 Improve(plan);
                 plans.Add((p, plan));
             }
+            return plans;
+        }
+
+        private List<Draft> ChoosePlan(List<CutDemand> demands, OptimizationResult res, List<List<CutDemand>> seedGroups = null)
+        {
+            var plans = GeneratePlans(demands);
             if (plans.Count == 0) return new List<Draft>();
+
+            if (seedGroups != null && seedGroups.Count > 1)
+            {
+                // best plan of every group planned alone, concatenated, then improved across groups
+                var seeded = new List<Draft>();
+                foreach (var g in seedGroups)
+                {
+                    var gp = GeneratePlans(g);
+                    var gm = gp.Select(x => Metrics(x.plan)).ToList();
+                    seeded.AddRange(gp[SelectBest(gm)].plan.Select(d => new Draft { Item = d.Item, Length = d.Length, Pieces = d.Pieces.ToList() }));
+                }
+                Improve(seeded);
+                plans.Add((new Policy { Name = "seed:groups+merge" }, seeded));
+            }
 
             var metrics = plans.Select(x => Metrics(x.plan)).ToList();
             int bestIdx = SelectBest(metrics);
@@ -362,6 +387,9 @@ namespace RhinoWood.Core.Optimization
             }
             foreach (var g in plan.SelectMany(b => b.Pieces.Select(p => (b, p))).Where(x => x.p.GrainGroup != null).GroupBy(x => x.p.GrainGroup))
                 m.Grain += g.Select(x => x.b).Distinct().Count();
+            // the reserve is part of what is really bought, so candidate plans are compared WITH it
+            foreach (var rp in ComputeReserve(plan.Select(b => (b.Item, b.Length, b.Pieces))))
+                foreach (var (item, length) in rp.Add) { m.Purchased += item.Volume(length); m.Cost += Price(item, length); m.Boards++; }
             return m;
         }
 
@@ -447,34 +475,63 @@ namespace RhinoWood.Core.Optimization
             res.OptimizedManufacturingM3 = pieces + kerf + trim;
         }
 
-        private void ApplyReserve(OptimizationResult res)
+        private sealed class ReservePlan
         {
-            foreach (var grp in res.Boards.Where(b => !b.IsReserve).GroupBy(b => b.Item.SpeciesId).ToList())
+            public string SpeciesId; public double Percent, Target, Have;
+            public List<(StockItem item, double length)> Add = new List<(StockItem, double)>();
+        }
+
+        /// <summary>
+        /// Reserve is applied ONCE, after optimization: target = reserve% x rough volume of a species, first covered by the usable remnants
+        /// of the plan; only a deficit adds boards, and then the CHEAPEST commercial option that covers it (not a whole board of the dominant profile).
+        /// Used both when comparing candidate plans and when finalising, so a tighter plan is never penalised for needing less spare wood.
+        /// </summary>
+        private List<ReservePlan> ComputeReserve(IEnumerable<(StockItem item, double length, List<CutDemand> pieces)> boards)
+        {
+            var list = new List<ReservePlan>();
+            foreach (var grp in boards.GroupBy(b => b.item.SpeciesId))
             {
                 var sp = _lib.GetSpecies(grp.Key);
-                // the dominant stock item of this species determines a material-specific reserve if one is set
-                var dominant = grp.GroupBy(b => b.Item).OrderByDescending(g => g.Sum(b => b.VolumeM3)).First().Key;
-                double pct = _settings.ReserveFor(sp, dominant);
-                res.ReservePercentBySpecies[sp.Id] = pct;
-                double target = pct / 100.0 * grp.Sum(b => b.Pieces.Sum(p => p.RoughVolumeM3));
-                // Reserve is satisfied first by usable remnants already produced by the optimized plan -> never applied twice.
-                double have = grp.Where(b => b.TailClass == RemnantClass.ProjectRemnant).Sum(b => b.TailLength * b.Item.SectionArea / 1e9);
-                double deficit = target - have;
-                int guard = 0;
-                while (deficit > 1e-9 && guard++ < 50)
+                var dominant = grp.GroupBy(b => b.item).OrderByDescending(g => g.Sum(b => b.item.Volume(b.length))).First().Key;
+                var rp = new ReservePlan { SpeciesId = grp.Key, Percent = _settings.ReserveFor(sp, dominant) };
+                rp.Target = rp.Percent / 100.0 * grp.Sum(b => b.pieces.Sum(p => p.RoughVolumeM3));
+                foreach (var b in grp)
                 {
-                    var opts = _lib.StockFor(sp.Id).Where(i => i.Id == dominant.Id).SelectMany(i => i.Lengths.Select(l => (i, l))).ToList();
-                    var pick = opts.Where(o => o.i.Volume(o.l) >= deficit).OrderBy(o => o.l).Cast<(StockItem i, double l)?>().FirstOrDefault()
-                               ?? opts.OrderByDescending(o => o.l).Cast<(StockItem i, double l)?>().First();
-                    var rb = new Board { Id = "R" + (res.Boards.Count(b => b.IsReserve) + 1).ToString("00", CultureInfo.InvariantCulture), Item = pick.Value.i, Length = pick.Value.l, IsReserve = true, Price = Price(pick.Value.i, pick.Value.l), TailLength = pick.Value.l, TailClass = RemnantClass.ProjectRemnant };
+                    double tail = b.length - 2 * R.EndTrim - b.pieces.Sum(p => p.Length) - R.SawKerf * b.pieces.Count;
+                    if (tail >= R.MinReusableRemnant) rp.Have += tail * b.item.SectionArea / 1e9;
+                }
+                double deficit = rp.Target - rp.Have;
+                var opts = _lib.StockFor(grp.Key).SelectMany(i => i.Lengths.Select(l => (item: i, length: l))).ToList();
+                int guard = 0;
+                while (deficit > 1e-9 && guard++ < 50 && opts.Count > 0)
+                {
+                    var covering = opts.Where(o => o.item.Volume(o.length) >= deficit - 1e-12).OrderBy(o => Price(o.item, o.length)).ThenBy(o => o.item.Volume(o.length)).ThenBy(o => o.item.Id, StringComparer.Ordinal).ToList();
+                    var pick = covering.Count > 0 ? covering[0] : opts.OrderByDescending(o => o.item.Volume(o.length)).First();
+                    rp.Add.Add((pick.item, pick.length));
+                    deficit -= pick.item.Volume(pick.length);
+                }
+                list.Add(rp);
+            }
+            return list;
+        }
+
+        private void ApplyReserve(OptimizationResult res)
+        {
+            var real = res.Boards.Where(b => !b.IsReserve).ToList();
+            foreach (var rp in ComputeReserve(real.Select(b => (b.Item, b.Length, b.Pieces))))
+            {
+                var sp = _lib.GetSpecies(rp.SpeciesId);
+                res.ReservePercentBySpecies[sp.Id] = rp.Percent;
+                foreach (var (item, length) in rp.Add)
+                {
+                    var rb = new Board { Id = "R" + (res.Boards.Count(b => b.IsReserve) + 1).ToString("00", CultureInfo.InvariantCulture), Item = item, Length = length, IsReserve = true, Price = Price(item, length), TailLength = length, TailClass = RemnantClass.ProjectRemnant };
                     res.Boards.Add(rb);
                     res.ReserveM3 += rb.VolumeM3;
-                    deficit -= rb.VolumeM3;
                 }
                 res.Explanation.Add(string.Format(CultureInfo.InvariantCulture,
                     "Reserve {0:0.#}% of {1}: target {2:0.0000} m3, covered by {3:0.0000} m3 of reusable remnants{4}.",
-                    pct, sp.Name, target, Math.Min(have, target),
-                    target - have > 1e-9 ? "; " + res.Boards.Count(b => b.IsReserve && b.Item.SpeciesId == sp.Id) + " extra reserve board(s) added" : " (no extra boards needed - reserve applied once, after optimization)"));
+                    rp.Percent, sp.Name, rp.Target, Math.Min(rp.Have, rp.Target),
+                    rp.Add.Count > 0 ? "; " + rp.Add.Count + " extra reserve board(s) added (" + string.Join(", ", rp.Add.Select(a => a.item.Label + " x " + a.length.ToString("0", CultureInfo.InvariantCulture))) + ")" : " (no extra boards needed - reserve applied once, after optimization)"));
             }
         }
 
