@@ -121,6 +121,24 @@ namespace RhinoWood.Plugin.UI
                 (d.Advanced ? advanced : l).AddRow(new Label { Text = d.Label + " (" + d.Unit + ")", ToolTip = d.Description }, ns);
             }
             l.AddRow(new Expander { Header = "Advanced parameters", Expanded = false, Content = advanced });
+            foreach (var grp in p.Furniture.Choices.GroupBy(c => c.Group))
+            {
+                l.AddRow(new Label { Text = grp.Key.ToUpperInvariant(), Font = new Font(SystemFont.Bold) });
+                foreach (var ch in grp)
+                {
+                    var choice = ch; var dd = new DropDown();
+                    foreach (var o in choice.Options)
+                        dd.Items.Add(new ListItem { Text = choice.Kind == "joint" ? p.Joints.Get(o).Name + "  (strength " + p.Joints.Get(o).Info.Strength + "/5)" : (p.Library.Hardware.TryGetValue(o, out var h) ? h.Model : o), Key = o });
+                    dd.SelectedKey = p.Choices[choice.Key];
+                    dd.SelectedKeyChanged += (s, e) =>
+                    {
+                        if (dd.SelectedKey == p.Choices[choice.Key]) return;
+                        try { p.SetChoice(choice.Key, dd.SelectedKey); WoodActions.Refresh(RhinoDoc.ActiveDoc, true); }
+                        catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); }
+                    };
+                    l.AddRow(new Label { Text = choice.Label, ToolTip = choice.Description }, dd);
+                }
+            }
             l.AddRow(Btn("Manual override...", () => Run("WoodOverride")));
             foreach (var o in p.Overrides)
             {

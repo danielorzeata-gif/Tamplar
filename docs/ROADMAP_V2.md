@@ -5,7 +5,7 @@ Baza de cunostinte: `knowledge/Wood/` (importata din arhiva Wood.rar + iteratia 
 | Etapa | Continut | Stare |
 |---|---|---|
 | V1.1 | Imbinari si fixari alegibile pe masa (7 tipuri de imbinare, 3 fixari de blat), `JointInfo` cu proprietati din cercetare, motor de preview 2D (`PreviewEngine`) | **facut, testat (83 teste)** |
-| V1.2 | **Dialog "Proiect nou" cu preview inainte de generare**: parametri + alegeri, previzualizare oblica in dialog + conduit shaded in viewport, rezumat live (achizitie, avertismente) | de facut (Rhino UI, neverificat in Rhino) |
+| V1.2 | **Dialog "Proiect nou" cu preview inainte de generare**: parametri + alegeri, previzualizare oblica in dialog + conduit shaded in viewport, rezumat live (achizitie, avertismente) | **scris, compileaza; neverificat in Rhino** |
 | V1.3 | Roluri si reguli din JSON (`joint_roles_and_rules.json`) incarcate de Core — mobilier nou fara cod | de facut |
 | V2.0 | `DoorDefinition`: canat cu panouri (montanti, traverse, panouri plutitoare cu joc calculat din miscare), toc, balamale (numar/pozitii), mortase de balama, broasca | de facut — vezi `DOORS_COMPLETE.md` §7 |
 | V2.1 | `WindowDefinition`: toc + canat, profil IV68/78/92, canal Euro, geam (greutate vs feronerie), picurator/pervaz, Uw | de facut — vezi `WINDOWS_COMPLETE.md` §9; blocat de O-01/O-02 pentru reguli stricte |

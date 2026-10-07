@@ -69,23 +69,10 @@ namespace RhinoWood.Plugin
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
             var lib = WoodActions.P.Library;
-            var gs = new GetOption();
-            gs.SetCommandPrompt("Species (Enter = Oak)");
-            var names = lib.Species.Values.OrderBy(s => s.Name).ToList();
-            var opts = names.Select(s => gs.AddOption(s.Id.Substring(0, 1) + s.Id.Substring(1).ToLowerInvariant().Replace(" ", ""))).ToList();
-            gs.AcceptNothing(true);
-            string species = "OAK";
-            if (gs.Get() == GetResult.Option) species = names[opts.IndexOf(gs.Option().Index)].Id;
-
-            var p = WoodProject.CreateTable("Dining table", species, lib);
-            foreach (var key in new[] { "length", "width", "height", "topThickness" })
-            {
-                var def = p.Furniture.Parameters.First(x => x.Key == key);
-                double v = def.Default;
-                var rc = RhinoGet.GetNumber(def.Label + " (" + def.Min + ".." + def.Max + " mm)", true, ref v, def.Min, def.Max);
-                if (rc == Result.Cancel) return Result.Cancel;
-                p.SetParameter(key, v);
-            }
+            var project = WoodProject.CreateTable("Dining table", "OAK", lib);
+            var dlg = new RhinoWood.Plugin.UI.NewProjectDialog(doc, project);
+            var p = dlg.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow);
+            if (p == null) return Result.Cancel;
             WoodActions.P.SetProject(p);
             WoodActions.Refresh(doc);
             RhinoApp.RunScript("-_Zoom _Extents", false);
