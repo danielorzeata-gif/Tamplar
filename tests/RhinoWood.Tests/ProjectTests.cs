@@ -605,6 +605,7 @@ namespace RhinoWood.Tests
             public IReadOnlyList<ParameterDef> Parameters { get; } = new[] { new ParameterDef { Key = "length", Default = 1200, Min = 400, Max = 3000, Label = "Length" } };
             public IReadOnlyList<string> OverridableNodes { get; } = new string[0];
             public IReadOnlyList<ChoiceDef> Choices { get; } = new ChoiceDef[0];
+            public IReadOnlyList<TierDef> Tiers { get; } = new TierDef[0];
             public string NodeFor(string k) => k;
             public DependencyGraph CreateGraph(ProjectContext ctx, IDictionary<string, double> v, IDictionary<string, string> ch, string sp)
             {

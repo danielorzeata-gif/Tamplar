@@ -63,6 +63,8 @@ namespace RhinoWood.Core.Workspaces
         public StyleSet Aspect { get; set; }
         public StyleSet Structure { get; set; }
         public List<PieceEntry> Pieces { get; set; } = new List<PieceEntry>();
+        /// <summary>Execution variant of the room's Structure set (ECONOMA / STANDARD / PREMIUM) or null.</summary>
+        public string Tier { get; set; }
 
         public Room(string name)
         {
@@ -107,6 +109,32 @@ namespace RhinoWood.Core.Workspaces
                 else if (f.SetValue != f.Value) TryApply(e, f.Key, f.SetValue, new StyleImpact());
             }
             return e;
+        }
+
+        /// <summary>
+        /// Sets the room's variant: writes the variant's joint/fixing choices into the Structure set and pushes them to every piece still linked.
+        /// Pieces whose furniture type does not define the variant, or that reject a value, are reported as conflicts.
+        /// </summary>
+        public StyleImpact ApplyTier(string tierId)
+        {
+            var total = new StyleImpact();
+            foreach (var piece in Pieces)
+            {
+                var def = piece.Project.Furniture;
+                var tier = def.Tiers.FirstOrDefault(t => t.Id == tierId);
+                if (tier == null) { total.Conflicts.Add(piece.Name + ": nu are varianta " + tierId); continue; }
+                foreach (var kv in tier.Choices)
+                {
+                    var cd = def.Choices.First(c => c.Key == kv.Key);
+                    if (cd.StyleKind != StyleKind.Structure) continue;
+                    var imp = SetStyle(StyleKind.Structure, cd.StyleKey, kv.Value);
+                    foreach (var id in imp.PieceIds) if (!total.PieceIds.Contains(id)) total.PieceIds.Add(id);
+                    total.Conflicts.AddRange(imp.Conflicts.Where(c => !total.Conflicts.Contains(c)));
+                }
+            }
+            Tier = tierId;
+            foreach (var piece in Pieces) if (piece.Project.Furniture.Tiers.Any(t => t.Id == tierId)) piece.Project.MarkTier(tierId);
+            return total;
         }
 
         public void RemovePiece(PieceEntry e) => Pieces.Remove(e);
@@ -251,6 +279,7 @@ namespace RhinoWood.Core.Workspaces
         public string Name { get; set; }
         public StyleSet Aspect { get; set; }
         public StyleSet Structure { get; set; }
+        public string Tier { get; set; }
         public List<PieceDto> Pieces { get; set; } = new List<PieceDto>();
     }
     public sealed class PieceDto
@@ -269,7 +298,7 @@ namespace RhinoWood.Core.Workspaces
             var f = new WorkspaceFile { Name = w.Name, Settings = w.Settings };
             foreach (var r in w.Rooms)
             {
-                var rd = new RoomDto { Name = r.Name, Aspect = r.Aspect, Structure = r.Structure };
+                var rd = new RoomDto { Name = r.Name, Aspect = r.Aspect, Structure = r.Structure, Tier = r.Tier };
                 foreach (var p in r.Pieces)
                     rd.Pieces.Add(new PieceDto { Id = p.Id, Name = p.Name, Unlinked = p.Unlinked.OrderBy(x => x, StringComparer.Ordinal).ToList(), ProjectJson = ProjectSerializer.Serialize(p.Project) });
                 f.Rooms.Add(rd);
@@ -285,7 +314,7 @@ namespace RhinoWood.Core.Workspaces
             foreach (var rd in f.Rooms)
             {
                 var room = w.AddRoom(rd.Name);
-                room.Aspect = rd.Aspect; room.Structure = rd.Structure;
+                room.Aspect = rd.Aspect; room.Structure = rd.Structure; room.Tier = rd.Tier;
                 foreach (var pd in rd.Pieces)
                 {
                     var proj = ProjectSerializer.Deserialize(pd.ProjectJson, w.Library);

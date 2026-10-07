@@ -49,6 +49,8 @@ namespace RhinoWood.Core.Projects
         public Dictionary<string, double> Parameters { get; private set; }
         /// <summary>User choices (joint types, hardware) keyed by ChoiceDef.Key.</summary>
         public Dictionary<string, string> Choices { get; private set; } = new Dictionary<string, string>();
+        /// <summary>Selected execution variant (ECONOMA/STANDARD/PREMIUM); null when the furniture has none.</summary>
+        public string Tier { get; private set; }
         public ProjectSettings Settings { get; set; } = new ProjectSettings();
         public WoodLibrary Library { get; }
         public JointRegistry Joints { get; }
@@ -68,6 +70,7 @@ namespace RhinoWood.Core.Projects
             Name = name; Furniture = furniture; SpeciesId = speciesId; Library = lib; Joints = joints; FurnitureTypes = types;
             Parameters = furniture.Parameters.ToDictionary(p => p.Key, p => p.Default);
             Choices = furniture.Choices.ToDictionary(c => c.Key, c => c.Default);
+            Tier = furniture.Tiers.Any(t => t.Id == Tiers.Standard) ? Tiers.Standard : null;
             Rebuild();
         }
 
@@ -79,6 +82,9 @@ namespace RhinoWood.Core.Projects
         }
 
         internal void ForceId(string id) { Id = id; }
+        internal void RestoreTier(string tier) { Tier = tier; }
+        /// <summary>Records the variant name without touching choices (used when a room drives the choices).</summary>
+        public void MarkTier(string tier) { Tier = tier; }
 
         private ProjectContext Context => new ProjectContext { Library = Library, Joints = Joints, Rules = Settings.Rules };
 
@@ -110,6 +116,17 @@ namespace RhinoWood.Core.Projects
             Choices[key] = option;
             Graph.Set(ChoiceNode(key), option);
         }
+
+        /// <summary>Applies a variant preset (ECONOMA/STANDARD/PREMIUM). Individual choices can be changed afterwards; the variant then reads as modified.</summary>
+        public void ApplyTier(string tierId)
+        {
+            var tier = Furniture.Tiers.FirstOrDefault(t => t.Id == tierId) ?? throw new ArgumentException("Unknown variant " + tierId);
+            foreach (var kv in tier.Choices) SetChoice(kv.Key, kv.Value);
+            Tier = tierId;
+        }
+
+        /// <summary>True when the current choices equal the selected variant's preset.</summary>
+        public bool TierMatches => Tier != null && Furniture.Tiers.FirstOrDefault(t => t.Id == Tier) is TierDef t && t.Choices.All(kv => Choices.TryGetValue(kv.Key, out var v) && v == kv.Value);
 
         private static string ChoiceNode(string key) => key == "jointApronLong" ? "joint.long" : key == "jointApronShort" ? "joint.short" : key == "topFixing" ? "top.fixing" : key;
 
@@ -239,6 +256,7 @@ namespace RhinoWood.Core.Projects
         public string SpeciesId { get; set; }
         public Dictionary<string, double> Parameters { get; set; } = new Dictionary<string, double>();
         public Dictionary<string, string> Choices { get; set; } = new Dictionary<string, string>();
+        public string Tier { get; set; }
         public List<OverrideDto> Overrides { get; set; } = new List<OverrideDto>();
         public List<string> CustomComponents { get; set; } = new List<string>();
         public ProjectSettings Settings { get; set; }
@@ -276,7 +294,7 @@ namespace RhinoWood.Core.Projects
             var f = new ProjectFile
             {
                 ProjectId = p.Id, Name = p.Name, FurnitureTypeId = p.Furniture.TypeId, SpeciesId = p.SpeciesId,
-                Parameters = new Dictionary<string, double>(p.Parameters), Choices = new Dictionary<string, string>(p.Choices), Settings = p.Settings, SavedUtc = DateTime.UtcNow,
+                Parameters = new Dictionary<string, double>(p.Parameters), Choices = new Dictionary<string, string>(p.Choices), Tier = p.Tier, Settings = p.Settings, SavedUtc = DateTime.UtcNow,
                 CustomComponents = p.CustomComponents.ToList(),
                 Overrides = p.Overrides.Select(kv => new OverrideDto { NodeId = kv.Key, Mode = kv.Value.Mode, Value = kv.Value.Value }).ToList()
             };
@@ -302,6 +320,7 @@ namespace RhinoWood.Core.Projects
             p.Rebuild();
             foreach (var kv in f.Parameters) p.SetParameter(kv.Key, kv.Value);
             if (f.Choices != null) foreach (var kv in f.Choices) p.SetChoice(kv.Key, kv.Value);
+            p.RestoreTier(f.Tier);
             foreach (var o in f.Overrides) p.Graph.SetOverride(o.NodeId, new NumericOverride { Mode = o.Mode, Value = o.Value });
             p.CustomComponents.AddRange(f.CustomComponents);
             return p;

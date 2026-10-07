@@ -28,7 +28,7 @@ namespace RhinoWood.Tests
         {
             var (_, room, a, b) = TwoTables();
             Assert.Equal("OAK", room.Aspect.Values["species"]);
-            Assert.Equal("mortise-tenon", room.Structure.Values["joint.apron-leg"]);
+            Assert.Equal("mortise-tenon", room.Structure.Values["joint.apron-long"]);
             Assert.Equal("OAK", b.Project.SpeciesId);                      // was BEECH, now follows the room set
             Assert.Equal(1200, b.Project.Parameters["length"]);            // dimensions are NOT part of a set
         }
@@ -40,10 +40,11 @@ namespace RhinoWood.Tests
             var impact = room.SetStyle(StyleKind.Aspect, "species", "ASH");
             Assert.Equal(2, impact.PiecesAffected);
             Assert.Equal("ASH", a.Project.SpeciesId); Assert.Equal("ASH", b.Project.SpeciesId);
-            var impact2 = room.SetStyle(StyleKind.Structure, "joint.apron-leg", "loose-tenon");
+            var impact2 = room.SetStyle(StyleKind.Structure, "joint.apron-long", "loose-tenon");
             Assert.Equal(2, impact2.PiecesAffected);
             Assert.Equal("loose-tenon", a.Project.Choices["jointApronLong"]);
-            Assert.Equal("loose-tenon", b.Project.Choices["jointApronShort"]);        // one style key drives both fields
+            Assert.Equal("loose-tenon", b.Project.Choices["jointApronLong"]);
+            Assert.Equal("mortise-tenon", b.Project.Choices["jointApronShort"]);       // separate key per role
         }
 
         [Fact]
@@ -54,14 +55,15 @@ namespace RhinoWood.Tests
             Assert.Equal(new[] { "P1" }, imp.PieceIds);
             Assert.Equal("dowel", a.Project.Choices["jointApronLong"]);
             Assert.Equal("mortise-tenon", b.Project.Choices["jointApronLong"]);
-            Assert.Equal("mortise-tenon", room.Structure.Values["joint.apron-leg"]);              // set untouched
+            Assert.Equal("mortise-tenon", room.Structure.Values["joint.apron-long"]);              // set untouched
             Assert.Equal(ValueSource.PieceOverride, room.Fields(a).First(f => f.Key == "jointApronLong").Source);
             Assert.Equal(ValueSource.Set, room.Fields(a).First(f => f.Key == "jointApronShort").Source);   // other field still linked
 
             // later set change must NOT overwrite the detached field
-            room.SetStyle(StyleKind.Structure, "joint.apron-leg", "bridle");
+            room.SetStyle(StyleKind.Structure, "joint.apron-long", "bridle");
+            room.SetStyle(StyleKind.Structure, "joint.apron-short", "loose-tenon");
             Assert.Equal("dowel", a.Project.Choices["jointApronLong"]);
-            Assert.Equal("bridle", a.Project.Choices["jointApronShort"]);
+            Assert.Equal("loose-tenon", a.Project.Choices["jointApronShort"]);
             Assert.Equal("bridle", b.Project.Choices["jointApronLong"]);
 
             // "apply to the whole set" from piece B
@@ -85,7 +87,7 @@ namespace RhinoWood.Tests
         public void ValueNotAllowedForAPiece_IsAConflict_NotSilentlyApplied()
         {
             var (_, room, a, b) = TwoTables();
-            var imp = room.SetStyle(StyleKind.Structure, "joint.apron-leg", "dovetail");       // not an allowed apron joint
+            var imp = room.SetStyle(StyleKind.Structure, "joint.apron-long", "dovetail");       // not an allowed apron joint
             Assert.NotEmpty(imp.Conflicts);
             Assert.Equal(0, imp.PiecesAffected);
             Assert.Equal("mortise-tenon", a.Project.Choices["jointApronLong"]);
@@ -218,6 +220,70 @@ namespace RhinoWood.Tests
             Assert.DoesNotContain(big.Issues, i => i.Code == "STABILITY_TABLE");
             var p = WoodProject.CreateTable("small"); p.SetParameter("length", 600); p.SetParameter("width", 400);
             Assert.Contains(p.Recalculate().Issues, i => i.Code == "STABILITY_TABLE");
+        }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    public class TierTests
+    {
+        [Theory]
+        [InlineData("ECONOMA", "dowel", "dowel")] [InlineData("STANDARD", "mortise-tenon", "mortise-tenon")] [InlineData("PREMIUM", "japanese-kusabi", "mortise-tenon")]
+        public void Tier_SetsJointsPerRole_AndProducesAValidTable(string tier, string longJoint, string shortJoint)
+        {
+            var p = WoodProject.CreateTable("t");
+            p.ApplyTier(tier);
+            Assert.Equal(longJoint, p.Choices["jointApronLong"]); Assert.Equal(shortJoint, p.Choices["jointApronShort"]);
+            var r = p.Recalculate();
+            Assert.False(r.HasErrors, string.Join("\n", r.Issues.Where(i => i.Severity == Severity.Error)));
+            Assert.DoesNotContain(r.Issues, i => i.Code == "THROUGH_CONFLICT");   // premium: through tenon only on one rail family
+            Assert.True(p.TierMatches);
+        }
+
+        [Fact]
+        public void TiersAreOrdered_AndEveryTierHasAMetaLine()
+        {
+            var tiers = WoodProject.CreateTable("t").Furniture.Tiers;
+            Assert.Equal(new[] { "ECONOMA", "STANDARD", "PREMIUM" }, tiers.Select(x => x.Id).ToArray());
+            Assert.All(tiers, x => Assert.False(string.IsNullOrWhiteSpace(x.Meta)));
+        }
+
+        [Fact]
+        public void ChangingAJointAfterATier_MarksItModified_AndPersists()
+        {
+            var p = WoodProject.CreateTable("t"); p.ApplyTier("PREMIUM");
+            p.SetChoice("jointApronShort", "dowel");
+            Assert.False(p.TierMatches);
+            Assert.Equal("PREMIUM (modificat)", RhinoWood.Core.Reports.SheetBuilder.TierName(p));
+            var (p2, ok) = ProjectSerializer.Open(ProjectSerializer.Serialize(p));
+            Assert.True(ok); Assert.Equal("PREMIUM", p2.Tier); Assert.False(p2.TierMatches);
+        }
+
+        [Fact]
+        public void Economa_HasNoTenons_AndShorterRails()
+        {
+            var std = WoodProject.CreateTable("a").Recalculate().Model.FindPart("APR-L-1").Finished.Length;
+            var p = WoodProject.CreateTable("b"); p.ApplyTier("ECONOMA");
+            var r = p.Recalculate();
+            Assert.DoesNotContain(r.Model.FindPart("APR-L-1").Features, f => f.Kind == FeatureKind.Tenon);
+            Assert.True(r.Model.FindPart("APR-L-1").Finished.Length < std);
+        }
+
+        [Fact]
+        public void RoomTier_DrivesTheStructureSet_ForEveryLinkedPiece()
+        {
+            var ws = new Workspace("c"); var room = ws.AddRoom("Dormitor");
+            var a = room.AddPiece("a", WoodProject.CreateTable("a", "OAK", ws.Library));
+            var b = room.AddPiece("b", WoodProject.CreateTable("b", "OAK", ws.Library));
+            room.ChangeField(b, "topFixing", "TOP-FIGURE8");                    // b deliberately differs
+            var imp = room.ApplyTier("PREMIUM");
+            Assert.Equal("japanese-kusabi", a.Project.Choices["jointApronLong"]); Assert.Equal("japanese-kusabi", b.Project.Choices["jointApronLong"]);
+            Assert.Equal("TOP-BUTTON", a.Project.Choices["topFixing"]);
+            Assert.Equal("TOP-FIGURE8", b.Project.Choices["topFixing"]);       // detached field is respected
+            Assert.Equal("PREMIUM", room.Tier); Assert.Equal("PREMIUM", a.Project.Tier);
+            var back = WorkspaceSerializer.Deserialize(WorkspaceSerializer.Serialize(ws));
+            Assert.Equal("PREMIUM", back.Rooms.Single().Tier);
         }
     }
 }

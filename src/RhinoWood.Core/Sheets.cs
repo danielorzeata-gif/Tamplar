@@ -55,6 +55,7 @@ namespace RhinoWood.Core.Reports
 
         public static List<Sheet> Build(WoodProject p, ProjectResult r, SheetMode mode = SheetMode.Design, string variantName = null)
         {
+            variantName = variantName ?? TierName(p);
             var list = new List<Sheet> { TechnicalSheet(p, r, mode, variantName) };
             if (mode == SheetMode.Sale) { list.Add(OfferSheet(p, r, variantName)); return list; }
             list.AddRange(JointSheets(p, r));
@@ -62,6 +63,8 @@ namespace RhinoWood.Core.Reports
             list.Add(AssemblySheet(p, r));
             return list;
         }
+
+        public static string TierName(WoodProject p) => p.Tier == null ? null : p.Tier + (p.TierMatches ? "" : " (modificat)");
 
         // ================================================================= 1. technical sheet (also the live preview in the interface)
         public static Sheet TechnicalSheet(WoodProject p, ProjectResult r, SheetMode mode, string variant)
@@ -353,13 +356,13 @@ namespace RhinoWood.Core.Reports
                     bool last = i == b.Cuts.Count - 1;
                     double waste = last && b.TailClass == RemnantClass.Scrap ? b.TailLength : 0;
                     totalWaste += waste; totalQty++;
-                    rows.Add($"<tr><td>{E(c.Demand.PartId)}</td><td>{E(Ro.Family(fam))}</td><td class='num'>{N(c.Demand.SecB)}×{N(c.Demand.SecA)}</td><td class='num'>{N(c.Length)}</td><td class='num'>1</td><td><span class='muted'>○ de comandat</span> <span class='num'>{E(b.Item.Id)} · {E(b.Id)}</span></td><td class='num waste'>{(waste > 0 ? N(waste) : "–")}</td></tr>");
+                    rows.Add($"<tr><td>{E(c.Demand.PartId)}</td><td>{E(Ro.Family(fam))}</td><td class='num'>{N(c.Demand.SecB)}×{N(c.Demand.SecA)}</td><td class='num'>{N(c.Length)}</td><td class='num'>1</td><td class='num'>{E(b.Id)} · {E(b.Item.Id)}</td><td class='num waste'>{(waste > 0 ? N(waste) : "–")}</td></tr>");
                 }
             int rowsPer = 24, tp = 0;
             var pages = rows.Select((x, i) => (x, i)).GroupBy(x => x.i / rowsPer).ToList();
             foreach (var pg in pages)
             {
-                var sb = new StringBuilder("<table class='wide'><tr><th>Piesă</th><th>Denumire</th><th class='num'>Secț. brută (gros×lăț)</th><th class='num'>L (mm)</th><th class='num'>Buc</th><th>Depozit / bară</th><th class='num'>Deșeu (mm)</th></tr>");
+                var sb = new StringBuilder("<table class='wide'><tr><th>Piesă</th><th>Denumire</th><th class='num'>Secț. brută (gros×lăț)</th><th class='num'>L (mm)</th><th class='num'>Buc</th><th>Bară</th><th class='num'>Deșeu (mm)</th></tr>");
                 foreach (var x in pg) sb.Append(x.x);
                 bool lastPage = pg.Key == pages.Count - 1;
                 if (lastPage)
@@ -377,23 +380,23 @@ namespace RhinoWood.Core.Reports
         {
             var o = r.Optimization; var cur = r.Cost.Currency;
             var sb = new StringBuilder("<div class='cols2'><div>");
-            sb.Append("<h2>Comandă de material <span class='muted'>· optimizată global, include rezerva</span></h2><table><tr><th>Cod</th><th>Material</th><th class='num'>Lungime</th><th class='num'>Buc</th><th class='num'>din care rezervă</th><th class='num'>Preț unitar</th><th class='num'>Total</th></tr>");
+            sb.Append("<h2>Necesar lucrare <span class='muted'>· material de comandat, optimizat global, cu rezerva</span></h2><table><tr><th>Cod</th><th>Material</th><th class='num'>Lungime</th><th class='num'>Buc</th><th class='num'>din care rezervă</th><th class='num'>Preț unitar</th><th class='num'>Total</th></tr>");
             foreach (var l in o.Purchase) sb.Append($"<tr><td class='num'>{E(l.Id)}</td><td>{E(Ro.SpeciesName(l.Item.SpeciesId))} {N(Math.Min(l.Item.Width, l.Item.Thickness))}×{N(Math.Max(l.Item.Width, l.Item.Thickness))}</td><td class='num'>{N(l.Length)}</td><td class='num'>{l.Quantity}</td><td class='num'>{l.ReserveQuantity}</td><td class='num'>{E(Money.Format(l.UnitPrice, cur))}</td><td class='num'>{E(Money.Format(l.Total, cur))}</td></tr>");
             sb.Append($"<tr class='tot'><td colspan='6'>Material</td><td class='num'>{E(Money.Format(o.TotalCost, cur))}</td></tr></table>");
             sb.Append($"<h2>Cost de producție</h2><table class='narrow'><tr><td>Material</td><td class='num'>{E(Money.Format(r.Cost.RawMaterial, cur))}</td></tr><tr><td>Feronerie și mărunțișuri</td><td class='num'>{E(Money.Format(r.Cost.Hardware + r.Cost.Consumables, cur))}</td></tr><tr><td>Manoperă</td><td class='num'>{E(Money.Format(r.Cost.Labor, cur))}</td></tr><tr class='tot'><td>Cost producție</td><td class='num big'>{E(Money.Format(r.Cost.Total, cur))}</td></tr></table>");
-            sb.Append("</div><div><h2>De ce această comandă</h2><ol class='steps'>");
+            sb.Append("</div><div><h2>De ce acest necesar</h2><ol class='steps'>");
             int pieces = o.Boards.Where(b => !b.IsReserve).Sum(b => b.Pieces.Count);
             int reuse = o.Boards.Where(b => !b.IsReserve).Sum(b => Math.Max(0, b.Pieces.Count - 1));
             var buy = string.Join(", ", o.Purchase.Select(l => l.Quantity + " × " + Ro.SpeciesName(l.Item.SpeciesId) + " " + N(Math.Min(l.Item.Width, l.Item.Thickness)) + "×" + N(Math.Max(l.Item.Width, l.Item.Thickness)) + "×" + N(l.Length)));
             sb.Append("<li>Necesar teoretic: " + N(o.TheoreticalFinishedM3, "0.0000") + " m³ de piese finite (" + N(o.TheoreticalLinearM, "0.0") + " m liniari).</li>");
             sb.Append("<li>Cu adaosurile de prelucrare (rindeluire, tăiere la lungime): " + N(o.RoughRequiredM3, "0.0000") + " m³ în " + pieces + " bucăți brute.</li>");
             sb.Append("<li>După optimizarea globală a tuturor pieselor (kerf " + N(p.Settings.Rules.SawKerf, "0.#") + " mm): " + N(o.OptimizedManufacturingM3, "0.0000") + " m³ pe " + o.Boards.Count(b => !b.IsReserve) + " bare; " + reuse + " bucăți se taie din restul unei bare deja începute.</li>");
-            sb.Append("<li>Comandă comercială (lungimi standard, cu rezerva): " + E(buy) + " = " + N(o.PurchasedM3, "0.0000") + " m³; piesele brute ocupă " + N(100 * o.RoughRequiredM3 / Math.Max(1e-9, o.PurchasedM3), "0") + "% din material.</li>");
+            sb.Append("<li>Necesar comercial (lungimi standard, cu rezerva): " + E(buy) + " = " + N(o.PurchasedM3, "0.0000") + " m³; piesele brute ocupă " + N(100 * o.RoughRequiredM3 / Math.Max(1e-9, o.PurchasedM3), "0") + "% din material.</li>");
             sb.Append("<li>Resturi reutilizabile " + N(o.ReusableRemnantM3, "0.0000") + " m³, deșeu " + N(o.ScrapM3, "0.0000") + " m³, pierderi de prelucrare (kerf, capete, surplus de secțiune, rindeluire) " + N(o.ProcessWasteM3, "0.0000") + " m³.</li>");
             int extra = o.Boards.Count(b => b.IsReserve);
             sb.Append("<li>Rezerva de " + string.Join(", ", o.ReservePercentBySpecies.Select(kv => N(kv.Value, "0.#") + "% " + Ro.SpeciesName(kv.Key))) + " se aplică o singură dată, după optimizare: " + (extra == 0 ? "este acoperită de resturile reutilizabile, fără bare în plus." : "s-au adăugat " + extra + " bare de rezervă.") + "</li>");
             sb.Append("</ol></div></div>");
-            return new Sheet { Id = "order", Title = p.Name + " · comandă și cost", Body = sb.ToString() };
+            return new Sheet { Id = "order", Title = p.Name + " · necesar lucrare și cost", Body = sb.ToString() };
         }
 
         // ================================================================= 4. assembly notes
@@ -534,6 +537,7 @@ p.note { font-size: 2.8mm; margin: 1mm 0 }
 
         public static (bool ok, string message) ExportSheets(WoodProject p, ProjectResult r, string pdfPath, SheetMode mode = SheetMode.Design, string variant = null)
         {
+            variant = variant ?? SheetBuilder.TierName(p);
             var sheets = SheetBuilder.Build(p, r, mode, variant);
             var sub = SheetDocumentSubtitle(p, mode, variant);
             return Export(SheetDocument.Html(sheets, p.Name, sub), pdfPath);

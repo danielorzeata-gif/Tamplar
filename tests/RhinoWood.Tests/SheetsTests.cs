@@ -46,7 +46,7 @@ namespace RhinoWood.Tests
             var sheets = SheetBuilder.Build(p, r, SheetMode.Sale, "STANDARD");
             Assert.Equal(new[] { "tech", "offer" }, sheets.Select(s => s.Id).ToArray());
             var all = string.Join("\n", sheets.Select(s => s.Body));
-            foreach (var forbidden in new[] { "deșeu", "Deșeu", "Cost producție", "Manoperă", "OAK-40x140", "debitare", "B001", "de comandat" })
+            foreach (var forbidden in new[] { "deșeu", "Deșeu", "Cost producție", "Manoperă", "OAK-40x140", "debitare", "B001", "Necesar lucrare" })
                 Assert.DoesNotContain(forbidden, all);
             Assert.Contains("Preț", all);
             // price = production cost + margin, rounded up to 10
@@ -62,7 +62,7 @@ namespace RhinoWood.Tests
             var all = string.Join("\n", sheets.Select(s => s.Body));
             Assert.Contains("#c23a22", all);
             foreach (var d in r.Demands) Assert.Contains(d.PartId, all);
-            Assert.Contains("Comandă de material", all);
+            Assert.Contains("Necesar lucrare", all);
             Assert.Contains("Cost producție", all);
         }
 
