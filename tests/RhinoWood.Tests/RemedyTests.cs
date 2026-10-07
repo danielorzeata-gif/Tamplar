@@ -470,3 +470,95 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    using RhinoWood.Core.Logistics;
+    using RhinoWood.Core.Workspaces;
+    public class PackingTests
+    {
+        private static void AssertSound(PackingPlan plan, System.Collections.Generic.IList<PackItem> items, PackingOptions o)
+        {
+            // every item exactly once
+            Assert.Equal(items.Select(i => i.Id).OrderBy(x => x), plan.Cartons.SelectMany(c => c.Items).Select(i => i.Item.Id).OrderBy(x => x));
+            foreach (var c in plan.Cartons)
+            {
+                for (int i = 0; i < c.Items.Count; i++)
+                {
+                    var b = c.Items[i].Box;
+                    Assert.True(b.Min.X >= -1e-6 && b.Min.Y >= -1e-6 && b.Min.Z >= -1e-6 && b.Max.X <= c.InnerL + 1e-6 && b.Max.Y <= c.InnerW + 1e-6 && b.Max.Z <= c.InnerH + 1e-6, c.Id + ": " + c.Items[i].Item.Id + " outside the carton");
+                    for (int j = i + 1; j < c.Items.Count; j++) Assert.False(b.Intersects(c.Items[j].Box, 0.5), c.Id + ": items overlap");
+                }
+                if (!c.Custom) Assert.True(c.ContentKg <= o.MaxCartonKg + 1e-6, c.Id + " too heavy");
+            }
+            Assert.Equal(plan.Cartons.Select(c => c.Id).OrderBy(x => x), plan.Pallets.SelectMany(p => p.Cartons).Select(c => c.Carton.Id).OrderBy(x => x));
+            foreach (var p in plan.Pallets)
+            {
+                for (int i = 0; i < p.Cartons.Count; i++)
+                {
+                    var b = p.Cartons[i].Box;
+                    Assert.True(b.Min.X >= -1e-6 && b.Min.Y >= -1e-6 && b.Max.X <= p.Spec.L + 1e-6 && b.Max.Y <= p.Spec.W + 1e-6, p.Id + ": carton overhangs the pallet");
+                    for (int j = i + 1; j < p.Cartons.Count; j++) Assert.False(b.Intersects(p.Cartons[j].Box, 0.5), p.Id + ": cartons overlap");
+                }
+                Assert.True(p.Height <= o.MaxPalletHeight + 1e-6 || p.Cartons.Count == 1, p.Id + " too tall");
+                Assert.True(p.MassKg <= o.MaxPalletKg + 1e-6 || p.Cartons.Count == 1, p.Id + " too heavy");
+            }
+        }
+
+        [Theory] [InlineData("casework.bed")] [InlineData("casework.dresser")] [InlineData("casework.wardrobe")] [InlineData("casework.nightstand")] [InlineData("table.dining")] [InlineData("casework.shelving")] [InlineData("casework.bench")]
+        public void EveryPiece_IsPackedSoundly(string type)
+        {
+            var p = WoodProject.Create(type, "x"); var r = p.Recalculate(); var o = new PackingOptions();
+            var items = PackingPlanner.ItemsOf(p, r); var plan = PackingPlanner.Plan(items, o);
+            AssertSound(plan, items, o);
+            Assert.NotEmpty(plan.Pallets); Assert.Contains("PLAN DE PALETARE", plan.Report);
+        }
+
+        [Fact]
+        public void Bed_NeedsOnlyAFewPallets_AndLongPartsGoInLongCartons()
+        {
+            var p = WoodProject.Create("casework.bed", "x"); var r = p.Recalculate();
+            var plan = PackingPlanner.Plan(PackingPlanner.ItemsOf(p, r));
+            Assert.InRange(plan.Pallets.Count, 1, 3);
+            var sideRail = plan.Cartons.First(c => c.Items.Any(i => i.Item.Id == "SRAIL-1"));
+            Assert.True(sideRail.InnerL >= 1962);
+        }
+
+        [Fact]
+        public void Bedroom_PacksTogether_AndSmallPiecesShareCartons()
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, "STANDARD", "OAK", "Dormitor", wardrobe: true);
+            var pieces = room.Pieces.Select(x => (x.Project, x.Project.Recalculate(), x.Id + ":")).ToList();
+            var o = new PackingOptions(); var items = pieces.SelectMany(q => PackingPlanner.ItemsOf(q.Item1, q.Item2, q.Item3)).ToList();
+            var plan = PackingPlanner.Plan(pieces, o);
+            AssertSound(plan, items, o);
+            Assert.True(plan.Cartons.Count < items.Count / 2, plan.Cartons.Count + " cartons for " + items.Count + " items");
+        }
+
+        [Fact]
+        public void LighterCartonLimit_MakesMoreCartons()
+        {
+            var p = WoodProject.Create("casework.bed", "x"); var r = p.Recalculate(); var items = PackingPlanner.ItemsOf(p, r);
+            Assert.True(PackingPlanner.Plan(items, new PackingOptions { MaxCartonKg = 15 }).Cartons.Count > PackingPlanner.Plan(items, new PackingOptions { MaxCartonKg = 30 }).Cartons.Count);
+        }
+    }
+}
+
+namespace RhinoWood.Tests
+{
+    using RhinoWood.Core.Logistics;
+    using RhinoWood.Core.Workspaces;
+    public class PackingPerPieceTests
+    {
+        [Fact]
+        public void CartonsNeverMixPieces_AndPalletsMayShareCartons()
+        {
+            var ws = new Workspace("t"); var room = BedroomSet.Create(ws, "STANDARD", "OAK", "Dormitor", true);
+            var pcs = room.Pieces.Select(x => (x.Project, x.Project.Recalculate(), x.Name + ":")).ToList();
+            var plan = PackingPlanner.Plan(pcs);
+            Assert.All(plan.Cartons, c => Assert.Single(c.Items.Select(i => i.Item.Label.Split(':')[0]).Distinct()));
+            Assert.True(plan.Pallets.Count <= 3);
+            Assert.True(plan.Pallets.Any(p => p.Cartons.Select(c => c.Carton.Piece).Distinct().Count() > 1));
+        }
+    }
+}

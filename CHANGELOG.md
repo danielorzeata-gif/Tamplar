@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.2.0
+- **Layere pe piesă**: fiecare piesă are layerul ei (ex. `Pat`), cu sub-layer pentru fiecare familie de piese identice (Picior, Lonjeron, Șipcă somieră…) și sub-layerele `Joinery and holes`, `Operations`, `Grain`, `Hardware`. Layerele generale vechi se șterg când rămân goale.
+- **Desfășurat** (`WoodUnfold`, buton): toate piesele așezate plat și aliniate (brut → după rindeluire → piesă cu găuri + deșeu roșu + lamele), cu operațiile fiecărei piese, în layerul `{piesă}::Desfășurat`; pentru cameră, un bloc pe piesă. Înlocuiește `WoodCutParts`.
+- **Paletat** (`WoodPallet`, buton): piesele finite în cutii standard (FEFCO 0201/0203 și cutii lungi la comandă), cutiile pe paleți EPAL 1 / EPAL 3 / paleți lungi; fără amestec de piese în aceeași cutie, limite de greutate/înălțime, verificare curier DPD/GLS; desen 3D în `{piesă}::Paletat::Palet n::Cutia m` și raport. Cercetare în `knowledge/Wood/09_LOGISTICS/PACKING_PALLETS.md`.
 - **Fără fantome**: „Generează” dintr-o cameră scrie acum toată camera (înainte scria doar piesa activă, iar restul rămânea ca previzualizare dublată); la generare și la o piesă/cameră nouă se șterg obiectele rămase de la proiectele vechi (Ctrl+Z le readuce); comandă nouă `WoodClean`.
 - **Dulap** (`casework.wardrobe`): uși suprapuse cu balamale cu cupă 35 (2/3/4 după înălțimea ușii), bară de haine la 1520–1770 mm, polițe fixe deasupra barei, spate HDF, picioare reglabile, kit anti-basculare; mâner vertical, push-to-open sau canal pe muchia liberă.
 - **Etajeră** (`casework.shelving`): montanți + polițe în canale (adâncime 1/3, max 12 mm), spate HDF; verificare de săgeată a rafturilor (L/300 sub 0,65 kg/dm³).

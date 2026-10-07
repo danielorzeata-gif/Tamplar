@@ -166,6 +166,7 @@ namespace RhinoWood.Plugin.UI
             Muted("Toate piesele se debitează împreună: aceleași bare se împart între piese, iar rezerva se aplică o singură dată.");
             Row(Button("Calculează debitarea camerei", () => { var res = P.Workspace.Recalculate(room); _report = Summarize(res); Rebuild(); }),
                 Button(P.RoomGenerated ? "Actualizează camera în Rhino" : "Generează camera în Rhino", () => { if (RhinoDoc.ActiveDoc != null) WoodActions.GenerateRoom(RhinoDoc.ActiveDoc); Rebuild(); }, BtnVariant.Primary));
+            Row(Button("Desfășurat cameră", () => { WoodActions.ExportCutParts(true); }), Button("Paletat cameră", () => { _report = WoodActions.Palletize(true); Rebuild(); }));
             if (_report.Length > 0) Mono(_report);
         }
 
@@ -277,8 +278,9 @@ namespace RhinoWood.Plugin.UI
             Muted("Fișa tehnică este în tabul „Fișă tehnică”. Restul planșelor (cote de îmbinare, plan de debitare, note de montaj) se exportă într-un singur PDF.");
             Row(Button("PDF Design", () => _msg.Text = WoodActions.ExportPdf(SheetMode.Design), BtnVariant.Primary),
                 Button("PDF Vânzare (ofertă)", () => _msg.Text = WoodActions.ExportPdf(SheetMode.Sale)));
-            Row(Button("Exportă piese de debitare (3D)", () => _msg.Text = WoodActions.ExportCutParts()));
-            Muted("Piesele se așază plat lângă model, în layerele Debitare: 01 piesă brută · 02 după rindeluire · 03 piesă cu găuri + deșeu roșu.");
+            Row(Button("Desfășurat (piese aliniate)", () => _msg.Text = WoodActions.ExportCutParts()),
+                Button("Paletat (transport)", () => { _msg.Text = "Se calculează…"; _msg.Text = WoodActions.Palletize(); }));
+            Muted("Desfășurat: toate piesele așezate plat, aliniate, cu operațiile și deșeul roșu, în layerul piesei ({piesă}::Desfășurat). Paletat: piesele în cutii standard, cutiile pe paleți ({piesă}::Paletat); raportul apare mai jos.");
             Row(Button("Exportă documentația (CSV/HTML)…", ExportReport));
             Add(_msg);
         }

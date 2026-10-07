@@ -6,6 +6,7 @@ using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using RhinoWood.Core.Display;
+using RhinoWood.Core.Domain;
 using RhinoWood.Core.Projects;
 
 namespace RhinoWood.Plugin
@@ -26,24 +27,65 @@ namespace RhinoWood.Plugin
         }
         public sealed class ManualEdit { public Guid ObjectId; public string Key; public string PartId; public GeometryPrimitive Primitive; }
 
-        private static readonly Dictionary<PrimCategory, (string name, System.Drawing.Color color)> Layers = new Dictionary<PrimCategory, (string, System.Drawing.Color)>
+        private static readonly Dictionary<PrimCategory, (string name, System.Drawing.Color color)> CategoryLayers = new Dictionary<PrimCategory, (string, System.Drawing.Color)>
         {
-            { PrimCategory.Part, ("RhinoWood::Parts", System.Drawing.Color.FromArgb(192, 132, 90)) },
-            { PrimCategory.Feature, ("RhinoWood::Joinery and holes", System.Drawing.Color.FromArgb(200, 60, 60)) },
-            { PrimCategory.Hardware, ("RhinoWood::Hardware", System.Drawing.Color.FromArgb(80, 120, 190)) },
-            { PrimCategory.Grain, ("RhinoWood::Grain", System.Drawing.Color.FromArgb(120, 90, 50)) },
-            { PrimCategory.Operation, ("RhinoWood::Operations", System.Drawing.Color.FromArgb(30, 150, 80)) },
+            { PrimCategory.Feature, ("Joinery and holes", System.Drawing.Color.FromArgb(200, 60, 60)) },
+            { PrimCategory.Hardware, ("Hardware", System.Drawing.Color.FromArgb(80, 120, 190)) },
+            { PrimCategory.Grain, ("Grain", System.Drawing.Color.FromArgb(120, 90, 50)) },
+            { PrimCategory.Operation, ("Operations", System.Drawing.Color.FromArgb(30, 150, 80)) },
+        };
+        private static readonly System.Drawing.Color[] WoodTones =
+        {
+            System.Drawing.Color.FromArgb(192, 132, 90), System.Drawing.Color.FromArgb(176, 120, 78), System.Drawing.Color.FromArgb(205, 150, 100), System.Drawing.Color.FromArgb(160, 105, 70),
+            System.Drawing.Color.FromArgb(214, 168, 120), System.Drawing.Color.FromArgb(150, 100, 64)
         };
 
-        private static int LayerIndex(RhinoDoc doc, PrimCategory c)
+        /// <summary>Finds or creates a layer by its full path (parents are created on the way).</summary>
+        public static int EnsureLayer(RhinoDoc doc, string fullPath, System.Drawing.Color color)
         {
-            var (name, color) = Layers[c];
-            int idx = doc.Layers.FindByFullPath(name, -1);
+            int idx = doc.Layers.FindByFullPath(fullPath, -1);
             if (idx >= 0) return idx;
-            int parent = doc.Layers.FindByFullPath("RhinoWood", -1);
-            if (parent < 0) parent = doc.Layers.Add(new Layer { Name = "RhinoWood", Color = System.Drawing.Color.Sienna });
-            var leaf = name.Substring(name.IndexOf("::", StringComparison.Ordinal) + 2);
-            return doc.Layers.Add(new Layer { Name = leaf, Color = color, ParentLayerId = doc.Layers[parent].Id });
+            var parts = fullPath.Split(new[] { "::" }, StringSplitOptions.None);
+            Guid parent = Guid.Empty; string path = "";
+            for (int i = 0; i < parts.Length; i++)
+            {
+                path = i == 0 ? parts[0] : path + "::" + parts[i];
+                int found = doc.Layers.FindByFullPath(path, -1);
+                if (found < 0)
+                {
+                    var layer = new Layer { Name = parts[i], Color = i == parts.Length - 1 ? color : System.Drawing.Color.Sienna };
+                    if (parent != Guid.Empty) layer.ParentLayerId = parent;
+                    found = doc.Layers.Add(layer);
+                }
+                parent = doc.Layers[found].Id; idx = found;
+            }
+            return idx;
+        }
+
+        /// <summary>Layer of a primitive: one top layer per piece (its name), a sub-layer per part family (identical parts share one), and the detail layers
+        /// Joinery and holes / Operations / Grain / Hardware as sub-layers of the piece.</summary>
+        private static int TargetLayer(RhinoDoc doc, WoodProject project, FurnitureModel model, GeometryPrimitive p)
+        {
+            string root = SafeName(project.Name);
+            if (CategoryLayers.TryGetValue(p.Category, out var c)) return EnsureLayer(doc, root + "::" + c.name, c.color);
+            var fam = model?.FamilyOf(p.PartId);
+            string name = fam != null ? SafeName(RhinoWood.Core.Reports.Ro.Family(fam)) : "Panouri HDF";
+            return EnsureLayer(doc, root + "::" + name, WoodTones[Math.Abs(name.GetHashCode()) % WoodTones.Length]);
+        }
+
+        private static string SafeName(string n) => string.IsNullOrWhiteSpace(n) ? "Piesa" : n.Replace("::", " ").Trim();
+
+        /// <summary>Removes the old flat layers (RhinoWood::Parts ...) once nothing is on them.</summary>
+        private static void RemoveLegacyLayers(RhinoDoc doc)
+        {
+            foreach (var name in new[] { "RhinoWood::Parts", "RhinoWood::Joinery and holes", "RhinoWood::Hardware", "RhinoWood::Grain", "RhinoWood::Operations", "RhinoWood" })
+            {
+                int i = doc.Layers.FindByFullPath(name, -1); if (i < 0) continue;
+                var layer = doc.Layers[i];
+                if (doc.Objects.FindByLayer(layer)?.Length > 0) continue;
+                if (layer.GetChildren()?.Length > 0) continue;
+                doc.Layers.Delete(i, true);
+            }
         }
 
         private static GeometryBase Build(GeometryPrimitive p, double s)
@@ -87,6 +129,7 @@ namespace RhinoWood.Plugin
             foreach (var o in doc.Objects.GetObjectList(new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = true, ObjectTypeFilter = ObjectType.AnyObject }))
                 if (o.Attributes.GetUserString(KProject) == project.Id) existing[o.Attributes.GetUserString(KKey)] = o;
 
+            var model = project.Recalculate().Model;
             var wanted = new HashSet<string>();
             foreach (var p in prims)
             {
@@ -94,7 +137,12 @@ namespace RhinoWood.Plugin
                 if (customKeys != null && customKeys.Contains(p.PartId)) continue;   // converted to custom component: no longer regenerated
                 if (existing.TryGetValue(p.Key, out var obj))
                 {
-                    if (obj.Attributes.GetUserString(KVersion) == p.Version) { rep.Unchanged++; continue; }
+                    int wantLayer = TargetLayer(doc, project, model, p);
+                    if (obj.Attributes.GetUserString(KVersion) == p.Version)
+                    {
+                        if (obj.Attributes.LayerIndex != wantLayer) { var la = obj.Attributes.Duplicate(); la.LayerIndex = wantLayer; doc.Objects.ModifyAttributes(obj, la, true); }
+                        rep.Unchanged++; continue;
+                    }
                     // geometry differs: was it edited by hand since we created it? then NEVER overwrite silently
                     var origin = obj.Attributes.GetUserString(KOrigin);
                     var bb = obj.Geometry.GetBoundingBox(true);
@@ -104,6 +152,7 @@ namespace RhinoWood.Plugin
                         continue;
                     }
                     var attrs = obj.Attributes.Duplicate();
+                    attrs.LayerIndex = wantLayer;
                     attrs.SetUserString(KVersion, p.Version);
                     var g = Build(p, s); rep.CacheHits += 0;
                     if (g == null) continue;
@@ -113,7 +162,7 @@ namespace RhinoWood.Plugin
                 else
                 {
                     var g = Build(p, s); if (g == null) continue;
-                    var attrs = new ObjectAttributes { LayerIndex = LayerIndex(doc, p.Category), Name = p.Key };
+                    var attrs = new ObjectAttributes { LayerIndex = TargetLayer(doc, project, model, p), Name = p.Key };
                     attrs.SetUserString(KProject, project.Id); attrs.SetUserString(KKey, p.Key); attrs.SetUserString(KPart, p.PartId ?? "");
                     attrs.SetUserString(KVersion, p.Version); attrs.SetUserString(KType, p.Category.ToString());
                     attrs.SetUserString(KOrigin, BoxTag(g.GetBoundingBox(true)));
@@ -126,6 +175,7 @@ namespace RhinoWood.Plugin
                 if (kv.Value.Attributes.GetUserString(KType) == "Custom") continue;
                 doc.Objects.Delete(kv.Value, true); rep.Deleted++;
             }
+            RemoveLegacyLayers(doc);
             doc.Views.Redraw();
             return rep;
         }

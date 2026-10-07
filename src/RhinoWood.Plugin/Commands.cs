@@ -133,11 +133,40 @@ namespace RhinoWood.Plugin
         }
 
         /// <summary>Lays every part flat in the document as rough block, finished block and cut part + red waste (three layers).</summary>
-        public static string ExportCutParts()
+        public static string ExportCutParts(bool wholeRoom = false)
         {
             if (P.Project == null) return "Nu există un proiect activ.";
+            if (wholeRoom && P.Room != null) return CutPartsExport.RunMany(RhinoDoc.ActiveDoc, P.Room.Pieces.Select(x => x.Project).ToList());
             var r = P.Recalculate();
             return CutPartsExport.Run(RhinoDoc.ActiveDoc, P.Project, r);
+        }
+
+        /// <summary>The last packing plan (shown in the tabs).</summary>
+        public static RhinoWood.Core.Logistics.PackingPlan LastPacking;
+
+        /// <summary>Packs the active piece (or the whole room) into cartons and pallets, draws it in 3D and returns the report.</summary>
+        public static string Palletize(bool wholeRoom = false)
+        {
+            if (P.Project == null) return "Nu există un proiect activ.";
+            var doc = RhinoDoc.ActiveDoc;
+            RhinoWood.Core.Logistics.PackingPlan plan; string name, id;
+            System.Collections.Generic.List<RhinoWood.Core.Projects.WoodProject> projects;
+            if (wholeRoom && P.Room != null)
+            {
+                projects = P.Room.Pieces.Select(x => x.Project).ToList(); name = P.Room.Name; id = "pack:" + P.Room.Id;
+                plan = RhinoWood.Core.Logistics.PackingPlanner.Plan(P.Room.Pieces.Select(x => (x.Project, x.Project.Recalculate(), x.Name + ":")).ToList());
+            }
+            else
+            {
+                projects = new System.Collections.Generic.List<RhinoWood.Core.Projects.WoodProject> { P.Project }; name = P.Project.Name; id = "pack:" + P.Project.Id;
+                plan = RhinoWood.Core.Logistics.PackingPlanner.Plan(RhinoWood.Core.Logistics.PackingPlanner.ItemsOf(P.Project, P.Recalculate()));
+            }
+            LastPacking = plan;
+            if (doc == null) return plan.Report;
+            var prims = projects.SelectMany(p => p.GenerateGeometry()).ToList();
+            double minX = prims.Count == 0 ? 0 : prims.Min(p => p.Box.Min.X), minY = prims.Count == 0 ? 0 : prims.Min(p => p.Box.Min.Y);
+            string msg = PalletExport.Run(doc, plan, name, id, minX, minY - 3500 - (plan.Pallets.Count == 0 ? 0 : plan.Pallets.Max(q => q.Spec.W)));
+            return msg + "\n" + plan.Report;
         }
 
         /// <summary>Applies a suggested solution and refreshes the document / preview.</summary>
@@ -415,7 +444,7 @@ namespace RhinoWood.Plugin
     [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f11")]
     public class WoodCutPartsCommand : Command
     {
-        public override string EnglishName => "WoodCutParts";
+        public override string EnglishName => "WoodUnfold";
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
             if (!WoodActions.RequireProject()) return Result.Failure;
@@ -463,6 +492,18 @@ namespace RhinoWood.Plugin
             if (WoodActions.P.Room == null && WoodActions.P.Project != null && WoodActions.P.Generated) keep.Add(WoodActions.P.Project.Id);
             int n = RhinoSync.RemoveOtherProjects(doc, keep);
             RhinoApp.WriteLine("Rhino Wood: " + n + " obiecte șterse (rămase de la proiecte care nu mai sunt active).");
+            return Result.Success;
+        }
+    }
+
+    [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f15")]
+    public class WoodPalletCommand : Command
+    {
+        public override string EnglishName => "WoodPallet";
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            if (!WoodActions.RequireProject()) return Result.Failure;
+            RhinoApp.WriteLine("Rhino Wood: " + WoodActions.Palletize(WoodActions.P.Room != null));
             return Result.Success;
         }
     }

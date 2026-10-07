@@ -204,8 +204,9 @@ namespace RhinoWood.Plugin.UI
             var a = new AtButton("Fișă tehnică (previzualizare)", BtnVariant.Quiet); a.Click += (x, e) => Run("WoodSheet");
             var b = new AtButton(Sale ? "Exportă oferta PDF" : "Exportă planșe PDF", BtnVariant.Secondary); b.Click += (x, e) => Run("WoodPdf");
             var c = new AtButton("Exportă toate documentele…", BtnVariant.Quiet); c.Click += (x, e) => Run("WoodReport");
-            var d = new AtButton("Exportă piese de debitare (3D)", BtnVariant.Secondary); d.Click += (x, e) => Run("WoodCutParts");
-            s.Add(a); s.Add(b); s.Add(d); s.Add(c);
+            var d = new AtButton("Desfășurat (piese aliniate)", BtnVariant.Secondary); d.Click += (x, e) => Run("WoodUnfold");
+            var pal = new AtButton("Paletat (transport)", BtnVariant.Secondary); pal.Click += (x, e) => Run("WoodPallet");
+            s.Add(a); s.Add(b); s.Add(d); s.Add(pal); s.Add(c);
             return s;
         }
 

@@ -18,31 +18,58 @@ namespace RhinoWood.Plugin
     /// </summary>
     public static class CutPartsExport
     {
-        private const string Parent = "Debitare";
+        private const string Sub = "Desfășurat";
         private const string L1 = "01 Piesă brută", L2 = "02 După rindeluire", L3 = "03 Debitare (piesă cu găuri + deșeu roșu)", L4 = "04 Lamele (biscuiți)";
         private const string KExport = "rw.export";
 
-        private static int Layer(RhinoDoc doc, string name, System.Drawing.Color color)
-        {
-            int parent = doc.Layers.FindByFullPath(Parent, -1);
-            if (parent < 0) parent = doc.Layers.Add(new Layer { Name = Parent, Color = System.Drawing.Color.SaddleBrown });
-            int idx = doc.Layers.FindByFullPath(Parent + "::" + name, -1);
-            if (idx >= 0) return idx;
-            return doc.Layers.Add(new Layer { Name = name, Color = color, ParentLayerId = doc.Layers[parent].Id });
-        }
+        private static string SafeName(string n) => string.IsNullOrWhiteSpace(n) ? "Piesa" : n.Replace("::", " ").Trim();
 
+        private static readonly Dictionary<OperationType, string> OpNames = new Dictionary<OperationType, string>
+        {
+            [OperationType.Cut] = "Tăiere", [OperationType.Plane] = "Rindeluire", [OperationType.Rip] = "Tăiere longitudinală", [OperationType.Crosscut] = "Retezare",
+            [OperationType.Glue] = "Încleiere", [OperationType.Rout] = "Frezare", [OperationType.Drill] = "Găurire", [OperationType.Mortise] = "Mortază",
+            [OperationType.Tenon] = "Cep", [OperationType.Slot] = "Canal", [OperationType.Sand] = "Șlefuire", [OperationType.Joint] = "Îmbinare"
+        };
+
+        /// <summary>Unfolded layout of the active piece, to the right of the assembled model.</summary>
         public static string Run(RhinoDoc doc, WoodProject project, ProjectResult result)
         {
             if (doc == null || project == null || result == null) return "Nu există proiect sau document.";
+            var prims = project.GenerateGeometry();
+            double maxX = prims.Count == 0 ? result.Model.Bounds.Max.X : prims.Max(p => p.Box.Max.X);
+            var msg = RunAt(doc, project, result, maxX + 600, 0, out _);
+            doc.Views.Redraw(); RhinoApp.RunScript("-_Zoom _Extents", false);
+            return msg;
+        }
+
+        /// <summary>Unfolded layout of every piece of a room: one block per piece, stacked, to the right of the whole room.</summary>
+        public static string RunMany(RhinoDoc doc, IList<WoodProject> projects)
+        {
+            if (doc == null || projects.Count == 0) return "Nu există proiect sau document.";
+            double maxX = projects.Max(p => { var pr = p.GenerateGeometry(); return pr.Count == 0 ? 0 : pr.Max(x => x.Box.Max.X); });
+            double y = 0; var msgs = new List<string>();
+            foreach (var p in projects)
+            {
+                msgs.Add(SafeName(p.Name) + ": " + RunAt(doc, p, p.Recalculate(), maxX + 1500, y, out var h));
+                y += h + 600;
+            }
+            doc.Views.Redraw(); RhinoApp.RunScript("-_Zoom _Extents", false);
+            return string.Join(" ", msgs);
+        }
+
+        private static string RunAt(RhinoDoc doc, WoodProject project, ProjectResult result, double x0, double yStart, out double usedHeight)
+        {
+            usedHeight = 0; _exp = project.Id;
             double s = RhinoMath.UnitScale(UnitSystem.Millimeters, doc.ModelUnitSystem);
             // replace a previous export of this project
             foreach (var o in doc.Objects.GetObjectList(new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = true }).ToList())
                 if (o.Attributes.GetUserString(KExport) == project.Id) doc.Objects.Delete(o, true);
 
-            int l1 = Layer(doc, L1, System.Drawing.Color.FromArgb(150, 150, 150));
-            int l2 = Layer(doc, L2, System.Drawing.Color.FromArgb(192, 132, 90));
-            int l3 = Layer(doc, L3, System.Drawing.Color.FromArgb(160, 100, 60));
-            int l4 = Layer(doc, L4, System.Drawing.Color.FromArgb(230, 200, 140));
+            string root = SafeName(project.Name) + "::" + Sub + "::";
+            int l1 = RhinoSync.EnsureLayer(doc, root + L1, System.Drawing.Color.FromArgb(150, 150, 150));
+            int l2 = RhinoSync.EnsureLayer(doc, root + L2, System.Drawing.Color.FromArgb(192, 132, 90));
+            int l3 = RhinoSync.EnsureLayer(doc, root + L3, System.Drawing.Color.FromArgb(160, 100, 60));
+            int l4 = RhinoSync.EnsureLayer(doc, root + L4, System.Drawing.Color.FromArgb(230, 200, 140));
 
             var model = result.Model;
             var rules = project.Settings.Rules;
@@ -61,10 +88,8 @@ namespace RhinoWood.Plugin
                         (fam?.Name ?? part.Id) + " · " + part.Id + (strips.Count > 1 ? " lamela " + (i + 1) + "/" + strips.Count : "")));
                 }
             }
-            double modelMaxX = model.AllParts.Max(p => p.Bounds.Max.X);
             double colW = items.Max(i => i.rough.Length) + 300;
-            double x0 = modelMaxX + 600;
-            double y = 0; int failed = 0, n = 0;
+            double y = yStart; int failed = 0, n = 0;
             var red = System.Drawing.Color.FromArgb(200, 40, 30);
 
             foreach (var it in items)
@@ -85,8 +110,10 @@ namespace RhinoWood.Plugin
                 if (!ok) failed++;
 
                 string label = it.name;
+                var ops = result.Manufacturing?.Operations.Where(o => o.PartId == part.Id && OpNames.ContainsKey(o.Type)).GroupBy(o => o.Type).Select(g => OpNames[g.Key] + (g.Count() > 1 ? "×" + g.Count() : "")).ToList();
+                string opsText = ops != null && ops.Count > 0 ? " · " + string.Join(", ", ops) : "";
                 Add(doc, rough, l1, part, label + " · brut " + R, null);
-                doc.Objects.AddTextDot(new TextDot(label, new Point3d((rowOrigin.X + R.Length / 2) * s, (rowOrigin.Y + R.Width / 2) * s, R.Thickness * s)), Attr(doc, l1, part, label, null));
+                doc.Objects.AddTextDot(new TextDot(label + " · brut " + R + opsText, new Point3d((rowOrigin.X + R.Length / 2) * s, (rowOrigin.Y + R.Width / 2) * s, R.Thickness * s)), Attr(doc, l1, part, label, null));
                 Add(doc, fin, l2, part, label + " · după rindeluire " + F, null);
                 Add(doc, cutPart, l3, part, label + " · piesa cu îmbinări", null);
 
@@ -111,9 +138,8 @@ namespace RhinoWood.Plugin
                 var at = Attr(doc, l4, model.FindPart(bsc.PartId), "Lamelă " + bsc.Size + " " + bsc.Id, null);
                 doc.Objects.AddBrep(br, at); bi++;
             }
-            doc.Views.Redraw();
-            RhinoApp.RunScript("-_Zoom _Extents", false);
-            return n + " piese și " + model.Biscuits.Count + " lamele exportate în layerele „" + Parent + "”" + (failed > 0 ? " (" + failed + " piese: decuparea booleană a eșuat, s-a păstrat blocul)" : "") + ".";
+            usedHeight = y - yStart;
+            return n + " piese și " + model.Biscuits.Count + " lamele exportate în layerul „" + SafeName(project.Name) + "::" + Sub + "”" + (failed > 0 ? " (" + failed + " piese: decuparea booleană a eșuat, s-a păstrat blocul)" : "") + ".";
         }
 
         private static CutVolume ToLocal(PartInstance part, CutVolume c)
@@ -128,10 +154,12 @@ namespace RhinoWood.Plugin
             return new CutVolume { Kind = PrimKind.Cylinder, P0 = c.P0 + d, P1 = c.P1 + d, Radius = c.Radius, Label = c.Label };
         }
 
+        [ThreadStatic] private static string _exp;
+        private static string ExportingProject { get => _exp; }
         private static ObjectAttributes Attr(RhinoDoc doc, int layer, PartInstance part, string name, System.Drawing.Color? color)
         {
             var a = new ObjectAttributes { LayerIndex = layer, Name = name };
-            a.SetUserString(KExport, WoodPlugin.Instance.Project.Id); a.SetUserString("rw.part", part.Id);
+            a.SetUserString(KExport, ExportingProject); a.SetUserString("rw.part", part.Id);
             if (color.HasValue) { a.ObjectColor = color.Value; a.ColorSource = ObjectColorSource.ColorFromObject; }
             return a;
         }
