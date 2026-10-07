@@ -1,0 +1,32 @@
+{
+  "id": "KD-BB-01",
+  "name": "Cep scurt de aliniere + bulon de pat ascuns",
+  "name_en": "Stub tenon + concealed bed bolt (knock-down)",
+  "family": "Knock_Down",
+  "type": "structural, demontabil",
+  "best_for": ["paturi (lonjeron/traversa -> picior)", "mese demontabile", "bancuri"],
+  "material": "lemn masiv",
+  "strength": 4, "difficulty": 3, "disassembly": true, "visible_hardware": false,
+  "geometry_function": "engine.joints.kd_bedbolt_stub",
+  "parameters": {
+    "tenon_t":      {"default": "T/3", "unit": "mm", "rules": ["JOINERY-MT-001"], "note": "grosime cep = 1/3 din grosimea traversei"},
+    "tenon_len":    {"default": 20, "unit": "mm", "rules": ["FURN-BED-A"], "note": "cep scurt de aliniere 15-20, nelipit"},
+    "tenon_band_z": {"default": "decalat fata de traversa perpendiculara", "rules": ["TAMPLAR-P3"]},
+    "fit":          {"default": 0.25, "unit": "mm/parte", "rules": ["TOL-KD"]},
+    "bolt":         {"default": "M8 inox", "rules": ["FURN-BED-A", "WOOD-SP-001"]},
+    "nut_dist":     {"default": 60, "unit": "mm de la capatul traversei", "rules": ["FURN-BED-A"]},
+    "counterbore":  {"default": "D20 x 12 + dop de lemn", "rules": ["BED-WH-001"]}
+  },
+  "rules": ["BED-WH-001", "FURN-BED-A", "JOINERY-MT-001", "TOL-KD", "TAMPLAR-P3", "WOOD-SP-001", "ADH-KD"],
+  "operations": [
+    {"part": "traversa", "op": "umeri cep (taiere)", "tool": "circular_masa|fierastrau_cepuri"},
+    {"part": "picior",   "op": "scobitura cep", "tool": "freza_mana+freza_spirala_10|dalta_10"},
+    {"part": "picior",   "op": "gaura bulon D9 (strapunge piciorul)", "tool": "masina_gaurit_coloana+burghiu_9_lung"},
+    {"part": "picior",   "op": "lamaj cap bulon D20 x 12 (pentru dop)", "tool": "burghiu_forstner_20"},
+    {"part": "traversa", "op": "gaura bulon D9 in capat (axial)", "tool": "ghidaj_gaurire_lunga+burghiu_9_lung"},
+    {"part": "traversa", "op": "locas piulita cilindrica D12 (din fata interioara, orb)", "tool": "burghiu_12"}
+  ],
+  "hardware": ["bulon de pat M8 inox", "piulita cilindrica M8 D12", "dop stejar D20"],
+  "alternatives": ["JP-09 hanasen (fara metal, cep trecut vizibil)", "tusk tenon + pana (Fairham Fig. 152-155)"],
+  "kb": ["03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md", "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"]
+}

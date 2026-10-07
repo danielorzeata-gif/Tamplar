@@ -1,0 +1,11 @@
+{
+  "_info": "Proprietati din baza de cunostinte. Valorile mecanice si de miscare sunt ale rudelor americane din Wood Handbook 2021 (V-TEXT); pentru speciile europene sunt orientative (vezi 05_WOOD_SELECTION).",
+  "materials": {
+    "stejar": {"name": "Stejar (Quercus robur/petraea)", "density_kg_m3": [650, 760], "proxy": "white oak (WH 2021)", "C_T": 0.00376, "C_R": 0.00194, "MOE_GPa": 12.3, "MOR_MPa": 105, "compr_perp_MPa": 7.4, "hardness_N": 6000, "EN350": "2", "tannin": true, "glue": "PVAc D3 (piese fixe)", "finish": "ulei-ceara dur", "color": [196, 160, 110]},
+    "fag":    {"name": "Fag (Fagus sylvatica)", "density_kg_m3": [690, 750], "proxy": "American beech", "C_T": 0.00431, "C_R": 0.00190, "MOE_GPa": 11.9, "MOR_MPa": 103, "compr_perp_MPa": 7.0, "hardness_N": 5800, "EN350": "5", "tannin": false, "glue": "PVAc D2/D3", "finish": "ulei / lac pe baza de apa", "color": [222, 184, 135]},
+    "frasin": {"name": "Frasin (Fraxinus excelsior)", "density_kg_m3": [650, 700], "proxy": "white ash", "C_T": 0.00274, "C_R": 0.00169, "MOE_GPa": 12.0, "MOR_MPa": 106, "compr_perp_MPa": 8.0, "hardness_N": 5900, "EN350": "5", "tannin": false, "glue": "PVAc D3", "finish": "ulei-ceara", "color": [214, 196, 160]},
+    "brad":   {"name": "Brad (Abies alba)", "density_kg_m3": [430, 470], "proxy": "white fir", "C_T": 0.00245, "C_R": 0.00112, "MOE_GPa": 10.3, "MOR_MPa": 68, "compr_perp_MPa": 3.7, "hardness_N": 2100, "EN350": "4", "tannin": false, "glue": "PVAc D3", "finish": "sealer + lac", "color": [235, 214, 170]},
+    "otel_inox": {"name": "Otel inox A2", "color": [150, 150, 160]},
+    "lemn_dop": {"name": "Dop / cui de lemn (stejar)", "color": [170, 130, 80]}
+  }
+}

@@ -1,0 +1,6 @@
+﻿Cod;Piesa;Buc;Material;Gros;Lat;Lung;Brut;Rosu in model
+A;Picior;4;stejar;70;70;720;74 x 74 x 750;"locas haunch (deschis sus); scobitura cep 10x60 adanc 52 (capat 45 grade)"
+B;Zarga lunga;2;stejar;30;100;1560;34 x 104 x 1590;"capat cep la 45 grade (joc 1 mm); nut oprit 10x14 pentru butoni; umar cep jos; umar sus + haunch 10 mm; umeri cep (obraji)"
+C;Zarga scurta;2;stejar;30;100;740;34 x 104 x 770;"capat cep la 45 grade (joc 1 mm); nut oprit 10x14 pentru butoni; umar cep jos; umar sus + haunch 10 mm; umeri cep (obraji)"
+D;Blat;1;stejar;30;900;1800;35 x 910 x 1840;-
+K;Buton fixare blat;16;stejar;24.0;30.0;55.0;26 x 32 x 65;"falt peste lamba; falt sub lamba; gaura surub D5 (trecere)"

@@ -1,0 +1,212 @@
+{
+  "_comment": "Catalog de roluri de imbinare pentru plugin: ce imbinari pot fi alese pe fiecare rol, implicit, motive. Sursa: knowledge/Wood (FUR-GEN-003, JOINERY_INDEX selector rapid, WIN/DOOR).",
+  "roles": {
+    "table.apron-leg": {
+      "default": "mortise-tenon",
+      "allowed": [
+        "mortise-tenon",
+        "loose-tenon",
+        "dowel",
+        "bridle",
+        "japanese-kusabi",
+        "biscuit",
+        "pocket-screw"
+      ],
+      "notes": "Ierarhie rezistenta: M&T > cep liber/dibluri > buzunar > lamele. Doua imbinari trecute in acelasi picior de colt intra in conflict."
+    },
+    "table.top-fixing": {
+      "default": "TOP-ZCLIP",
+      "allowed": [
+        "TOP-ZCLIP",
+        "TOP-FIGURE8",
+        "TOP-BUTTON"
+      ],
+      "notes": "Figure-8 doar pentru bleaturi inguste (< ~450 mm)."
+    },
+    "bed.rail-post": {
+      "default": "bed-bolt",
+      "allowed": [
+        "bed-bolt",
+        "tusk-tenon",
+        "mortise-tenon",
+        "wedged-tenon"
+      ],
+      "notes": "Pat demontabil: bolt de pat + cep de aliniere (JOINERY_INDEX)."
+    },
+    "case.corner": {
+      "default": "dovetail",
+      "allowed": [
+        "dovetail",
+        "box-joint",
+        "rabbet+dowel",
+        "dado"
+      ],
+      "notes": "Coada de randunica 1:6 corpuri grele / 1:8 fine (C-02)."
+    },
+    "case.shelf": {
+      "default": "dado",
+      "allowed": [
+        "dado",
+        "sliding-dovetail",
+        "dowel",
+        "shelf-pin"
+      ],
+      "notes": "Raftul masiv: nu strans pe toata adancimea (miscare)."
+    },
+    "drawer.corner": {
+      "default": "dovetail",
+      "allowed": [
+        "dovetail",
+        "box-joint",
+        "rabbet+dowel"
+      ],
+      "notes": "Fata de sertar: half-blind dovetail."
+    },
+    "door.frame-corner": {
+      "default": "mortise-tenon-haunched",
+      "allowed": [
+        "mortise-tenon-haunched",
+        "loose-tenon",
+        "dowel",
+        "bridle"
+      ],
+      "notes": "Haunch = canalul panoului; cep 1/3 din grosime."
+    },
+    "window.sash-corner": {
+      "default": "mortise-tenon-haunched-through",
+      "allowed": [
+        "mortise-tenon-haunched-through",
+        "double-tenon",
+        "cope-and-stick+dowel"
+      ],
+      "notes": "Dublu cep recomandat la adancimi mici; dibluri = mai slab (BioRes)."
+    },
+    "window.frame-corner": {
+      "default": "mortise-tenon-haunched-through",
+      "allowed": [
+        "mortise-tenon-haunched-through",
+        "double-tenon"
+      ],
+      "notes": "Cornurile de protectie 30-50 mm."
+    },
+    "chair.rail-leg": {
+      "default": "mortise-tenon-stub-mitred",
+      "allowed": [
+        "mortise-tenon-stub-mitred",
+        "dowel",
+        "wedged-tenon"
+      ],
+      "notes": "Cepuri mitred in picior (JOINERY-MT-167)."
+    },
+    "frame.edge-glue": {
+      "default": "plain-glue",
+      "allowed": [
+        "plain-glue",
+        "dowel-align",
+        "biscuit-align",
+        "tongue-groove"
+      ],
+      "notes": "Rost plan; lamele doar pentru aliniere (C-11)."
+    }
+  },
+  "doors": {
+    "leaf_width": [
+      610,
+      735,
+      860,
+      985,
+      1110
+    ],
+    "leaf_height": [
+      1985,
+      2110
+    ],
+    "reveal_mm": 3,
+    "hinge_rule": {
+      "upTo": [
+        1515,
+        2
+      ],
+      "upTo2": [
+        2285,
+        3
+      ],
+      "upTo3": [
+        3050,
+        4
+      ]
+    },
+    "hinge_top_from_top": 150,
+    "hinge_bottom_from_bottom": 225,
+    "panel_groove": {
+      "width": 8,
+      "depth": 12
+    },
+    "panel_clearance_formula": "c = 0.5*C_T*W*dMC + 1",
+    "handle_height": 1000
+  },
+  "windows": {
+    "profiles": {
+      "IV68": {
+        "thickness": 68,
+        "face": 80,
+        "glass_max": 28
+      },
+      "IV78": {
+        "thickness": 78,
+        "face": 80,
+        "glass_max": 40
+      },
+      "IV92": {
+        "thickness": 92,
+        "face": 90,
+        "glass_max": 48
+      }
+    },
+    "euro_groove": {
+      "groove": 16,
+      "axis": 9,
+      "rebate_depth": 20,
+      "falzluft": 12,
+      "verified": false
+    },
+    "sash_weight_limit_kg": {
+      "standard": 150,
+      "heavy": 300
+    },
+    "glass": {
+      "double_4_16_4": {
+        "mm": 24,
+        "Ug": 1.1,
+        "kg_m2": 20
+      },
+      "triple_4_12_4_12_4": {
+        "mm": 36,
+        "Ug": 0.7,
+        "kg_m2": 30
+      }
+    },
+    "sill_slope_deg_min": 5,
+    "drip_from_edge_mm": 12
+  },
+  "shelf": {
+    "spans_mm": {
+      "18": 750,
+      "19": 750,
+      "25": 900,
+      "32": 1100
+    },
+    "deflection_limit": "L/300"
+  },
+  "drawer": {
+    "slide_side_gap_mm": 12.7
+  },
+  "hinge_cup": {
+    "diameter": 35,
+    "boring_mm": {
+      "face_frame_overlay": 3,
+      "frameless": 5,
+      "inset": 5
+    }
+  }
+}

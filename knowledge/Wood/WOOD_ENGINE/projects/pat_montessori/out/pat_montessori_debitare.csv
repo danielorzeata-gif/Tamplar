@@ -1,0 +1,11 @@
+﻿Cod;Piesa;Buc;Material;Gros;Lat;Lung;Brut;Rosu in model
+A;Stalp;4;stejar;70;70;1050;74 x 74 x 1080;"gaura bulon D9 (strapunge piciorul); gaura cui de lemn D12 (impreuna, la montaj); injumatatire (1/2 grosime pe zona comuna); lamaj cap bulon D20x12 (pentru dop); scobitura cep 10x35 adanc 22"
+B;Lonjeron;2;stejar;30.0;150;2050.0;34 x 154 x 2080;"gaura bulon D9 in capat (axial, 95 mm); locas piulita cilindrica D12 (orb, din fata interioara); umeri cep (taiere)"
+C;Traversa capat;2;stejar;30.0;150;1450.0;34 x 154 x 1480;"gaura bulon D9 in capat (axial, 95 mm); locas piulita cilindrica D12 (orb, din fata interioara); scobitura oarba cep 15x60 adanc 17; umeri cep (taiere)"
+D;Grinda centrala;1;stejar;45.0;100;2040.0;49 x 104 x 2070;"gaura cui de lemn D12 vertical (grinda + picior); umeri cep"
+E;Picior central;2;stejar;40;70;70;44 x 74 x 80;gaura cui de lemn D12 vertical (grinda + picior)
+F;Sipca lamele;2;stejar;25.0;40;1830;29 x 44 x 1860;-
+G;Lamela;14;stejar;20;80.0;1406.0;24 x 84 x 1436;-
+H;Caprior;4;stejar;70.0;70.0;1005.4;74 x 74 x 1035;"gaura cui de lemn D12 (impreuna, la montaj); gaura cui de lemn D12 vertical; injumatatire (1/2 grosime pe zona comuna); locas coama (taiere)"
+I;Coama;1;stejar;70.0;70;2270;74 x 74 x 2300;gaura cui de lemn D12 vertical
+J;Dop cap bulon;8;lemn_dop;10;20;20;10 x 20 x 20;-

@@ -1,0 +1,23 @@
+{
+  "id": "HL-PEG-01",
+  "name": "Injumatatire (ai-gaki) cu cuie de lemn, la orice unghi",
+  "name_en": "Pegged half-lap (any angle)",
+  "family": "Half_Lap",
+  "type": "structural usor, demontabil (cuiele se scot)",
+  "best_for": ["stalp -> caprior", "caprior -> caprior la coama", "rame"],
+  "material": "lemn masiv",
+  "strength": 3, "difficulty": 2, "disassembly": true, "visible_hardware": false,
+  "geometry_function": "engine.joints.half_lap_pegged",
+  "parameters": {
+    "depth":  {"default": "T/2", "rules": ["JOINERY-LAP-001"]},
+    "region": {"default": "intersectia celor doua piese in planul imbinarii (calculata)"},
+    "pegs":   {"default": "1-2 cuie D12 stejar", "rules": ["JOINERY-MT-005", "JP-09"], "note": "marja >= 18 mm fata de marginea zonei de injumatatire"}
+  },
+  "rules": ["JOINERY-LAP-001", "JOINERY-MT-005", "JP-09", "ADH-KD"],
+  "operations": [
+    {"part": "ambele", "op": "injumatatire (scoatere 1/2 grosime pe zona comuna)", "tool": "freza_mana+freza_dreapta_18|fierastrau_cepuri+dalta_25"},
+    {"part": "ambele", "op": "gaura cui de lemn D12 (gaurite impreuna, la montaj)", "tool": "bormasina+burghiu_12"}
+  ],
+  "hardware": ["cui de lemn stejar D12"],
+  "kb": ["02_WOOD_JOINERY/lap/JOINERY_LAP_HALVING.md", "11_JAPANESE_WOODWORKING/joinery/JP_AIGAKI_KUMIKO.md"]
+}

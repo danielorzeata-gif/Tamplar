@@ -1,0 +1,21 @@
+{
+  "id": "RS-PEG-01",
+  "name": "Coama asezata in furca capriorilor + cui de lemn vertical",
+  "name_en": "Ridge seated in rafter crotch, pegged",
+  "family": "Traditional",
+  "type": "pozitionare, demontabil",
+  "best_for": ["coama de acoperis la paturi 'casuta'", "pergole"],
+  "strength": 2, "difficulty": 2, "disassembly": true, "visible_hardware": false,
+  "geometry_function": "engine.joints.ridge_seat_pegged",
+  "parameters": {
+    "seat":  {"default": "locasul = volumul coamei intersectat cu capriorii (calculat)"},
+    "peg":   {"default": "cui stejar D12, patrunde 20 mm in capriori", "rules": ["JOINERY-MT-005"]}
+  },
+  "rules": ["JOINERY-MT-005", "DES-STR-001"],
+  "operations": [
+    {"part": "caprior", "op": "locas coama (taiere in V/patrat)", "tool": "fierastrau_panglica|fierastrau_cepuri+dalta_25"},
+    {"part": "coama+capriori", "op": "gaura cui de lemn D12 verticala", "tool": "bormasina+burghiu_12"}
+  ],
+  "hardware": ["cui de lemn stejar D12"],
+  "kb": ["11_JAPANESE_WOODWORKING/joinery/JP_WATARI_AGO.md"]
+}

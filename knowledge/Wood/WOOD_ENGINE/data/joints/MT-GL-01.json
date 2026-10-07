@@ -1,0 +1,95 @@
+{
+ "id": "MT-GL-01",
+ "name": "Cep-scobitura lipit, cu haunch si capat de cep la 45 grade",
+ "name_en": "Glued haunched mortise & tenon, mitred tenon ends",
+ "family": "Mortise_Tenon",
+ "type": "structural, permanent",
+ "best_for": [
+  "zarga -> picior de masa",
+  "scaune",
+  "rame de usi",
+  "cadre de dulap"
+ ],
+ "material": "lemn masiv",
+ "strength": 5,
+ "difficulty": 3,
+ "disassembly": false,
+ "visible_hardware": false,
+ "geometry_function": "engine.joints.mt_glued",
+ "parameters": {
+  "tenon_t": {
+   "default": "T/3",
+   "rules": [
+    "JOINERY-MT-001"
+   ],
+   "note": "alege grosimea zargii astfel incat T/3 = latimea frezei/daltei pe care o ai (ex. zarga 30 -> cep 10)"
+  },
+  "tenon_len": {
+   "default": 50,
+   "unit": "mm",
+   "note": "cat mai lung; cand doua cepuri se intalnesc in picior -> capete la 45 grade",
+   "rules": [
+    "JOINERY-MT-167"
+   ]
+  },
+  "haunch": {
+   "default": "adancime 10 mm, pana la capatul piciorului",
+   "rules": [
+    "JOINERY-MT-004"
+   ]
+  },
+  "fit": {
+   "default": 0.1,
+   "unit": "mm/parte",
+   "rules": [
+    "TOL-GLUE"
+   ]
+  },
+  "mitre": {
+   "default": "semiplan (a, b, c) care separa cele doua cepuri; joc 1 mm",
+   "rules": [
+    "JOINERY-MT-167"
+   ]
+  }
+ },
+ "rules": [
+  "JOINERY-MT-001",
+  "JOINERY-MT-004",
+  "JOINERY-MT-167",
+  "TOL-GLUE",
+  "ADH-D3"
+ ],
+ "operations": [
+  {
+   "part": "zarga",
+   "op": "umeri cep + haunch",
+   "tool": "circular_masa|fierastrau_cepuri"
+  },
+  {
+   "part": "zarga",
+   "op": "capat cep la 45 grade",
+   "tool": "fierastrau_cepuri|fierastrau_panglica"
+  },
+  {
+   "part": "picior",
+   "op": "scobitura (capat la 45 grade unde se intalneste cu cealalta)",
+   "tool": "freza_mana+freza_spirala_10|dalta_10"
+  },
+  {
+   "part": "picior",
+   "op": "locas haunch (deschis sus)",
+   "tool": "fierastrau_cepuri+dalta_10"
+  }
+ ],
+ "hardware": [
+  "adeziv PVAc D3"
+ ],
+ "alternatives": [
+  "KD-BB-01 (demontabil cu bulon)",
+  "dibluri (mai slab la scaune — C-13)"
+ ],
+ "kb": [
+  "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md",
+  "03_FURNITURE/furniture_construction/FURNITURE_TABLES_CHAIRS_CASES.md"
+ ]
+}

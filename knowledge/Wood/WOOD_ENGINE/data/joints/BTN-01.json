@@ -1,0 +1,64 @@
+{
+ "id": "BTN-01",
+ "name": "Butoni de lemn in nut (prinderea blatului masiv)",
+ "name_en": "Wooden tabletop buttons in apron groove",
+ "family": "Knock_Down",
+ "type": "fixare care permite miscarea lemnului",
+ "best_for": [
+  "blat masiv pe zarga",
+  "capace de comoda"
+ ],
+ "strength": 3,
+ "difficulty": 2,
+ "disassembly": true,
+ "visible_hardware": false,
+ "geometry_function": "engine.joints.buttons_in_groove",
+ "parameters": {
+  "groove": {
+   "default": "10 x 14 mm in fata interioara, la 12 mm sub muchia de sus, oprit la 20 mm de umerii cepurilor (nu atinge haunch-ul)"
+  },
+  "tongue": {
+   "default": "8 mm grosime, intra 10 mm in nut"
+  },
+  "gap": {
+   "default": "calculat din miscarea blatului (WOOD-MOIST-005): zargile lungi = miscare perpendiculara; scurte = miscare in lungul nutului",
+   "rules": [
+    "WOOD-MOIST-005",
+    "TBL-BTN"
+   ]
+  },
+  "spacing": {
+   "default": "max ~400 mm"
+  }
+ },
+ "rules": [
+  "TBL-BTN",
+  "WOOD-MOIST-005",
+  "TBL-WH-005",
+  "FAST-001"
+ ],
+ "operations": [
+  {
+   "part": "zarga",
+   "op": "nut oprit pe fata interioara (freza sprijinita pe fata, ghidaj paralel dupa muchia de sus)",
+   "tool": "freza_mana+freza_spirala_10"
+  },
+  {
+   "part": "buton",
+   "op": "debitare + lamba (falt)",
+   "tool": "circular_masa|fierastrau_cepuri"
+  },
+  {
+   "part": "buton",
+   "op": "gaura surub + lamaj",
+   "tool": "bormasina+burghiu_4"
+  }
+ ],
+ "hardware": [
+  "surub inox 4 x 35 / buton"
+ ],
+ "kb": [
+  "03_FURNITURE/tables/FURNITURE_PROJECTS_TABLES.md",
+  "05_WOOD_SELECTION/moisture/WOOD_MOISTURE_MOVEMENT.md"
+ ]
+}

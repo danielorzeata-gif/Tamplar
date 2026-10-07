@@ -1,0 +1,22 @@
+{
+  "id": "ST-LOOSE-01",
+  "name": "Cep scurt nelipit (grinda in traversa)",
+  "name_en": "Loose stub tenon",
+  "family": "Mortise_Tenon",
+  "type": "pozitionare, demontabil",
+  "best_for": ["grinda centrala de pat", "traverse secundare"],
+  "strength": 2, "difficulty": 2, "disassembly": true, "visible_hardware": false,
+  "geometry_function": "engine.joints.stub_tenon_loose",
+  "parameters": {
+    "tenon_t":   {"default": "T/3", "rules": ["JOINERY-MT-001"]},
+    "tenon_len": {"default": 15, "rules": ["FURN-BED-A"]},
+    "fit":       {"default": 0.25, "rules": ["TOL-KD"]}
+  },
+  "rules": ["JOINERY-MT-001", "FURN-BED-A", "TOL-KD", "ADH-KD"],
+  "operations": [
+    {"part": "grinda",   "op": "umeri cep", "tool": "circular_masa|fierastrau_cepuri"},
+    {"part": "traversa", "op": "scobitura oarba", "tool": "freza_mana+freza_spirala_10|dalta_10"}
+  ],
+  "hardware": [],
+  "kb": ["02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"]
+}

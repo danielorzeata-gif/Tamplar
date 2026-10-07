@@ -1,0 +1,299 @@
+{
+ "_info": "Reguli cu provenienta (provenance). level: V-TEXT = citit in sursa; V-STD = standard; REF = carte de referinta, pagina neverificata; PRACTICA = regula de atelier; ESTIMARE = calcul/interpretare a agentului. kb = fisierul din baza de cunostinte unde e documentata regula.",
+ "rules": [
+  {
+   "id": "JOINERY-MT-001",
+   "topic": "cep",
+   "rule": "Grosimea cepului = 1/3 din grosimea lemnului (peretii scobiturii raman egali cu cepul).",
+   "value": "t = T/3",
+   "source": "W. Fairham, Woodwork Joints (Gutenberg #21531)",
+   "location": "cap. The Mortise and Tenon Joint, 'General Rule' (p. 64+ ed. orig.)",
+   "level": "V-TEXT",
+   "confirmed_by": [
+    "JOINERY-MT-010 (Wells & Hooper 1922)",
+    "Mission Furniture 1909-12 (PROP-001)"
+   ],
+   "kb": "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"
+  },
+  {
+   "id": "BED-WH-001",
+   "topic": "pat",
+   "rule": "La patul din lemn, traversele laterale se prind de capete cu cep scurt (stub tenon) si bulon; piulita se ascunde, golul se astupa cu lemn.",
+   "value": "cep scurt + bulon ascuns",
+   "source": "P.A. Wells & J. Hooper, Modern Cabinet Work (ed. 1922, Internet Archive)",
+   "location": "cap. VIII 'Bedsteads' (OCR)",
+   "level": "V-TEXT",
+   "kb": "03_FURNITURE/furniture_construction/FURNITURE_PROPORTIONS_HISTORICAL.md"
+  },
+  {
+   "id": "FURN-BED-A",
+   "topic": "pat",
+   "rule": "Varianta A pat demontabil: bulon de pat M8-M10 + cep scurt de aliniere 15-20 mm, nelipit; piulita cilindrica in lonjeron la >= 60-80 mm de capat; joc cep 0,2-0,3 mm/parte; umerii in echer (strangerea se face pe umeri).",
+   "value": "cep 15-20; piulita >= 60 mm",
+   "source": "baza de cunostinte, sinteza de atelier",
+   "location": "FURNITURE_BED_SOLID_WOOD §3 detaliu A",
+   "level": "PRACTICA",
+   "kb": "03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md"
+  },
+  {
+   "id": "FURN-BED-SECT",
+   "topic": "pat",
+   "rule": "Sectiuni pat stejar: picioare 70x70-80x80, lonjeroane 28-32 x 140-160, grinda centrala 40x80-45x100. Verificat istoric: sofa-pat Mission (1910) picioare 76x76, lonjeroane 22x203.",
+   "value": "picior 70x70; lonjeron 30x150",
+   "source": "baza de cunostinte (calcul incovoiere + sageata) + Mission Furniture Part 2",
+   "location": "FURNITURE_BED_SOLID_WOOD §2, §2b",
+   "level": "ESTIMARE",
+   "kb": "03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md"
+  },
+  {
+   "id": "FURN-BED-BEAM",
+   "topic": "pat",
+   "rule": "Pat >= 140 cm latime: grinda centrala obligatorie, cu picioare centrale.",
+   "value": "grinda + 2 picioare",
+   "source": "baza de cunostinte",
+   "location": "FURNITURE_BED_SOLID_WOOD §2",
+   "level": "PRACTICA",
+   "kb": "03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md"
+  },
+  {
+   "id": "FURN-BED-SLATS",
+   "topic": "pat",
+   "rule": "Lamele 18-22 x 70-90 mm, interspatiu <= 50-70 mm (verifica si recomandarea producatorului saltelei); lamelele nu se blocheaza rigid la ambele capete.",
+   "value": "20x80, gol <= 60",
+   "source": "baza de cunostinte",
+   "location": "FURNITURE_BED_SOLID_WOOD §2",
+   "level": "PRACTICA",
+   "kb": "03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md"
+  },
+  {
+   "id": "FURN-BED-CLEAT",
+   "topic": "pat",
+   "rule": "Sipca de sprijin a lamelelor pe fata interioara a lonjeronului, lipita + insurubata la 150-200 mm; marginea lonjeronului ramane deasupra lamelelor (Mission Furniture: 2 in sub muchie) ca sa tina salteaua.",
+   "value": "sipca 25x40",
+   "source": "baza de cunostinte + H.H. Windsor, Mission Furniture Part 2 (couch)",
+   "location": "FURNITURE_BED §2; PRJ-P2_COUCH",
+   "level": "V-TEXT",
+   "kb": "03_FURNITURE/chairs/FURNITURE_PROJECTS_SEATING.md"
+  },
+  {
+   "id": "JOINERY-LAP-001",
+   "topic": "injumatatire",
+   "rule": "Imbinarea prin injumatatire: din fiecare piesa se scoate jumatate din grosime; piesele se suprapun flush.",
+   "value": "adancime = T/2",
+   "source": "W. Fairham, Woodwork Joints",
+   "location": "cap. The Halved Joint (p. 13+)",
+   "level": "V-TEXT",
+   "kb": "02_WOOD_JOINERY/lap/JOINERY_LAP_HALVING.md"
+  },
+  {
+   "id": "JOINERY-MT-005",
+   "topic": "cui de lemn",
+   "rule": "Cuiul de lemn (drawbore) din esenta tare, ~3/8 in (~10 mm); decalaj ~1/8 in (3 mm) spre umar daca se vrea tragere.",
+   "value": "cui 10-12 mm",
+   "source": "W. Fairham, Woodwork Joints",
+   "location": "Fig. 162",
+   "level": "V-TEXT",
+   "kb": "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"
+  },
+  {
+   "id": "JP-09",
+   "topic": "japonez",
+   "rule": "Hanasen / kusabi: blocare mecanica fara adeziv, demontabila prin scoaterea cuiului.",
+   "value": "cui de lemn demontabil",
+   "source": "Nakahara 1983; Sumiyoshi & Matsui 1991",
+   "location": "fisa JP_HANASEN_WEDGED_TENON",
+   "level": "REF",
+   "kb": "11_JAPANESE_WOODWORKING/joinery/JP_HANASEN_WEDGED_TENON.md"
+  },
+  {
+   "id": "TAMPLAR-P3",
+   "topic": "nod",
+   "rule": "Doua cepuri perpendiculare care intra in acelasi picior la aceeasi inaltime se intersecteaza: se decaleaza pe inaltime (sau se mitreaza capetele - Fairham Fig. 167).",
+   "value": "benzi Z decalate",
+   "source": "skill tamplar; W. Fairham Fig. 167",
+   "location": "principiul 3",
+   "level": "PRACTICA",
+   "kb": "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"
+  },
+  {
+   "id": "CON-DIM-004",
+   "topic": "debitare",
+   "rule": "Supradimensionare la debitarea grosiera: +3-5 mm grosime si latime, +20-50 mm lungime; horn 25-75 mm la montanti.",
+   "value": "+4 / +4 / +30 mm",
+   "source": "baza de cunostinte; W. Fairham (horn)",
+   "location": "CONSTRUCTION_TOLERANCES_DIMENSIONING",
+   "level": "PRACTICA",
+   "kb": "09_CONSTRUCTION/tolerances/CONSTRUCTION_TOLERANCES_DIMENSIONING.md"
+  },
+  {
+   "id": "WOOD-SP-001",
+   "topic": "stejar",
+   "rule": "Stejarul contine taninuri care reactioneaza cu fierul (pete negre) -> feronerie inox / alama.",
+   "value": "inox A2",
+   "source": "Hoadley, Understanding Wood (pagina neverificata) + practica",
+   "location": "WOOD_SPECIES_EUROPEAN",
+   "level": "REF",
+   "kb": "05_WOOD_SELECTION/european_species/WOOD_SPECIES_EUROPEAN.md"
+  },
+  {
+   "id": "WOOD-MOIST-005",
+   "topic": "miscare",
+   "rule": "Miscarea lemnului: dD = D x C x dUM; stejar alb C_T = 0,00376, C_R = 0,00194 (6-14 % UM).",
+   "value": "C_T 0,00376",
+   "source": "USDA FPL, Wood Handbook FPL-GTR-282 (2021)",
+   "location": "Ec. 13-3, Tab. 13-5",
+   "level": "V-TEXT",
+   "kb": "05_WOOD_SELECTION/moisture/WOOD_MOISTURE_MOVEMENT.md"
+  },
+  {
+   "id": "FAST-001",
+   "topic": "fixare",
+   "rule": "Gaura de ghidare pentru surub ~90 % din diametrul de baza al filetului in esente tari (70 % la rasinoase).",
+   "value": "90 %",
+   "source": "USDA FPL, Wood Handbook 2021",
+   "location": "cap. 8 Fastenings",
+   "level": "V-TEXT",
+   "kb": "08_MATERIALS/screws/MATERIALS_FASTENERS.md"
+  },
+  {
+   "id": "ADH-KD",
+   "topic": "adeziv",
+   "rule": "Imbinarile demontabile nu se lipesc; adeziv doar la sipci si piese fixe.",
+   "value": "fara adeziv",
+   "source": "baza de cunostinte",
+   "location": "FURNITURE_BED §5",
+   "level": "PRACTICA",
+   "kb": "03_FURNITURE/beds/FURNITURE_BED_SOLID_WOOD.md"
+  },
+  {
+   "id": "TOL-KD",
+   "topic": "toleranta",
+   "rule": "Cep de aliniere la imbinari demontabile: joc 0,2-0,3 mm pe parte (se monteaza fara forta); scobitura +1-2 mm pe adancime.",
+   "value": "0,25 / parte; +2 mm adancime",
+   "source": "baza de cunostinte",
+   "location": "FURNITURE_BED §3; CONSTRUCTION_TOLERANCES",
+   "level": "PRACTICA",
+   "kb": "09_CONSTRUCTION/tolerances/CONSTRUCTION_TOLERANCES_DIMENSIONING.md"
+  },
+  {
+   "id": "MONT-001",
+   "topic": "Montessori",
+   "rule": "Pat de podea Montessori: suprafata de dormit joasa (~20-30 cm cu salteaua), fara feronerie proeminenta, muchii rotunjite; cadrul 'casuta' e decorativ / pentru baldachin, nu pentru catarat.",
+   "value": "lamele la ~16 cm",
+   "source": "agent (fara sursa tehnica in baza); EN 1725 pentru paturi (cerinte de siguranta) — standard platit",
+   "location": "-",
+   "level": "ESTIMARE",
+   "kb": "-"
+  },
+  {
+   "id": "DES-STR-001",
+   "topic": "structura",
+   "rule": "Un cadru dreptunghiular cu noduri slabe se deformeaza in paralelogram (racking); rigidizare prin umeri lati, contrafise, panouri sau legaturi la partea de sus.",
+   "value": "-",
+   "source": "W. Fairham (oblique bridle 'previne racking')",
+   "location": "Fig. 76",
+   "level": "V-TEXT",
+   "kb": "13_DESIGN_AND_ENGINEERING/DESIGN_ERGONOMICS_DFM.md"
+  },
+  {
+   "id": "FURN-TBL-H",
+   "topic": "masa",
+   "rule": "Masa de dining: inaltime 730-760 mm; spatiu pentru genunchi sub zarga >= 600-650 mm; 600 mm latime pe persoana.",
+   "value": "750 / >= 600",
+   "source": "Panero & Zelnik, Human Dimension & Interior Space (1979) — pagina neverificata",
+   "location": "FURNITURE_TABLES_CHAIRS_CASES; DESIGN_ERGONOMICS_DFM",
+   "level": "REF",
+   "kb": "13_DESIGN_AND_ENGINEERING/DESIGN_ERGONOMICS_DFM.md"
+  },
+  {
+   "id": "FURN-TBL-SECT",
+   "topic": "masa",
+   "rule": "Masa stejar: picioare 60x60-80x80, zarga 22-25 x 80-110, blat masiv 25-40 (28-32 uzual). Mission Furniture: picioare 2 in (51 mm), zarga 7/8 in (22 mm) aproape universal.",
+   "value": "70x70; 25x100; 30",
+   "source": "baza de cunostinte + H.H. Windsor, Mission Furniture 1909-12",
+   "location": "FURNITURE_TABLES_CHAIRS_CASES; PROP-001",
+   "level": "PRACTICA",
+   "kb": "03_FURNITURE/furniture_construction/FURNITURE_PROPORTIONS_HISTORICAL.md"
+  },
+  {
+   "id": "JOINERY-MT-004",
+   "topic": "cep",
+   "rule": "Cep cu haunch la colt: latimea cepului redusa ca sa ramana lemn la capatul montantului; haunch-ul scurt impiedica dezalinierea fetei.",
+   "value": "haunch ~10 mm",
+   "source": "W. Fairham, Woodwork Joints",
+   "location": "Fig. 130-131",
+   "level": "V-TEXT",
+   "kb": "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"
+  },
+  {
+   "id": "JOINERY-MT-167",
+   "topic": "cep",
+   "rule": "La picioarele de masa, cepurile zargilor intra in picior si aproape se ating — capetele lor se taie la 45 grade (mitred on the end).",
+   "value": "capete cep la 45 grade",
+   "source": "W. Fairham, Woodwork Joints",
+   "location": "Fig. 167 'Table framing'",
+   "level": "V-TEXT",
+   "kb": "02_WOOD_JOINERY/mortise_tenon/JOINERY_MORTISE_TENON.md"
+  },
+  {
+   "id": "TOL-GLUE",
+   "topic": "toleranta",
+   "rule": "Cep lipit: obrajii intra cu mana / lovituri usoare, joc ~0,05-0,15 mm pe parte (film PVAc); capatul cepului cu 1-2 mm joc (rezervor de adeziv).",
+   "value": "0,1 / parte; +2 mm",
+   "source": "baza de cunostinte",
+   "location": "CONSTRUCTION_TOLERANCES_DIMENSIONING",
+   "level": "PRACTICA",
+   "kb": "09_CONSTRUCTION/tolerances/CONSTRUCTION_TOLERANCES_DIMENSIONING.md"
+  },
+  {
+   "id": "ADH-D3",
+   "topic": "adeziv",
+   "rule": "Mobilier interior: PVAc D2/D3 (EN 204); suprafete proaspat rindeluite (< 24 h); presiune 0,7-1,7 MPa dupa densitate; umiditate lemn 6-14 %.",
+   "value": "PVAc D3",
+   "source": "EN 204 (standard) + USDA Wood Handbook 2021 cap. 10",
+   "location": "ADH-003, ADH-005, ADH-005b",
+   "level": "V-TEXT",
+   "kb": "08_MATERIALS/adhesives/MATERIALS_ADHESIVES.md"
+  },
+  {
+   "id": "ADH-004b",
+   "topic": "adeziv",
+   "rule": "Imbinarile pe cant (rost plan) pot fi la fel de rezistente ca lemnul; lamba-uluc nu da de regula rezistenta mai mare — doar aliniere.",
+   "value": "rost plan",
+   "source": "USDA Wood Handbook 2021",
+   "location": "cap. 10 'Edge-Grain Joints', Fig. 10-6",
+   "level": "V-TEXT",
+   "kb": "08_MATERIALS/adhesives/MATERIALS_ADHESIVES.md"
+  },
+  {
+   "id": "TBL-BTN",
+   "topic": "masa",
+   "rule": "Blatul masiv se prinde de zarga cu butoni de lemn (wooden buttons) in nut sau coltare — niciodata rigid pe toata latimea; blatul trebuie sa se poata misca.",
+   "value": "butoni in nut",
+   "source": "H.H. Windsor, Mission Furniture Part 1 (library table) + baza de cunostinte (FURN-TBL-001)",
+   "location": "PRJ-P1_LIBRARY_TABLE; WOOD-MOIST-006",
+   "level": "V-TEXT",
+   "kb": "03_FURNITURE/tables/FURNITURE_PROJECTS_TABLES.md"
+  },
+  {
+   "id": "TBL-WH-005",
+   "topic": "masa",
+   "rule": "Piesele de intarire de sub blat nu au voie sa aiba fibra perpendiculara pe blat lipita rigid — la contractie blatul crapa.",
+   "value": "-",
+   "source": "P.A. Wells & J. Hooper, Modern Cabinet Work (1922)",
+   "location": "cap. VI (OCR)",
+   "level": "V-TEXT",
+   "kb": "03_FURNITURE/tables/FURNITURE_PROJECTS_TABLES.md"
+  },
+  {
+   "id": "CON-ASM-002",
+   "topic": "montaj",
+   "rule": "Verifica diagonalele imediat dupa strangere (egale = cadru in echer); asamblare in sub-ansamble.",
+   "value": "diagonale egale",
+   "source": "baza de cunostinte; Mission Furniture (couch)",
+   "location": "CONSTRUCTION_TOLERANCES_DIMENSIONING",
+   "level": "PRACTICA",
+   "kb": "09_CONSTRUCTION/tolerances/CONSTRUCTION_TOLERANCES_DIMENSIONING.md"
+  }
+ ]
+}

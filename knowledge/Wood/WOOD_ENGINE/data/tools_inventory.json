@@ -1,0 +1,161 @@
+{
+  "_info": "INVENTARUL ATELIERULUI — completeaza tu. status: \"da\" / \"nu\" / \"?\" (necunoscut). model: optional (ex. Bosch GOF 130). Generatorul verifica fiecare operatie: verde = ai scula, rosu = lipseste, gri = necunoscut. Cheile cu '|' in operatii inseamna alternative (oricare ajunge).",
+  "tools": {
+    "circular_masa": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "debitare la latime/lungime, cepuri cu dispozitiv"
+    },
+    "fierastrau_retezat": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "mitre saw / retezare unghi (capete capriori)"
+    },
+    "fierastrau_panglica": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "taieturi drepte si inclinate la capriori"
+    },
+    "abricht": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "fata + cant de referinta"
+    },
+    "masina_grosime": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "grosime"
+    },
+    "freza_mana": {
+      "status": "da",
+      "model": "",
+      "group": "portabile",
+      "note": "scobituri, injumatatiri, rotunjiri"
+    },
+    "freza_spirala_10": {
+      "status": "da",
+      "model": "",
+      "group": "freze",
+      "note": "spirala ascendenta D10 (scobituri cep 10)"
+    },
+    "freza_dreapta_18": {
+      "status": "da",
+      "model": "",
+      "group": "freze",
+      "note": "golire injumatatiri / locas coama"
+    },
+    "freza_rotunjire_r5": {
+      "status": "da",
+      "model": "",
+      "group": "freze",
+      "note": "muchii rotunjite (Montessori)"
+    },
+    "masina_gaurit_coloana": {
+      "status": "da",
+      "model": "",
+      "group": "utilaje",
+      "note": "gauri perpendiculare precise"
+    },
+    "bormasina": {
+      "status": "da",
+      "model": "",
+      "group": "portabile",
+      "note": ""
+    },
+    "ghidaj_gaurire_lunga": {
+      "status": "da",
+      "model": "",
+      "group": "dispozitive",
+      "note": "gaura bulon in capatul lonjeronului (perpendiculara pe capat)"
+    },
+    "burghiu_9_lung": {
+      "status": "da",
+      "model": "",
+      "group": "burghie",
+      "note": "D9 x >= 160 mm, bulon M8"
+    },
+    "burghiu_12": {
+      "status": "da",
+      "model": "",
+      "group": "burghie",
+      "note": "cuie de lemn D12, piulita cilindrica D12"
+    },
+    "burghiu_forstner_20": {
+      "status": "da",
+      "model": "",
+      "group": "burghie",
+      "note": "lamaj cap bulon + dop"
+    },
+    "dalta_10": {
+      "status": "da",
+      "model": "",
+      "group": "scule de mana",
+      "note": "colturi scobituri"
+    },
+    "dalta_25": {
+      "status": "da",
+      "model": "",
+      "group": "scule de mana",
+      "note": "pariere injumatatiri"
+    },
+    "fierastrau_cepuri": {
+      "status": "da",
+      "model": "",
+      "group": "scule de mana",
+      "note": "umeri cep, injumatatiri"
+    },
+    "rindea_umar": {
+      "status": "da",
+      "model": "",
+      "group": "scule de mana",
+      "note": "ajustare obraji cep"
+    },
+    "gramil_dublu": {
+      "status": "da",
+      "model": "",
+      "group": "trasare",
+      "note": ""
+    },
+    "echer_extrar": {
+      "status": "da",
+      "model": "",
+      "group": "trasare",
+      "note": "unghiul capriorilor"
+    },
+    "slefuitor_orbital": {
+      "status": "da",
+      "model": "",
+      "group": "portabile",
+      "note": ""
+    },
+    "cleme": {
+      "status": "da",
+      "model": "",
+      "group": "montaj",
+      "note": "min. 4 x 1000 mm"
+    },
+    "surubelnita_bit": {
+      "status": "da",
+      "model": "",
+      "group": "portabile",
+      "note": "suruburi sipci/lamele"
+    },
+    "freza_disc_10": {
+      "status": "?",
+      "model": "",
+      "group": "freze",
+      "note": "freza disc (slot cutter) 10 mm — alternativa la circular pentru nut"
+    },
+    "burghiu_4": {
+      "status": "?",
+      "model": "",
+      "group": "burghie",
+      "note": "burghiu D4 (gauri surub butoni / ghidare)"
+    }
+  }
+}
