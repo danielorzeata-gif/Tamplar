@@ -30,7 +30,7 @@ namespace RhinoWood.Core.Reports
         };
         private static readonly Dictionary<string, string> Hardware = new Dictionary<string, string>
         {
-            ["TOP-ZCLIP"] = "Clips Z 30×20", ["TOP-FIGURE8"] = "Fixare figure-8", ["TOP-BUTTON"] = "Buton de lemn", ["TOP-SLOTSCREW"] = "Șurub în gaură alungită 4×35 + șaibă",
+            ["TOP-ZCLIP"] = "Clips Z 30×20", ["TOP-FIGURE8"] = "Fixare figure-8", ["TOP-BUTTON"] = "Buton de lemn", ["TOP-SLOTSCREW"] = "Șurub în gaură alungită 4×35 + șaibă", ["TOP-SLOTSCREW-L"] = "Șurub în gaură alungită lungă 4×35 + șaibă",
             ["SCR-4x16"] = "Șurub 4×16", ["SCR-4x35"] = "Șurub 4×35", ["WSH-4"] = "Șaibă 4"
         };
         private static readonly Dictionary<FeatureKind, string> Features = new Dictionary<FeatureKind, string>

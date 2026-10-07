@@ -233,6 +233,20 @@ namespace RhinoWood.Core.Libraries
                     new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ScrewHole, U = 0, V = 0, Diameter = 3, Depth = 20, Purpose = "Pilot hole" },
                 }
             };
+            lib.Hardware["TOP-SLOTSCREW-L"] = new HardwareItem
+            {
+                Id = "TOP-SLOTSCREW-L", Category = "Tabletop fastener", Manufacturer = "Generic", Model = "Slotted-hole screw 4x35 + washer (long slot)",
+                Dimensions = new Vec3(35, 4, 4), UnitPrice = 0.07, TravelAllowance = 26,
+                FastenerIds = { "SCR-4x35", "WSH-4" }, FastenersPerUnit = { { "SCR-4x35", 1 }, { "WSH-4", 1 } },
+                RequiredToolIds = { "DRILL-5", "ROUT-8" },
+                InstallationNotesRo = "Gaură alungită în zargă (axa lungă pe direcția de mișcare) lasă blatul să se miște; șurubul intră în fața inferioară a blatului.",
+                InstallationNotes = "Elongated hole in the apron (long axis along the movement direction) lets the top move; screw into the top underside.",
+                Pattern =
+                {
+                    new HolePatternEntry { Target = PatternTarget.Host, Kind = FeatureKind.ElongatedHole, U = 0, V = 0, Diameter = 5, SizeU = 34, SizeV = 5, Depth = 25, Purpose = "Elongated screw slot (allows top movement)" },
+                    new HolePatternEntry { Target = PatternTarget.Mate, Kind = FeatureKind.ScrewHole, U = 0, V = 0, Diameter = 3, Depth = 20, Purpose = "Pilot hole" },
+                }
+            };
 
             lib.Consumables["GLUE-PVAC"] = new ConsumableItem { Id = "GLUE-PVAC", Name = "PVA D3 wood glue", Unit = "m2 glue line", UnitPrice = 1.2 };
             lib.Consumables["FINISH-OIL"] = new ConsumableItem { Id = "FINISH-OIL", Name = "Hardwax oil", Unit = "m2 surface", UnitPrice = 4.5 };

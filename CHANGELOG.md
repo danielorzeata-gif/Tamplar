@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- **Fixări blat pe zargile scurte**: numărul crește cu dimensiunea mesei (aceeași regulă de pas ca la zargile lungi), mereu impar, cu un șurub pe axa centrală, distribuite simetric; șuruburile îndepărtate de centru primesc gaură alungită mai lungă (`TOP-SLOTSCREW-L`, cursă 26 mm).
+- Soluții aplicabile și pentru avertismentul „cursa fixării” (schimbă fixarea blatului cu una care permite mișcarea), nu doar pentru mortaze.
+- Baza de cunoștințe: `03_FURNITURE/bedroom/FISA_DORMITOR.md` (clase de vizibilitate A/B/C, reguli MIX, niveluri PREMIUM/STANDARD/ESENȚIAL) și secțiunile de fronturi de comodă.
 - **Blatul se vede din scânduri**: în modul Normal și peste, blatul încleiat e desenat ca scânduri separate (fiecare solid propriu, cu fibra pe scândură).
 - **Lamele (biscuiți) între scânduri**: #20 (56×23×4) de la 20 mm grosime, #10 sub; centrate în grosime (2 rânduri de la 45 mm); primele la 60 mm de capete, distribuite uniform la cel mult „Pas lamele” (200 mm implicit, parametru nou). Numărul și poziția se recalculează la orice schimbare de lungime/lățime/grosime/pas. Canalele sunt decupate boolean în ambele scânduri, lamelele apar ca solide ovale 3D (Inginerie+), intră în BOM/cost și în notele de montaj.
 - Exportul de piese: fiecare scândură de blat e o piesă separată; lamelele au layerul `Debitare::04 Lamele`.

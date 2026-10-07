@@ -117,3 +117,37 @@ namespace RhinoWood.Tests
         }
     }
 }
+
+namespace RhinoWood.Tests
+{
+    public class TopFastenerCountTests
+    {
+        private static int OnApron(RhinoWood.Core.Projects.ProjectResult r, string id) => r.Model.HardwareInstalls.Count(h => h.HostPartId == id);
+
+        [Fact]
+        public void ShortAprons_GetMoreFasteners_WhenTheTableGrows_AndTheCountIsOddWithACentreOne()
+        {
+            var small = WoodProject.CreateTable("t"); small.SetParameter("length", 1400); small.SetParameter("width", 700); var rs = small.Recalculate();
+            var wide = WoodProject.CreateTable("t"); wide.SetParameter("length", 1400); wide.SetParameter("width", 1400); var rw = wide.Recalculate();
+            Assert.True(OnApron(rw, "APR-S-1") > OnApron(rs, "APR-S-1"));
+            Assert.Equal(OnApron(rw, "APR-S-1"), OnApron(rw, "APR-S-2"));
+            Assert.Equal(1, OnApron(rw, "APR-S-1") % 2);
+            var ys = rw.Model.HardwareInstalls.Where(h => h.HostPartId == "APR-S-1").Select(h => h.Point.Y).OrderBy(v => v).ToList();
+            Assert.Equal(rw.Model.FindPart("TOP-1").Bounds.Center.Y, ys[ys.Count / 2], 3);           // one on the centre line
+            Assert.Equal(ys.First() - rw.Model.FindPart("TOP-1").Bounds.Min.Y, rw.Model.FindPart("TOP-1").Bounds.Max.Y - ys.Last(), 3);   // symmetric
+        }
+
+        [Fact]
+        public void Square1400_HasSeveralFastenersOnAllFourAprons() { var p = WoodProject.CreateTable("t"); p.SetParameter("length", 1400); p.SetParameter("width", 1400); var r = p.Recalculate(); Assert.All(new[] { "APR-L-1", "APR-L-2", "APR-S-1", "APR-S-2" }, a => Assert.True(OnApron(r, a) >= 3, a)); Assert.DoesNotContain(r.Issues, i => i.Code == "MOVEMENT_FASTENER" && i.Message.Contains("Slotted")); }
+
+        [Fact]
+        public void ClipTravelWarning_GetsAFixThatChangesTheTopFixing()
+        {
+            var p = WoodProject.CreateTable("t"); p.SetParameter("length", 1600); p.SetParameter("width", 1150); var r = p.Recalculate();
+            Assert.Contains(r.Issues, i => i.Code == "MOVEMENT_FASTENER");
+            var fixes = RemedyEngine.Suggest(p, r);
+            Assert.NotEmpty(fixes); Assert.All(fixes, f => Assert.Equal("topFixing", f.ChoiceKey));
+            RemedyEngine.Apply(p, fixes[0]); Assert.DoesNotContain(p.Recalculate().Issues, i => i.Code == "MOVEMENT_FASTENER");
+        }
+    }
+}

@@ -303,7 +303,7 @@ namespace RhinoWood.Core.Furniture
                 return new Boxed<List<JointEngine.Request>>(reqs, jl + js + r.Get<Boxed<List<PartFamily>>>("comp.legs").Fingerprint + r.Get<Boxed<List<PartFamily>>>("comp.aprons").Fingerprint);
             });
 
-            g.AddComputed("hardware.installs", new[] { "comp.aprons", "comp.top", "clipSpacing", "top.fixing", "leg.section", "span.x", "overhang" }, r =>
+            g.AddComputed("hardware.installs", new[] { "comp.aprons", "comp.top", "clipSpacing", "top.fixing", "leg.section", "span.x", "span.y", "overhang" }, r =>
             {
                 var aprons = r.Get<Boxed<List<PartFamily>>>("comp.aprons").Value;
                 var list = new List<HardwareInstall>();
@@ -335,15 +335,27 @@ namespace RhinoWood.Core.Furniture
                         list.Add(hi);
                     }
                 }
-                foreach (var ap in aprons[1].Instances)   // short aprons: one fixed-centre slotted screw
+                // short aprons run ALONG the direction in which the top moves, so clips cannot be used: slotted screws (long slot axis = movement direction).
+                // Same spacing rule as the long aprons; the count is odd so there is always one screw on the centre line (the point that does not move);
+                // screws far from the centre need a longer slot (travel = distance x movement coefficient x moisture swing).
+                double sLeg = r.Get<double>("leg.section"), oh = r.Get<double>("overhang"), spanY = r.Get<double>("span.y");
+                double ya = oh + sLeg + 80, yb = oh + spanY - sLeg - 80, yMid = (ya + yb) / 2;
+                int ns = Math.Max(1, (int)Math.Ceiling((yb - ya) / spacing) + 1); if (ns % 2 == 0) ns++;
+                if (yb - ya < 100) ns = 1;
+                foreach (var ap in aprons[1].Instances)
                 {
-                    double xc = (ap.Bounds.Min.X + ap.Bounds.Max.X) / 2, yc = (ap.Bounds.Min.Y + ap.Bounds.Max.Y) / 2;
-                    list.Add(new HardwareInstall
+                    double xc = (ap.Bounds.Min.X + ap.Bounds.Max.X) / 2;
+                    for (int i = 0; i < ns; i++)
                     {
-                        HardwareId = "TOP-SLOTSCREW", HostPartId = ap.Id, MatePartId = "TOP-1",
-                        Point = new Vec3(xc, yc, zTop), Normal = new Vec3(0, 0, -1), AxisU = new Vec3(0, 1, 0), AxisV = new Vec3(1, 0, 0),
-                        MatePoint = new Vec3(xc, yc, zTop), MateNormal = new Vec3(0, 0, 1), MateAxisV = new Vec3(1, 0, 0)
-                    });
+                        double yc = ns == 1 ? yMid : ya + (yb - ya) * i / (ns - 1);
+                        double travel = Math.Abs(yc - topPart.Bounds.Center.Y) * 0.0045 * 5;      // conservative: 0.45 %/% x 5 % swing
+                        list.Add(new HardwareInstall
+                        {
+                            HardwareId = travel > 8 ? "TOP-SLOTSCREW-L" : "TOP-SLOTSCREW", HostPartId = ap.Id, MatePartId = "TOP-1",
+                            Point = new Vec3(xc, yc, zTop), Normal = new Vec3(0, 0, -1), AxisU = new Vec3(0, 1, 0), AxisV = new Vec3(1, 0, 0),
+                            MatePoint = new Vec3(xc, yc, zTop), MateNormal = new Vec3(0, 0, 1), MateAxisV = new Vec3(1, 0, 0)
+                        });
+                    }
                 }
                 return new Boxed<List<HardwareInstall>>(list, fix + string.Join("|", list.Select(h => h.HardwareId + h.Point)));
             });
