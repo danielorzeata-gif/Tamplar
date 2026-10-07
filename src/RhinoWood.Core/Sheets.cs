@@ -64,6 +64,9 @@ namespace RhinoWood.Core.Reports
             return list;
         }
 
+        /// <summary>Customer price: production cost x (1 + margin), rounded up to 10.</summary>
+        public static double SalePrice(WoodProject p, ProjectResult r) => Math.Ceiling(r.Cost.Total * (1 + p.Settings.SalesMarginPercent / 100.0) / 10.0) * 10.0;
+
         public static string TierName(WoodProject p) => p.Tier == null ? null : p.Tier + (p.TierMatches ? "" : " (modificat)");
 
         // ================================================================= 1. technical sheet (also the live preview in the interface)
@@ -433,7 +436,7 @@ namespace RhinoWood.Core.Reports
         // ================================================================= offer (SALE mode) - no internal costs, stock codes or waste
         private static Sheet OfferSheet(WoodProject p, ProjectResult r, string variant)
         {
-            double price = Math.Ceiling(r.Cost.Total * (1 + p.Settings.SalesMarginPercent / 100.0) / 10.0) * 10.0;
+            double price = SalePrice(p, r);
             var bb = r.Model.Bounds.Size;
             var sb = new StringBuilder();
             sb.Append($"<div class='offer'><div class='display'>{E(p.Name)}</div><div class='muted'>{E(SpeciesName(p, p.SpeciesId))}{(string.IsNullOrEmpty(variant) ? "" : " · variantă " + E(variant))}</div>");

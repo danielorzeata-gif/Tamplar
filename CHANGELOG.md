@@ -11,6 +11,7 @@
 - Species data replaced by verified DIN 68364/68100 values (`DataLabel` [V-DATA]/[UNVERIFIED]); Janka removed (R17); default moisture swing 5 points.
 - `knowledge/Wood/13_DESIGN_AND_ENGINEERING/RULES_EN_PEER_REVIEW_2026.md` added; `docs/UI_SPEC.md`.
 - PDF sheets in the Atelier style (Romanian, diacritics): technical sheet (live preview), joint dimensions, cutting plan + cut list, order & cost, assembly notes; SALE mode (offer only, no internal costs/waste/stock codes); `WoodPdf`, `WoodSheet` commands and a "Fișă tehnică" panel.
+- Atelier panel (Eto): tokens, controls and the full panel with ECONOMA/STANDARD/PREMIUM variants, draft + viewport preview before generation; modal new-project dialog removed; DEPOZIT_LEMN replaced by "Necesar lucrare".
 - `knowledge/Wood`: imported knowledge base + iteration 9 research on doors, windows, furniture matrix, hardware; `docs/ROADMAP_V2.md`.
 
 ## 1.0.0

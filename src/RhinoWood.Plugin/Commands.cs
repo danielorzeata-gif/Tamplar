@@ -26,6 +26,7 @@ namespace RhinoWood.Plugin
         /// <summary>Recalculate everything, then update Rhino geometry for the current display mode.</summary>
         public static void Refresh(RhinoDoc doc, bool announce = true)
         {
+            if (!P.Generated) { P.Recalculate(); return; }      // draft: only the viewport preview exists
             var r = P.Recalculate();
             var prims = P.Project.GenerateGeometry();
             var rep = RhinoSync.Sync(doc, P.Project, prims, P.Project.CustomComponents);
@@ -38,6 +39,25 @@ namespace RhinoWood.Plugin
                 foreach (var i in r.Issues.Where(i => i.Severity != Severity.Info)) RhinoApp.WriteLine("  " + i);
             }
             if (rep.ManualEdits.Count > 0) ResolveManualEdits(doc, rep);
+        }
+
+        /// <summary>Writes the draft into the document (idempotent) and stops the viewport preview.</summary>
+        public static void Generate(RhinoDoc doc)
+        {
+            if (!RequireProject()) return;
+            P.Generated = true;
+            Refresh(doc, true);
+            RhinoApp.RunScript("-_Zoom _Extents", false);
+        }
+
+        /// <summary>Selects the Rhino objects of a part so a click on a cutting-list row highlights it in the viewport.</summary>
+        public static void SelectPart(RhinoDoc doc, string partId)
+        {
+            if (doc == null || P.Project == null || !P.Generated) return;
+            doc.Objects.UnselectAll();
+            foreach (var o in doc.Objects.GetObjectList(new Rhino.DocObjects.ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = false, HiddenObjects = false }))
+                if (o.Attributes.GetUserString(RhinoSync.KProject) == P.Project.Id && o.Attributes.GetUserString(RhinoSync.KPart) == partId) o.Select(true);
+            doc.Views.Redraw();
         }
 
         private static void ResolveManualEdits(RhinoDoc doc, RhinoSync.SyncReport rep)
@@ -68,19 +88,15 @@ namespace RhinoWood.Plugin
         public override string EnglishName => "WoodNewTable";
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
-            var lib = WoodActions.P.Library;
-            var project = WoodProject.CreateTable("Masă sufragerie", "OAK", lib);
-            var dlg = new RhinoWood.Plugin.UI.NewProjectDialog(doc, project);
-            var p = dlg.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow);
-            if (p == null) return Result.Cancel;
-            WoodActions.P.SetProject(p);
-            WoodActions.Refresh(doc);
-            RhinoApp.RunScript("-_Zoom _Extents", false);
+            // Atelier: no modal dialogs. A draft is created in the panel and previewed in the viewport; "Generează" writes it into the document.
+            var project = WoodProject.CreateTable("Masă sufragerie", "OAK", WoodActions.P.Library);
+            WoodActions.P.PreviewOn = true;
+            WoodActions.P.SetProject(project, generated: false);
             Rhino.UI.Panels.OpenPanel(typeof(RhinoWood.Plugin.UI.WoodPanel).GUID);
+            RhinoApp.WriteLine("Rhino Wood: ciornă creată; ajustează în panou, apoi apasă Generează.");
             return Result.Success;
         }
     }
-
     [System.Runtime.InteropServices.Guid("2f0f8a3a-6c1e-4b53-b9a4-0a1c3d5e7f02")]
     public class WoodSetCommand : Command
     {

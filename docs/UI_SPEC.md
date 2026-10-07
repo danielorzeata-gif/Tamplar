@@ -49,7 +49,17 @@ PDF is rendered from HTML/SVG with an installed Chromium browser (Edge ships wit
 ## Field provenance, rules, room purchase (unchanged)
 See previous sections: `FieldInfo.Source` (standard / set / piece override), three feedback levels (blocked / warning / info-needs testing) driven by `RuleCatalog` R1–R19, one global purchase per room (`RoomResult.Saving`).
 
+## Implementation status
+| Part | State |
+|---|---|
+| Atelier tokens (light/dark from host theme), controls: button, segmented, section, parameter field (−/+, limits shown not blocked), tier selector, cutting list (waste red, click selects the part in the viewport), price summary | written, compiles; **not yet run in Rhino** |
+| Panel order: header (DESIGN/VÂNZARE) → ELEMENT → DIMENSIUNI (+ AVANSATE) → VARIANTĂ → ÎMBINĂRI → VERIFICĂRI → DEBITARE (DESIGN only) → COST / OFERTĂ → DOCUMENTE; footer [Previzualizare] [Generează] | written, compiles |
+| Draft flow: `WoodNewTable` creates a draft, the viewport shows the preview (display conduit), nothing is in the document until **Generează**; later edits update the geometry | written, compiles |
+| Modal "new project" dialog | **removed** (Atelier: modal dialogs only for delete confirmations) |
+| DEPOZIT_LEMN / stock badges | **dropped by decision**: the list shows "Necesar lucrare" (what to cut and order), no stock states |
+| Sections still missing: CAMERĂ (rooms/pieces/sets in the panel), detail library, casework, door, window | next |
+
 ## Next implementation steps
-1. Replace the modal `NewProjectDialog` with the Atelier panel flow (Previzualizare → Generează) + Fișă panel (done) + tokens (colors/typography/spacing) in Eto.
-2. **DEPOZIT_LEMN** import (`depozit_lemn.xlsx`: Cod, Grupa, Grosime, Latime, Diametru, Lungime, Pret, Lei/m, Specie, Observatii) → stock badges (● în stoc / ▲ stoc mic / ○ lipsă) and stock-first optimization.
-3. Tier presets for the Structure set; detail library; casework pieces; door/window.
+1. Run the panel in Rhino and fix what the first screenshots show (layout, fonts, dark theme).
+2. CAMERĂ section: rooms, pieces and the two style sets in the panel (Core `Workspace` is ready); room tier.
+3. Detail library (edge profiles, foot shapes, front styles, handles) and casework pieces (nightstand, dresser, wardrobe, bed), then door and window.

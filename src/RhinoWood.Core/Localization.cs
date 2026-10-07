@@ -46,6 +46,18 @@ namespace RhinoWood.Core.Reports
         public static string Joint(IJointDefinition d) => Joints.TryGetValue(d.Id, out var v) ? v : d.Name;
         public static string Joint(string id, string fallback) => Joints.TryGetValue(id, out var v) ? v : fallback;
         public static string HardwareName(string id, string fallback) => Hardware.TryGetValue(id, out var v) ? v : fallback ?? id;
+        private static readonly Dictionary<string, string> Params = new Dictionary<string, string>
+        {
+            ["length"] = "Lungime", ["width"] = "Lățime", ["height"] = "Înălțime", ["topThickness"] = "Grosime blat", ["legSectionUser"] = "Secțiune picior (0 = regulă)",
+            ["apronHeight"] = "Înălțime zargă", ["apronThickness"] = "Grosime zargă", ["overhang"] = "Prelungire blat", ["reveal"] = "Retragere zargă", ["clipSpacing"] = "Pas fixare blat"
+        };
+        private static readonly Dictionary<string, string> Choices = new Dictionary<string, string>
+        {
+            ["jointApronLong"] = "Zargă lungă – picior", ["jointApronShort"] = "Zargă scurtă – picior", ["topFixing"] = "Fixare blat"
+        };
+        public static string Param(string key, string fallback) => Params.TryGetValue(key, out var v) ? v : fallback;
+        public static string Choice(string key, string fallback) => Choices.TryGetValue(key, out var v) ? v : fallback;
+        public static string Group(string g) => g == "Joinery" ? "Îmbinări" : g == "Hardware" ? "Feronerie" : g == "Main" ? "Principale" : g;
         public static string FurnitureName(string typeId, string fallback) => typeId == "table.dining" ? "Masă de sufragerie din lemn masiv" : fallback;
         public static string Feature(FeatureKind k) => Features.TryGetValue(k, out var v) ? v : k.ToString();
 

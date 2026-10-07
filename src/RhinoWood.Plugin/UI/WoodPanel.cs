@@ -7,26 +7,36 @@ using Eto.Drawing;
 using Eto.Forms;
 using Rhino;
 using RhinoWood.Core.Domain;
-using RhinoWood.Core.Projects;
+using RhinoWood.Core.Furniture;
 using RhinoWood.Core.Optimization;
+using RhinoWood.Core.Projects;
 using RhinoWood.Core.Reports;
+using RhinoWood.Plugin.UI.Atelier;
 
 namespace RhinoWood.Plugin.UI
 {
     /// <summary>
-    /// Dockable Rhino panel with the 12 sections of the system. Business logic lives in RhinoWood.Core; this class only presents it.
-    /// Progressive disclosure: advanced parameters sit in a collapsed expander.
+    /// The Atelier panel: ONE docked panel (320 px), no windows. Header (title + DESIGN/VÂNZARE) → ELEMENT → DIMENSIUNI → VARIANTĂ →
+    /// ÎMBINĂRI → VERIFICĂRI → DEBITARE (DESIGN) → COST / OFERTĂ → DOCUMENTE, and a footer with [Previzualizare] (secondary, left) and
+    /// [Generează] (the single primary action, right). Business logic stays in RhinoWood.Core.
     /// </summary>
     [Guid("a7d2c1f4-93b0-4c1e-8f65-5b0f6d3e2a10")]
     public class WoodPanel : Panel
     {
-        private readonly TabControl _tabs = new TabControl { Size = new Size(380, 600) };
         private static WoodPlugin P => WoodPlugin.Instance;
+        private readonly AtSegmented _mode = new AtSegmented("DESIGN", "VÂNZARE");
+        private bool _internal;
+        private AtSection _verif, _debit, _cost;
+        private Label _tierNote;
+        private AtButton _previewBtn;
 
         public WoodPanel()
         {
-            Content = _tabs;
-            P.ProjectChanged += (s, e) => Application.Instance.AsyncInvoke(Rebuild);
+            Tk.Init();
+            BackgroundColor = Tk.Surface;
+            MinimumSize = new Size(300, 240);
+            _mode.SelectedChanged += (s, e) => Rebuild();
+            P.ProjectChanged += (s, e) => { if (_internal) return; Application.Instance.AsyncInvoke(Rebuild); };
             Rebuild();
         }
 
@@ -44,209 +54,236 @@ namespace RhinoWood.Plugin.UI
             }
         }
 
-        private void Rebuild()
-        {
-            int sel = _tabs.SelectedIndex;
-            _tabs.Pages.Clear();
-            var p = P.Project; var r = P.LastResult;
-            _tabs.Pages.Add(new TabPage { Text = "PROJECT", Content = ProjectPage(p, r) });
-            if (p != null && r != null)
-            {
-                _tabs.Pages.Add(new TabPage { Text = "FURNITURE", Content = FurniturePage(p) });
-                _tabs.Pages.Add(new TabPage { Text = "COMPONENTS", Content = Grid(new[] { "Id", "Name", "Qty", "Finished", "Rough", "Species" }, r.Model.Families.Select(f => new[] { f.Id, f.Name, f.Quantity.ToString(), f.Finished.ToString(), string.Join(" + ", f.RoughPieces.Select(x => x.CountPerPart + "x " + x.Rough)), f.SpeciesId })) });
-                _tabs.Pages.Add(new TabPage { Text = "MATERIALS", Content = MaterialsPage(p) });
-                _tabs.Pages.Add(new TabPage { Text = "JOINERY", Content = Grid(new[] { "Joint", "Type", "A", "B", "Detail" }, r.Model.Joints.Select(j => new[] { j.Id, j.JointTypeId, j.PartAId, j.PartBId, j.Description + (j.Mitred ? " [mitred]" : "") })) });
-                _tabs.Pages.Add(new TabPage { Text = "HARDWARE", Content = Grid(new[] { "Id", "Hardware", "Host", "Mate", "Features" }, r.Model.HardwareInstalls.Select(h => new[] { h.Id, h.HardwareId, h.HostPartId, h.MatePartId, h.FeatureIds.Count.ToString() })) });
-                _tabs.Pages.Add(new TabPage { Text = "ENGINEERING", Content = EngineeringPage(p, r) });
-                _tabs.Pages.Add(new TabPage { Text = "MANUFACTURING", Content = Grid(new[] { "Op", "Part", "Type", "Description", "Min" }, r.Manufacturing.Operations.Select(o => new[] { o.Id, o.PartId, o.Type.ToString(), o.Description, o.Minutes.ToString("0.#", CultureInfo.InvariantCulture) })) });
-                _tabs.Pages.Add(new TabPage { Text = "OPTIMIZATION", Content = OptimizationPage(p, r) });
-                _tabs.Pages.Add(new TabPage { Text = "PROCUREMENT", Content = ProcurementPage(r) });
-                _tabs.Pages.Add(new TabPage { Text = "DOCUMENTATION", Content = DocumentationPage() });
-                _tabs.Pages.Add(new TabPage { Text = "SETTINGS", Content = SettingsPage(p) });
-            }
-            if (sel >= 0 && sel < _tabs.Pages.Count) _tabs.SelectedIndex = sel;
-        }
-
-        // ------------------------------------------------------------------ helpers
-        private static GridView Grid(string[] headers, IEnumerable<string[]> rows)
-        {
-            var g = new GridView { DataStore = rows.ToList(), AllowMultipleSelection = false };
-            for (int i = 0; i < headers.Length; i++)
-            {
-                int col = i;
-                g.Columns.Add(new GridColumn { HeaderText = headers[i], DataCell = new TextBoxCell { Binding = Binding.Delegate<string[], string>(x => x[col]) }, AutoSize = true });
-            }
-            return g;
-        }
-
-        private static Button Btn(string text, Action a) { var b = new Button { Text = text }; b.Click += (s, e) => { try { a(); } catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); } }; return b; }
-
+        private bool Sale => _mode.SelectedIndex == 1;
         private static void Run(string cmd) => RhinoApp.RunScript("_" + cmd, true);
 
-        private Control ProjectPage(WoodProject p, ProjectResult r)
+        // ----------------------------------------------------------------------------------------- build
+        private void Rebuild()
         {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            l.AddRow(new Label { Text = p == null ? "No active project" : p.Name, Font = new Font(SystemFont.Bold, 11) });
-            if (p != null && r != null)
+            Tk.Init(); BackgroundColor = Tk.Surface;
+            var p = P.Project;
+            var header = new TableLayout
             {
-                l.AddRow(new Label { Text = "Type: " + p.Furniture.Name });
-                l.AddRow(new Label { Text = "Species: " + p.SpeciesId + "   Project ID: " + p.Id });
-                l.AddRow(new Label { Text = string.Format("Parts: {0}   Families: {1}   Joints: {2}   Hardware: {3}", r.Model.AllParts.Count(), r.Model.Families.Count, r.Model.Joints.Count, r.Model.HardwareInstalls.Count) });
-                l.AddRow(new Label { Text = string.Format("Purchase: {0}", string.Join(", ", r.Optimization.Purchase.Select(x => x.Quantity + "x " + x.Item.Label + "x" + x.Length))) });
-                l.AddRow(new Label { Text = string.Format("Total cost: {0:0.00} {1}", r.Cost.Total, r.Cost.Currency) });
-                l.AddRow(new Label { Text = string.Format("Issues: {0} errors, {1} warnings", r.Issues.Count(i => i.Severity == Severity.Error), r.Issues.Count(i => i.Severity == Severity.Warning)) });
+                Padding = new Padding(12, 8, 12, 8), Spacing = new Size(8, 0), BackgroundColor = Tk.Surface,
+                Rows = { new TableRow(new Label { Text = "Atelier", Font = Tk.PanelTitle, TextColor = Tk.Ink, VerticalAlignment = VerticalAlignment.Center }, new TableCell(null, true), _mode) }
+            };
+
+            var body = new StackLayout { Orientation = Orientation.Vertical, Spacing = 0, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+            if (p == null) body.Items.Add(new StackLayoutItem(EmptySection(), HorizontalAlignment.Stretch));
+            else
+            {
+                body.Items.Add(new StackLayoutItem(ElementSection(p), HorizontalAlignment.Stretch));
+                body.Items.Add(new StackLayoutItem(DimensionsSection(p), HorizontalAlignment.Stretch));
+                body.Items.Add(new StackLayoutItem(TierSection(p), HorizontalAlignment.Stretch));
+                body.Items.Add(new StackLayoutItem(JointsSection(p), HorizontalAlignment.Stretch));
+                _verif = new AtSection("Verificări", null, true); body.Items.Add(new StackLayoutItem(_verif, HorizontalAlignment.Stretch));
+                if (!Sale) { _debit = new AtSection("Debitare", "necesar lucrare", true); body.Items.Add(new StackLayoutItem(_debit, HorizontalAlignment.Stretch)); }
+                else _debit = null;
+                _cost = new AtSection(Sale ? "Ofertă" : "Cost", null, true); body.Items.Add(new StackLayoutItem(_cost, HorizontalAlignment.Stretch));
+                body.Items.Add(new StackLayoutItem(DocumentsSection(), HorizontalAlignment.Stretch));
+                UpdateResults();
             }
-            l.AddRow(Btn("New dining table...", () => Run("WoodNewTable")));
-            l.AddRow(Btn("Open project file...", () => Run("WoodOpen")), Btn("Save project file...", () => Run("WoodSave")));
-            l.AddRow(Btn("Recalculate", () => { if (RhinoDoc.ActiveDoc != null && P.Project != null) WoodActions.Refresh(RhinoDoc.ActiveDoc); }));
-            l.Add(null);
-            return l;
+
+            _previewBtn = new AtButton(P.PreviewOn ? "Ascunde previzualizarea" : "Previzualizare", BtnVariant.Secondary);
+            _previewBtn.Click += (s, e) => { P.PreviewOn = !P.PreviewOn; _previewBtn.Text = P.PreviewOn ? "Ascunde previzualizarea" : "Previzualizare"; PreviewService.Refresh(); };
+            var gen = new AtButton(P.Generated ? "Actualizează" : "Generează", BtnVariant.Primary);
+            gen.Click += (s, e) => { if (RhinoDoc.ActiveDoc != null && P.Project != null) { WoodActions.Generate(RhinoDoc.ActiveDoc); Application.Instance.AsyncInvoke(Rebuild); } };
+            var footer = new TableLayout
+            {
+                Padding = new Padding(12, 8), Spacing = new Size(8, 0), BackgroundColor = Tk.Surface,
+                Rows = { new TableRow(_previewBtn, new TableCell(null, true), gen) }
+            };
+            if (p == null) { _previewBtn.Enabled = false; gen.Enabled = false; }
+
+            Content = new TableLayout
+            {
+                Rows =
+                {
+                    new TableRow(header),
+                    new TableRow(new Scrollable { Content = body, Border = BorderType.None, ExpandContentWidth = true, BackgroundColor = Tk.Surface }) { ScaleHeight = true },
+                    new TableRow(footer)
+                }
+            };
         }
 
-        private Control FurniturePage(WoodProject p)
+        private Control EmptySection()
         {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            var advanced = new DynamicLayout { Spacing = new Size(6, 6) };
-            foreach (var def in p.Furniture.Parameters)
+            var s = new AtSection("Element", "niciunul", true);
+            s.Add(new Label { Text = "Niciun element activ. Creează o masă din lemn masiv; vei vedea previzualizarea în viewport înainte de generare.", Font = Tk.Label, TextColor = Tk.InkMuted, Wrap = WrapMode.Word });
+            var b = new AtButton("Masă de sufragerie", BtnVariant.Secondary); b.Click += (s2, e) => Run("WoodNewTable");
+            s.Add(b);
+            return s;
+        }
+
+        private Control ElementSection(WoodProject p)
+        {
+            var s = new AtSection("Element", Ro.FurnitureName(p.Furniture.TypeId, p.Furniture.Name), true);
+            s.Add(new Label { Text = "Mobilier › " + p.Furniture.Category.Replace("Tables", "Mese") + " › " + Ro.FurnitureName(p.Furniture.TypeId, p.Furniture.Name), Font = Tk.Label, TextColor = Tk.InkMuted });
+            var dd = new DropDown { Font = Tk.Label, BackgroundColor = Tk.Raised, TextColor = Tk.Ink };
+            foreach (var sp in p.Library.Species.Values.OrderBy(x => Ro.SpeciesName(x.Id, x.Name))) dd.Items.Add(new ListItem { Text = Ro.SpeciesName(sp.Id, sp.Name) + (sp.DataLabel == "[UNVERIFIED]" ? " (date neverificate)" : ""), Key = sp.Id });
+            dd.SelectedKey = p.SpeciesId;
+            dd.SelectedKeyChanged += (s2, e) => { if (dd.SelectedKey != p.SpeciesId) { p.SetSpecies(dd.SelectedKey); AfterEdit(); } };
+            s.Add(Field("Esență", dd));
+            return s;
+        }
+
+        private Control DimensionsSection(WoodProject p)
+        {
+            var main = p.Furniture.Parameters.Where(d => !d.Advanced).ToList(); var adv = p.Furniture.Parameters.Where(d => d.Advanced).ToList();
+            var s = new AtSection("Dimensiuni", main.Count + " parametri", true);
+            foreach (var d in main) s.Add(ParamControl(p, d));
+            if (adv.Count > 0)
             {
-                var d = def;
-                var ns = new NumericStepper { MinValue = d.Min, MaxValue = d.Max, DecimalPlaces = 0, Increment = 5, Value = p.Parameters[d.Key] };
-                ns.Value = Math.Max(d.Min, Math.Min(d.Max, p.Parameters[d.Key]));
-                ns.LostFocus += (s, e) =>
+                var a = new AtSection("Avansate", adv.Count + " parametri", false);
+                foreach (var d in adv) a.Add(ParamControl(p, d));
+                s.Add(a);
+            }
+            return s;
+        }
+
+        private Control ParamControl(WoodProject p, ParameterDef d)
+        {
+            var f = new AtParam(Ro.Param(d.Key, d.Label), (int)Math.Round(p.Parameters[d.Key]), (int)d.Min, (int)d.Max, d.Key == "topThickness" ? 5 : 10);
+            f.Committed += (s, v) => { try { p.SetParameter(d.Key, v); AfterEdit(); } catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); } };
+            return f;
+        }
+
+        private Control TierSection(WoodProject p)
+        {
+            var tiers = p.Furniture.Tiers;
+            var s = new AtSection("Variantă", p.Tier, true);
+            if (tiers.Count == 0) { s.Add(new Label { Text = "Acest element nu are variante.", Font = Tk.Label, TextColor = Tk.InkMuted }); return s; }
+            var sel = new AtTierSelector(tiers.Select(t => t.Id).ToArray(), tiers.Select(t => t.Meta).ToArray(), p.Tier);
+            sel.SelectedChanged += (s2, e) => { try { p.ApplyTier(sel.Selected); AfterEdit(); } catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); } Application.Instance.AsyncInvoke(Rebuild); };
+            s.Add(sel);
+            _tierNote = new Label { Font = Tk.Caption, TextColor = Tk.Warn };
+            s.Add(_tierNote);
+            return s;
+        }
+
+        private Control JointsSection(WoodProject p)
+        {
+            var s = new AtSection("Îmbinări", p.Furniture.Choices.Count + " alegeri", true);
+            foreach (var ch in p.Furniture.Choices)
+            {
+                var choice = ch;
+                var dd = new DropDown { Font = Tk.Label, BackgroundColor = Tk.Raised, TextColor = Tk.Ink };
+                foreach (var o in choice.Options) dd.Items.Add(new ListItem { Text = OptionLabel(p, choice, o), Key = o });
+                dd.SelectedKey = p.Choices[choice.Key];
+                var note = new Label { Font = Tk.Caption, TextColor = Tk.InkMuted, Wrap = WrapMode.Word, Text = OptionNote(p, choice, dd.SelectedKey) };
+                dd.SelectedKeyChanged += (s2, e) =>
                 {
-                    if (Math.Abs(ns.Value - p.Parameters[d.Key]) < 1e-9) return;
-                    try { p.SetParameter(d.Key, ns.Value); WoodActions.Refresh(RhinoDoc.ActiveDoc, false); }
+                    if (dd.SelectedKey == p.Choices[choice.Key]) return;
+                    try { p.SetChoice(choice.Key, dd.SelectedKey); note.Text = OptionNote(p, choice, dd.SelectedKey); AfterEdit(); }
                     catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); }
                 };
-                (d.Advanced ? advanced : l).AddRow(new Label { Text = d.Label + " (" + d.Unit + ")", ToolTip = d.Description }, ns);
+                s.Add(Field(Ro.Choice(choice.Key, choice.Label), dd));
+                s.Add(note);
             }
-            l.AddRow(new Expander { Header = "Advanced parameters", Expanded = false, Content = advanced });
-            foreach (var grp in p.Furniture.Choices.GroupBy(c => c.Group))
+            return s;
+        }
+
+        private static string OptionLabel(WoodProject p, ChoiceDef c, string id) =>
+            c.Kind == "joint" ? Ro.Joint(p.Joints.Get(id)) : Ro.HardwareName(id, p.Library.Hardware.TryGetValue(id, out var h) ? h.Model : id);
+
+        private static string OptionNote(WoodProject p, ChoiceDef c, string id)
+        {
+            if (c.Kind != "joint") return p.Library.Hardware.TryGetValue(id, out var h) ? "cursă " + h.TravelAllowance.ToString("0.#", CultureInfo.InvariantCulture) + " mm" : "";
+            var i = p.Joints.Get(id).Info;
+            return "rezistență " + Dots(i.Strength) + " · dificultate " + Dots(i.Difficulty) + " · " + (i.VisibleFromOutside ? "aparentă" : "ascunsă");
+        }
+        private static string Dots(int n) => new string('●', Math.Max(0, Math.Min(5, n))) + new string('○', 5 - Math.Max(0, Math.Min(5, n)));
+
+        private Control DocumentsSection()
+        {
+            var s = new AtSection("Documente", "PDF", false);
+            var a = new AtButton("Fișă tehnică (previzualizare)", BtnVariant.Quiet); a.Click += (x, e) => Run("WoodSheet");
+            var b = new AtButton(Sale ? "Exportă oferta PDF" : "Exportă planșe PDF", BtnVariant.Secondary); b.Click += (x, e) => Run("WoodPdf");
+            var c = new AtButton("Exportă toate documentele…", BtnVariant.Quiet); c.Click += (x, e) => Run("WoodReport");
+            s.Add(a); s.Add(b); s.Add(c);
+            return s;
+        }
+
+        private static Control Field(string label, Control c) =>
+            new StackLayout { Orientation = Orientation.Vertical, Spacing = 4, HorizontalContentAlignment = HorizontalAlignment.Stretch, Items = { new Label { Text = label, Font = Tk.Label, TextColor = Tk.Ink }, c } };
+
+        // ----------------------------------------------------------------------------------------- editing
+        private void AfterEdit()
+        {
+            _internal = true;
+            try
             {
-                l.AddRow(new Label { Text = grp.Key.ToUpperInvariant(), Font = new Font(SystemFont.Bold) });
-                foreach (var ch in grp)
+                var doc = RhinoDoc.ActiveDoc;
+                if (P.Generated && doc != null) WoodActions.Refresh(doc, false); else P.Recalculate();
+            }
+            finally { _internal = false; }
+            UpdateResults();
+        }
+
+        /// <summary>Refreshes the result sections (checks, cutting list, cost) without rebuilding the inputs, so typing is never interrupted.</summary>
+        private void UpdateResults()
+        {
+            var p = P.Project; var r = P.LastResult;
+            if (p == null || r == null || _verif == null) return;
+            if (_tierNote != null) _tierNote.Text = p.Tier != null && !p.TierMatches ? "Variantă modificată: alegi altceva decât presetarea " + p.Tier + "." : "";
+
+            _verif.Clear();
+            var issues = r.Issues.Where(i => i.Severity != Severity.Info).ToList();
+            _verif.Meta = issues.Count == 0 ? "în regulă" : issues.Count + " de verificat";
+            if (issues.Count == 0) _verif.Add(new Label { Text = "● Nicio problemă de construcție găsită.", Font = Tk.Label, TextColor = Tk.Ok });
+            foreach (var i in issues.Take(8))
+                _verif.Add(new Label { Text = (i.Severity == Severity.Error ? "○ " : "▲ ") + Ro.Issue(i), Font = Tk.Caption, TextColor = i.Severity == Severity.Error ? Tk.Danger : Tk.Warn, Wrap = WrapMode.Word });
+            if (issues.Count > 8) _verif.Add(new Label { Text = "… încă " + (issues.Count - 8) + " (vezi planșele PDF).", Font = Tk.Caption, TextColor = Tk.InkMuted });
+
+            if (_debit != null)
+            {
+                _debit.Clear();
+                var rows = CutRows(r);
+                _debit.Meta = rows.Count + " repere · " + r.Optimization.Purchase.Sum(x => x.Quantity) + " bare";
+                var list = new AtCutList(rows);
+                list.RowSelected += (s, row) => WoodActions.SelectPart(RhinoDoc.ActiveDoc, row.PartId);
+                _debit.Add(list);
+                _debit.Add(new Label { Text = "Deșeul este colorat roșu (aceeași culoare ca în viewport).", Font = Tk.Caption, TextColor = Tk.InkMuted });
+            }
+
+            _cost.Clear();
+            var cur = r.Cost.Currency;
+            if (Sale) { _cost.Meta = "preț client"; _cost.Add(AtPrice.Build(new List<(string, string)>(), "Preț", Money.Format(SheetBuilder.SalePrice(p, r), cur))); }
+            else
+            {
+                _cost.Meta = "producție";
+                _cost.Add(AtPrice.Build(new List<(string, string)>
                 {
-                    var choice = ch; var dd = new DropDown();
-                    foreach (var o in choice.Options)
-                        dd.Items.Add(new ListItem { Text = choice.Kind == "joint" ? p.Joints.Get(o).Name + "  (strength " + p.Joints.Get(o).Info.Strength + "/5)" : (p.Library.Hardware.TryGetValue(o, out var h) ? h.Model : o), Key = o });
-                    dd.SelectedKey = p.Choices[choice.Key];
-                    dd.SelectedKeyChanged += (s, e) =>
+                    ("Material", Money.Format(r.Cost.RawMaterial, cur)),
+                    ("Feronerie și mărunțișuri", Money.Format(r.Cost.Hardware + r.Cost.Consumables, cur)),
+                    ("Manoperă", Money.Format(r.Cost.Labor, cur))
+                }, "Cost producție", Money.Format(r.Cost.Total, cur)));
+            }
+        }
+
+        private static List<AtCutList.Row> CutRows(ProjectResult r)
+        {
+            var groups = new Dictionary<string, AtCutList.Row>(); var boards = new Dictionary<string, List<string>>();
+            foreach (var b in r.Optimization.Boards.Where(x => !x.IsReserve))
+                for (int i = 0; i < b.Cuts.Count; i++)
+                {
+                    var c = b.Cuts[i]; var fam = r.Model.Families.First(f => f.Id == c.Demand.FamilyId);
+                    string key = c.Demand.FamilyId + "|" + c.Length.ToString("0.#", CultureInfo.InvariantCulture) + "|" + c.Demand.SecA + "|" + c.Demand.SecB;
+                    if (!groups.TryGetValue(key, out var row))
                     {
-                        if (dd.SelectedKey == p.Choices[choice.Key]) return;
-                        try { p.SetChoice(choice.Key, dd.SelectedKey); WoodActions.Refresh(RhinoDoc.ActiveDoc, true); }
-                        catch (Exception ex) { MessageBox.Show(ex.Message, "Rhino Wood"); }
-                    };
-                    l.AddRow(new Label { Text = choice.Label, ToolTip = choice.Description }, dd);
+                        row = new AtCutList.Row { Name = Ro.Family(fam), Section = c.Demand.SecB.ToString("0") + "×" + c.Demand.SecA.ToString("0"), Length = c.Length.ToString("0"), PartId = c.Demand.PartId };
+                        groups[key] = row; boards[key] = new List<string>();
+                    }
+                    row.Qty++;
+                    if (!boards[key].Contains(b.Id)) boards[key].Add(b.Id);
+                    if (i == b.Cuts.Count - 1 && b.TailClass == RemnantClass.Scrap) row.WasteMm += b.TailLength;
                 }
-            }
-            l.AddRow(Btn("Manual override...", () => Run("WoodOverride")));
-            foreach (var o in p.Overrides)
+            foreach (var kv in groups)
             {
-                var info = p.GetOverride(o.Key);
-                l.AddRow(new Label { Text = string.Format("{0}: rule {1:0.#} {2} {3:0.#} = {4:0.#}", o.Key, info.Calculated, o.Value.Mode == RhinoWood.Core.Parametric.OverrideMode.Add ? "+" : "=>", o.Value.Value, info.Final) });
+                var bl = boards[kv.Key]; kv.Value.Source = bl[0] + (bl.Count > 1 ? " +" + (bl.Count - 1) : "");
+                kv.Value.Waste = kv.Value.WasteMm > 0 ? kv.Value.WasteMm.ToString("0") : "–";
             }
-            l.Add(null);
-            return l;
-        }
-
-        private Control MaterialsPage(WoodProject p)
-        {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            var dd = new DropDown();
-            foreach (var s in p.Library.Species.Values.OrderBy(s => s.Name)) dd.Items.Add(new ListItem { Text = s.Name, Key = s.Id });
-            dd.SelectedKey = p.SpeciesId;
-            dd.SelectedKeyChanged += (s, e) => { if (dd.SelectedKey != p.SpeciesId) { p.SetSpecies(dd.SelectedKey); WoodActions.Refresh(RhinoDoc.ActiveDoc, false); } };
-            l.AddRow(new Label { Text = "Species" }, dd);
-            var sp = p.Library.GetSpecies(p.SpeciesId);
-            l.AddRow(new Label { Text = string.Format(CultureInfo.InvariantCulture, "Density {0} kg/m3, Brinell perp {1}-{2} N/mm2, tangential movement {3:0.0000}/%MC, price {4:0}/m3 {5}", sp.DensityKgM3, sp.BrinellPerpMin, sp.BrinellPerpMax, sp.TangentialMovementPerPercent, sp.PricePerM3, sp.DataLabel) });
-            l.AddRow(Btn("Add custom species...", () => Run("WoodAddSpecies")));
-            l.Add(Grid(new[] { "Profile", "W x T", "Lengths" }, p.Library.StockFor(p.SpeciesId).Select(s => new[] { s.Id, s.Width + " x " + s.Thickness, string.Join(", ", s.Lengths) })));
-            return l;
-        }
-
-        private Control EngineeringPage(WoodProject p, ProjectResult r)
-        {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            var mode = new DropDown();
-            foreach (var m in Enum.GetValues(typeof(DisplayMode))) mode.Items.Add(m.ToString());
-            mode.SelectedKey = p.Settings.Display.ToString();
-            mode.SelectedKeyChanged += (s, e) => { p.Settings.Display = (DisplayMode)Enum.Parse(typeof(DisplayMode), mode.SelectedKey); WoodActions.Refresh(RhinoDoc.ActiveDoc, false); };
-            var grain = new CheckBox { Text = "Show grain direction", Checked = p.Settings.ShowGrain };
-            grain.CheckedChanged += (s, e) => { p.Settings.ShowGrain = grain.Checked == true; WoodActions.Refresh(RhinoDoc.ActiveDoc, false); };
-            l.AddRow(new Label { Text = "Display mode" }, mode); l.AddRow(grain);
-            l.Add(Grid(new[] { "Severity", "Code", "Message" }, r.Issues.Select(i => new[] { i.Severity.ToString(), i.Code, i.Message })), yscale: true);
-            return l;
-        }
-
-        private Control OptimizationPage(WoodProject p, ProjectResult r)
-        {
-            var o = r.Optimization;
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            var strat = new DropDown();
-            foreach (var s in Enum.GetValues(typeof(OptimizationStrategy))) strat.Items.Add(s.ToString());
-            strat.SelectedKey = p.Settings.Strategy.ToString();
-            strat.SelectedKeyChanged += (s, e) => { p.Settings.Strategy = (OptimizationStrategy)Enum.Parse(typeof(OptimizationStrategy), strat.SelectedKey); P.Recalculate(); };
-            l.AddRow(new Label { Text = "Strategy" }, strat);
-            l.Add(new TextArea { ReadOnly = true, Text = ReportBuilder.OptimizationText(r), Size = new Size(360, 220), Font = new Font(FontFamilies.Monospace, 8) });
-            l.Add(new CutPlanView(o, r.Model.Families.Select(f => f.Id).ToList()) { Size = new Size(360, Math.Max(80, o.Boards.Count * 34 + 10)) });
-            return new Scrollable { Content = l };
-        }
-
-        private Control ProcurementPage(ProjectResult r)
-        {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            l.Add(Grid(new[] { "Line", "Material", "Length", "Qty", "Reserve", "Unit", "Total", "Remnant m3", "Waste m3" }, r.Optimization.Purchase.Select(x => new[] { x.Id, x.Item.Label, x.Length.ToString("0"), x.Quantity.ToString(), x.ReserveQuantity.ToString(), x.UnitPrice.ToString("0.00"), x.Total.ToString("0.00"), x.ExpectedUsableRemnantM3.ToString("0.0000"), x.ExpectedWasteM3.ToString("0.0000") })), yscale: true);
-            l.AddRow(new Label { Text = string.Format("Material {0:0.00}  Hardware {1:0.00}  Consumables {2:0.00}  Labor {3:0.00}  TOTAL {4:0.00} {5}", r.Cost.RawMaterial, r.Cost.Hardware, r.Cost.Consumables, r.Cost.Labor, r.Cost.Total, r.Cost.Currency) });
-            return l;
-        }
-
-        private Control DocumentationPage()
-        {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            l.AddRow(new Label { Text = "Exports BOM, cut list, procurement list, manufacturing operations, traceability, joinery and hardware details, assembly sequence, drawings (SVG), exploded view and an HTML project summary." });
-            l.AddRow(Btn("Fișă tehnică (previzualizare)", () => Run("WoodSheet")));
-            l.AddRow(Btn("Exportă planșe PDF", () => Run("WoodPdf")));
-            l.AddRow(Btn("Exportă toate documentele...", () => Run("WoodReport")));
-            l.Add(null);
-            return l;
-        }
-
-        private Control SettingsPage(WoodProject p)
-        {
-            var l = new DynamicLayout { Padding = new Padding(8), Spacing = new Size(6, 6) };
-            l.AddRow(new Label { Text = string.Format("Reserve {0}%, kerf {1} mm, length allowance {2} mm, min remnant {3} mm, labor {4}/h {5}", p.Settings.GlobalReservePercent, p.Settings.Rules.SawKerf, p.Settings.Rules.LengthAllowance, p.Settings.Rules.MinReusableRemnant, p.Settings.Rules.LaborRatePerHour, p.Settings.Currency) });
-            l.AddRow(Btn("Edit settings...", () => Run("WoodSettings")));
-            l.Add(null);
-            return l;
-        }
-    }
-
-    /// <summary>Visual cut plan: each commercial board as a bar with parts, remnants and scrap.</summary>
-    public sealed class CutPlanView : Drawable
-    {
-        private readonly OptimizationResult _o; private readonly List<string> _families;
-        private static readonly Color[] Palette = { Color.FromArgb(192, 132, 90), Color.FromArgb(122, 158, 126), Color.FromArgb(111, 143, 181), Color.FromArgb(181, 143, 176), Color.FromArgb(209, 180, 92), Color.FromArgb(141, 141, 141) };
-        public CutPlanView(OptimizationResult o, List<string> families) { _o = o; _families = families; }
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            if (_o.Boards.Count == 0) return;
-            float w = Width - 20; double max = _o.Boards.Max(b => b.Length); float y = 4;
-            foreach (var b in _o.Boards)
-            {
-                float k = (float)(w / max);
-                e.Graphics.DrawText(SystemFonts.Default(7), Brushes.Black, 2, y, b.Id + " " + b.Item.Label + " x " + b.Length);
-                float by = y + 12;
-                e.Graphics.FillRectangle(Color.FromArgb(243, 236, 226), 4, by, (float)b.Length * k, 14);
-                foreach (var c in b.Cuts)
-                {
-                    var col = Palette[Math.Max(0, _families.IndexOf(c.Demand.FamilyId)) % Palette.Length];
-                    e.Graphics.FillRectangle(col, 4 + (float)c.Start * k, by, (float)c.Length * k, 14);
-                    e.Graphics.DrawRectangle(Colors.Black, 4 + (float)c.Start * k, by, (float)c.Length * k, 14);
-                }
-                if (b.TailLength > 0) e.Graphics.FillRectangle(b.TailClass == RemnantClass.ProjectRemnant ? Color.FromArgb(200, 230, 190) : Colors.LightGrey, 4 + (float)(b.Length - b.TailLength) * k, by, (float)b.TailLength * k, 14);
-                y += 34;
-            }
+            return groups.Values.ToList();
         }
     }
 }

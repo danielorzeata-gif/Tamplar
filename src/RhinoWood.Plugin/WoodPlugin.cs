@@ -29,6 +29,9 @@ namespace RhinoWood.Plugin
         public ProjectResult LastResult { get; private set; }
         public WoodLibrary Library { get; private set; }
         public event EventHandler ProjectChanged;
+        /// <summary>True once geometry for the active project has been generated into the document (until then only the viewport preview exists).</summary>
+        public bool Generated { get; set; }
+        public bool PreviewOn { get; set; } = true;
 
         public WoodPlugin() { Instance = this; }
 
@@ -69,9 +72,9 @@ namespace RhinoWood.Plugin
             File.WriteAllText(UserLibraryPath, LibrarySerializer.SerializeUser(user));
         }
 
-        public void SetProject(WoodProject p)
+        public void SetProject(WoodProject p, bool generated = false)
         {
-            Project = p; LastResult = p?.Recalculate();
+            Project = p; Generated = generated; LastResult = p?.Recalculate();
             Raise();
         }
 
@@ -83,7 +86,7 @@ namespace RhinoWood.Plugin
             return LastResult;
         }
 
-        public void Raise() => ProjectChanged?.Invoke(this, EventArgs.Empty);
+        public void Raise() { RhinoWood.Plugin.UI.PreviewService.Refresh(); ProjectChanged?.Invoke(this, EventArgs.Empty); }
 
         // ---------------------------------------------------------------- persistence inside the .3dm (single string, no per-object JSON)
         public void SaveToDocument(RhinoDoc doc)
@@ -103,7 +106,7 @@ namespace RhinoWood.Plugin
             try
             {
                 var (p, ok) = ProjectSerializer.Open(json, Library);
-                Project = p; LastResult = p.Recalculate();
+                Project = p; Generated = true; LastResult = p.Recalculate();
                 RhinoApp.WriteLine("Rhino Wood: project '" + p.Name + "' reopened" + (ok ? " - plan verified." : " - WARNING: recalculated plan differs from the saved snapshot (library or rules changed)."));
                 Raise();
             }
